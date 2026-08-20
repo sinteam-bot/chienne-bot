@@ -38,7 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Maps pour les mentions
         usersMap: {},
         rolesMap: {},
-        channelsMap: {}
+        channelsMap: {},
+
+        // Forum
+        forumData: {
+            channelId: null,
+            posts: [],
+            availableTags: [],
+            activeTag: 'ALL',
+            search: '',
+            sortBy: 'recent'
+        },
+        selectedNewPostTags: new Set()
     };
 
     // ============================================
@@ -76,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         viewVirtualLogs: document.getElementById('view-virtual-logs'),
         viewVirtualConfig: document.getElementById('view-virtual-config'),
         viewVirtualUsers: document.getElementById('view-virtual-users'),
+        viewForum: document.getElementById('view-forum'),
 
         // Vue Messages
         messagesContainer: document.getElementById('messages-container'),
@@ -85,6 +97,25 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingOlderMessages: document.getElementById('loading-older-messages'),
         sendMessageForm: document.getElementById('send-message-form'),
         messageTextInput: document.getElementById('message-text-input'),
+
+        // Vue Forum
+        forumTitleDisplay: document.getElementById('forum-title-display'),
+        forumGuidelinesText: document.getElementById('forum-guidelines-text'),
+        btnOpenCreatePost: document.getElementById('btn-open-create-post'),
+        forumSearchInput: document.getElementById('forum-search-input'),
+        btnClearForumSearch: document.getElementById('btn-clear-forum-search'),
+        forumSortSelect: document.getElementById('forum-sort-select'),
+        forumTagsBar: document.getElementById('forum-tags-bar'),
+        forumPostsGrid: document.getElementById('forum-posts-grid'),
+
+        // Modale Création Post Forum
+        createPostModal: document.getElementById('create-post-modal'),
+        btnClosePostModal: document.getElementById('btn-close-post-modal'),
+        btnCancelPostModal: document.getElementById('btn-cancel-post-modal'),
+        formCreatePost: document.getElementById('form-create-post'),
+        newPostTitle: document.getElementById('new-post-title'),
+        newPostContent: document.getElementById('new-post-content'),
+        modalTagsSelector: document.getElementById('modal-tags-selector'),
 
         // Vue Logs
         logLevelFilter: document.getElementById('log-level-filter'),
@@ -333,6 +364,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     catChannels.appendChild(chItem);
+
+                    // Si le salon a des fils de discussion (threads)
+                    if (ch.threads && ch.threads.length > 0) {
+                        const threadWrapper = document.createElement('div');
+                        threadWrapper.className = 'thread-list-wrapper';
+
+                        ch.threads.forEach(th => {
+                            const thItem = document.createElement('div');
+                            thItem.className = 'thread-item';
+                            thItem.dataset.channelId = th.id;
+                            thItem.innerHTML = `
+                                <span class="thread-icon">🧵</span>
+                                <span class="thread-name">${th.name}</span>
+                                ${th.archived ? '<span class="thread-badge archived">Archivé</span>' : ''}
+                            `;
+
+                            thItem.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                selectChannel(th.id);
+                            });
+
+                            threadWrapper.appendChild(thItem);
+                        });
+
+                        catChannels.appendChild(threadWrapper);
+                    }
                 });
             }
 
@@ -346,33 +403,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. SÉLECTION ET CHANGEMENT DE SALON
     // ============================================
     async function selectChannel(channelId) {
-        // Trouver les métadonnées du salon
+        // Trouver les métadonnées du salon ou fil
         let targetChannel = null;
+        let parentChannel = null;
+
         for (const cat of AppState.channels) {
             if (cat.channels) {
-                const found = cat.channels.find(c => c.id === channelId);
-                if (found) {
-                    targetChannel = found;
-                    break;
+                for (const ch of cat.channels) {
+                    if (ch.id === channelId) {
+                        targetChannel = ch;
+                        break;
+                    }
+                    if (ch.threads) {
+                        const foundTh = ch.threads.find(t => t.id === channelId);
+                        if (foundTh) {
+                            targetChannel = {
+                                ...foundTh,
+                                type: 'thread',
+                                icon: 'thread',
+                                parentId: ch.id
+                            };
+                            parentChannel = ch;
+                            break;
+                        }
+                    }
                 }
+                if (targetChannel) break;
             }
         }
 
         if (!targetChannel) {
-            // Salon par défaut virtuel si introuvable
-            targetChannel = { id: channelId, name: channelId, type: 'virtual', icon: 'hash', topic: '' };
+            targetChannel = { id: channelId, name: channelId, type: 'text', icon: 'hash', topic: '' };
         }
 
         AppState.currentChannel = targetChannel;
 
-        // Mettre à jour l'état actif dans la sidebar
-        document.querySelectorAll('.channel-item').forEach(el => {
+        // Mettre à jour l'état actif dans la sidebar (salons et threads)
+        document.querySelectorAll('.channel-item, .thread-item').forEach(el => {
             el.classList.toggle('active', el.dataset.channelId === channelId);
         });
 
         // Mettre à jour l'en-tête
         let iconSymbol = '#';
-        if (targetChannel.icon === 'scroll') iconSymbol = '📜';
+        if (targetChannel.type === 'thread') iconSymbol = '🧵';
+        else if (targetChannel.icon === 'scroll') iconSymbol = '📜';
         else if (targetChannel.icon === 'gear') iconSymbol = '⚙️';
         else if (targetChannel.icon === 'users') iconSymbol = '👥';
         else if (targetChannel.icon === 'volume-2') iconSymbol = '🔊';
@@ -380,13 +454,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         DOM.headerChannelIcon.textContent = iconSymbol;
         DOM.headerChannelName.textContent = targetChannel.name;
-        DOM.headerChannelTopic.textContent = targetChannel.topic || (targetChannel.type === 'virtual' ? 'Salon virtuel Chienne Bot' : `Bienvenue dans le salon ${targetChannel.name}`);
+
+        if (targetChannel.type === 'thread') {
+            const parentName = parentChannel ? parentChannel.name : (targetChannel.parentName || 'salon');
+            const parentId = parentChannel ? parentChannel.id : targetChannel.parentId;
+            DOM.headerChannelTopic.innerHTML = `
+                <a href="javascript:void(0)" class="thread-parent-link" onclick="AppState.selectChannel('${parentId}')">
+                    ↳ Fil dans #${parentName}
+                </a>
+                ${targetChannel.archived ? '<span class="thread-badge archived" style="margin-left: 6px;">Archivé</span>' : ''}
+            `;
+        } else {
+            DOM.headerChannelTopic.textContent = targetChannel.topic || (targetChannel.type === 'virtual' ? 'Salon virtuel Chienne Bot' : `Bienvenue dans le salon ${targetChannel.name}`);
+        }
 
         // Masquer toutes les vues
         DOM.viewMessages.classList.remove('active');
         DOM.viewVirtualLogs.classList.remove('active');
         DOM.viewVirtualConfig.classList.remove('active');
         DOM.viewVirtualUsers.classList.remove('active');
+        DOM.viewForum.classList.remove('active');
         DOM.logsLiveBadge.classList.add('hidden');
 
         // Basculer vers la vue appropriée
@@ -403,12 +490,22 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (channelId === 'virtual-users') {
             DOM.viewVirtualUsers.classList.add('active');
             await fetchUsers();
+        } else if (targetChannel.type === 'forum') {
+            // Salon Forum Discord
+            DOM.viewForum.classList.add('active');
+            DOM.forumTitleDisplay.textContent = `Bienvenue dans #${targetChannel.name}`;
+            DOM.forumGuidelinesText.textContent = targetChannel.topic || 'Créez ou consultez les discussions de ce forum.';
+            await fetchForumPosts(channelId);
         } else {
-            // Salon Discord classique avec historique de messages
+            // Salon Discord classique ou Fil de discussion
             DOM.viewMessages.classList.add('active');
             DOM.bannerChannelIcon.textContent = iconSymbol;
-            DOM.bannerChannelTitle.textContent = `Bienvenue dans #${targetChannel.name} !`;
-            DOM.messageTextInput.placeholder = `Envoyer un message dans #${targetChannel.name} en tant que Bot...`;
+            DOM.bannerChannelTitle.textContent = targetChannel.type === 'thread'
+                ? `Fil de discussion : #${targetChannel.name}`
+                : `Bienvenue dans #${targetChannel.name} !`;
+            DOM.messageTextInput.placeholder = targetChannel.type === 'thread'
+                ? `Envoyer un message dans le fil #${targetChannel.name}...`
+                : `Envoyer un message dans #${targetChannel.name} en tant que Bot...`;
 
             if (!AppState.messages[channelId] || AppState.messages[channelId].length === 0) {
                 await loadChannelMessages(channelId);
@@ -613,6 +710,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).join('') + `</div>`;
             }
 
+            // Rendu de la carte de fil de discussion associé au message s'il existe
+            let threadCardHtml = '';
+            if (msg.thread && msg.thread.id) {
+                threadCardHtml = `
+                    <div class="message-thread-card" onclick="AppState.selectChannel('${msg.thread.id}')" title="Ouvrir le fil #${window.DiscordMarkdown.escapeHtml(msg.thread.name)}">
+                        <span class="thread-card-icon">🧵</span>
+                        <div class="message-thread-card-info">
+                            <span class="message-thread-card-name">${window.DiscordMarkdown.escapeHtml(msg.thread.name)}</span>
+                            <span class="message-thread-card-meta">${msg.thread.messageCount || 0} message${(msg.thread.messageCount || 0) > 1 ? 's' : ''} ${msg.thread.archived ? '• (Archivé)' : ''}</span>
+                        </div>
+                        <span class="message-thread-card-arrow">➜</span>
+                    </div>
+                `;
+            }
+
             if (isGrouped) {
                 groupEl.innerHTML = `
                     ${actionsBarHtml}
@@ -624,6 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${embedsHtml}
                         ${attachmentsHtml}
                         ${reactionsHtml}
+                        ${threadCardHtml}
                     </div>
                 `;
             } else {
@@ -645,6 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${embedsHtml}
                         ${attachmentsHtml}
                         ${reactionsHtml}
+                        ${threadCardHtml}
                     </div>
                 `;
             }
@@ -815,6 +929,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Exposer sur AppState pour les onclick
+    AppState.selectChannel = selectChannel;
     AppState.startEditMessage = startEditMessage;
     AppState.copyMessageText = copyMessageText;
     AppState.promptDeleteMessage = promptDeleteMessage;
@@ -1334,6 +1449,427 @@ document.addEventListener('DOMContentLoaded', () => {
             saveConfigModule('xp', configData);
         });
 
+    // ============================================
+    // GESTION DES FORUMS DISCORD
+    // ============================================
+    async function fetchForumPosts(channelId) {
+        DOM.forumPostsGrid.innerHTML = `
+            <div style="padding: 40px; text-align: center; color: var(--text-muted); grid-column: 1 / -1;">
+                <div class="spinner" style="margin: 0 auto 12px auto;"></div>
+                Chargement des discussions du forum...
+            </div>
+        `;
+
+        try {
+            const res = await fetch(`/api/channels/${channelId}/posts`);
+            const json = await res.json();
+
+            if (json.success && json.data) {
+                AppState.forumData.channelId = channelId;
+                AppState.forumData.posts = json.data.posts || [];
+                AppState.forumData.availableTags = json.data.availableTags || [];
+                AppState.forumData.activeTag = 'ALL';
+                AppState.forumData.search = '';
+                AppState.forumData.sortBy = 'recent';
+
+                DOM.forumSearchInput.value = '';
+                DOM.btnClearForumSearch.classList.add('hidden');
+                DOM.forumSortSelect.value = 'recent';
+
+                renderForumTags();
+                renderForumPosts();
+            } else {
+                DOM.forumPostsGrid.innerHTML = `
+                    <div style="padding: 30px; text-align: center; color: var(--red); grid-column: 1 / -1;">
+                        ${json.error || 'Erreur lors du chargement des discussions'}
+                    </div>
+                `;
+            }
+        } catch (e) {
+            console.error('Erreur chargement posts forum:', e);
+            DOM.forumPostsGrid.innerHTML = `
+                <div style="padding: 30px; text-align: center; color: var(--red); grid-column: 1 / -1;">
+                    Impossible de charger les posts de ce forum.
+                </div>
+            `;
+        }
+    }
+
+    function renderForumTags() {
+        DOM.forumTagsBar.innerHTML = '';
+
+        const allBtn = document.createElement('button');
+        allBtn.className = `forum-tag-pill ${AppState.forumData.activeTag === 'ALL' ? 'active' : ''}`;
+        allBtn.textContent = 'Tous les tags';
+        allBtn.addEventListener('click', () => {
+            AppState.forumData.activeTag = 'ALL';
+            renderForumTags();
+            renderForumPosts();
+        });
+        DOM.forumTagsBar.appendChild(allBtn);
+
+        AppState.forumData.availableTags.forEach(tag => {
+            const tagBtn = document.createElement('button');
+            tagBtn.className = `forum-tag-pill ${AppState.forumData.activeTag === tag.id ? 'active' : ''}`;
+
+            let emojiHtml = '';
+            if (tag.emoji) {
+                if (tag.emoji.startsWith('http')) {
+                    emojiHtml = `<img src="${tag.emoji}" style="width: 14px; height: 14px; object-fit: contain;">`;
+                } else {
+                    emojiHtml = `<span>${tag.emoji}</span>`;
+                }
+            }
+
+            tagBtn.innerHTML = `${emojiHtml}<span>${window.DiscordMarkdown.escapeHtml(tag.name)}</span>`;
+            tagBtn.addEventListener('click', () => {
+                AppState.forumData.activeTag = (AppState.forumData.activeTag === tag.id) ? 'ALL' : tag.id;
+                renderForumTags();
+                renderForumPosts();
+            });
+            DOM.forumTagsBar.appendChild(tagBtn);
+        });
+    }
+
+    function renderForumPosts() {
+        DOM.forumPostsGrid.innerHTML = '';
+
+        let filtered = [...AppState.forumData.posts];
+
+        // Filtre Tag
+        if (AppState.forumData.activeTag !== 'ALL') {
+            filtered = filtered.filter(p => p.appliedTags && p.appliedTags.includes(AppState.forumData.activeTag));
+        }
+
+        // Filtre Recherche
+        if (AppState.forumData.search) {
+            const q = AppState.forumData.search.toLowerCase();
+            filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || (p.preview && p.preview.toLowerCase().includes(q)));
+        }
+
+        // Tri
+        if (AppState.forumData.sortBy === 'recent') {
+            filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        } else if (AppState.forumData.sortBy === 'messages') {
+            filtered.sort((a, b) => (b.messageCount || 0) - (a.messageCount || 0));
+        } else if (AppState.forumData.sortBy === 'oldest') {
+            filtered.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        }
+
+        if (filtered.length === 0) {
+            DOM.forumPostsGrid.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: var(--text-muted); grid-column: 1 / -1;">
+                    Aucune discussion ne correspond à vos critères dans ce forum.
+                </div>
+            `;
+            return;
+        }
+
+        // Map tags
+        const tagsMap = new Map();
+        AppState.forumData.availableTags.forEach(t => tagsMap.set(t.id, t));
+
+        filtered.forEach(post => {
+            const card = document.createElement('div');
+            card.className = 'forum-post-card';
+            card.dataset.threadId = post.id;
+
+            // Rendu tags
+            let tagsHtml = '';
+            if (post.appliedTags && post.appliedTags.length > 0) {
+                tagsHtml = `<div class="forum-post-card-tags">` + post.appliedTags.map(tagId => {
+                    const tagObj = tagsMap.get(tagId);
+                    if (!tagObj) return '';
+                    let emojiStr = '';
+                    if (tagObj.emoji) {
+                        if (tagObj.emoji.startsWith('http')) emojiStr = `<img src="${tagObj.emoji}">`;
+                        else emojiStr = `<span>${tagObj.emoji}</span>`;
+                    }
+                    return `<span class="forum-post-tag">${emojiStr}<span>${window.DiscordMarkdown.escapeHtml(tagObj.name)}</span></span>`;
+                }).join('') + `</div>`;
+            }
+
+            const postDate = post.createdAt ? new Date(post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '';
+
+            card.innerHTML = `
+                <div class="forum-post-card-header">
+                    <h4 class="forum-post-card-title">${window.DiscordMarkdown.escapeHtml(post.name)}</h4>
+                    ${tagsHtml}
+                </div>
+                ${post.preview ? `<p class="forum-post-card-preview">${window.DiscordMarkdown.escapeHtml(post.preview)}</p>` : ''}
+                <div class="forum-post-card-footer">
+                    <div class="forum-post-author">
+                        <img src="${post.owner.avatar}" class="forum-author-avatar" alt="Avatar">
+                        <span class="forum-author-name">${window.DiscordMarkdown.escapeHtml(post.owner.displayName || post.owner.username)}</span>
+                    </div>
+                    <div class="forum-post-stats">
+                        <span>💬 ${post.messageCount || 0}</span>
+                        ${post.archived ? '<span class="thread-badge archived">Archivé</span>' : ''}
+                        <span>📅 ${postDate}</span>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                AppState.selectChannel(post.id);
+            });
+
+            DOM.forumPostsGrid.appendChild(card);
+        });
+    }
+
+    function openCreatePostModal() {
+        if (!AppState.currentChannel || AppState.currentChannel.type !== 'forum') return;
+
+        DOM.newPostTitle.value = '';
+        DOM.newPostContent.value = '';
+        AppState.selectedNewPostTags.clear();
+
+        // Remplir sélecteur de tags
+        DOM.modalTagsSelector.innerHTML = '';
+        if (AppState.forumData.availableTags && AppState.forumData.availableTags.length > 0) {
+            AppState.forumData.availableTags.forEach(tag => {
+                const chip = document.createElement('div');
+                chip.className = 'modal-tag-chip';
+                chip.dataset.tagId = tag.id;
+
+                let emojiStr = '';
+                if (tag.emoji) {
+                    if (tag.emoji.startsWith('http')) emojiStr = `<img src="${tag.emoji}" style="width: 12px; height: 12px;"> `;
+                    else emojiStr = `${tag.emoji} `;
+                }
+
+                chip.innerHTML = `${emojiStr}${window.DiscordMarkdown.escapeHtml(tag.name)}`;
+                chip.addEventListener('click', () => {
+                    if (AppState.selectedNewPostTags.has(tag.id)) {
+                        AppState.selectedNewPostTags.delete(tag.id);
+                        chip.classList.remove('selected');
+                    } else {
+                        AppState.selectedNewPostTags.add(tag.id);
+                        chip.classList.add('selected');
+                    }
+                });
+
+                DOM.modalTagsSelector.appendChild(chip);
+            });
+        } else {
+            DOM.modalTagsSelector.innerHTML = '<span style="color: var(--text-muted); font-size: 12px;">Aucun tag configuré dans ce forum</span>';
+        }
+
+        DOM.createPostModal.classList.remove('hidden');
+        DOM.newPostTitle.focus();
+    }
+
+    async function handleCreatePostSubmit(e) {
+        e.preventDefault();
+        const forumId = AppState.currentChannel?.id;
+        if (!forumId) return;
+
+        const title = DOM.newPostTitle.value.trim();
+        const content = DOM.newPostContent.value.trim();
+        const appliedTags = Array.from(AppState.selectedNewPostTags);
+
+        if (!title || !content) {
+            showToast('Titre et message initial requis', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/channels/${forumId}/posts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content, appliedTags })
+            });
+
+            const json = await res.json();
+            if (json.success && json.data) {
+                showToast('Discussion créée avec succès dans le forum !', 'success');
+                DOM.createPostModal.classList.add('hidden');
+
+                // Mettre à jour la liste des salons pour que le thread apparaisse dans la sidebar
+                await fetchChannels();
+
+                // Ouvrir immédiatement la nouvelle discussion
+                selectChannel(json.data.id);
+            } else {
+                showToast(json.error || 'Erreur lors de la création du post', 'error');
+            }
+        } catch (err) {
+            showToast('Erreur de connexion', 'error');
+        }
+    }
+
+    // ============================================
+    // ÉCOUTEURS D'ÉVÉNEMENTS
+    // ============================================
+    function setupEventListeners() {
+        // Rafraîchissement global
+        DOM.btnRefreshAll.addEventListener('click', () => {
+            fetchGuildInfo();
+            fetchChannels();
+            showToast('Données rafraîchies', 'info');
+        });
+
+        DOM.btnRefreshChannel.addEventListener('click', () => {
+            if (AppState.currentChannel) {
+                if (AppState.currentChannel.type === 'forum') {
+                    fetchForumPosts(AppState.currentChannel.id);
+                } else if (!AppState.currentChannel.id.startsWith('virtual-')) {
+                    loadChannelMessages(AppState.currentChannel.id);
+                }
+                showToast('Salon actualisé', 'info');
+            }
+        });
+
+        DOM.btnScrollBottom.addEventListener('click', scrollMessagesToBottom);
+
+        // Raccourcis rail gauche
+        DOM.homeGuildBtn.addEventListener('click', () => {
+            if (AppState.channels.length > 0 && AppState.channels[0].channels.length > 0) {
+                selectChannel(AppState.channels[0].channels[0].id);
+            }
+        });
+
+        DOM.btnVirtualLogsQuick.addEventListener('click', () => selectChannel('virtual-logs'));
+        DOM.btnVirtualConfigQuick.addEventListener('click', () => selectChannel('virtual-config'));
+        DOM.btnVirtualUsersQuick.addEventListener('click', () => selectChannel('virtual-users'));
+
+        // Envoi de message
+        DOM.sendMessageForm.addEventListener('submit', handleSendMessage);
+        DOM.messageTextInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(e);
+            }
+        });
+
+        // Défilement infini des messages
+        DOM.messagesContainer.addEventListener('scroll', handleMessagesScroll);
+
+        // Actions Logs
+        DOM.logLevelFilter.addEventListener('change', (e) => {
+            AppState.logFilterLevel = e.target.value;
+            renderLogsList();
+        });
+
+        DOM.logSearchInput.addEventListener('input', (e) => {
+            AppState.logFilterSearch = e.target.value;
+            DOM.btnClearLogSearch.classList.toggle('hidden', !e.target.value);
+            renderLogsList();
+        });
+
+        DOM.btnClearLogSearch.addEventListener('click', () => {
+            DOM.logSearchInput.value = '';
+            AppState.logFilterSearch = '';
+            DOM.btnClearLogSearch.classList.add('hidden');
+            renderLogsList();
+        });
+
+        DOM.btnToggleAutoscroll.addEventListener('click', () => {
+            AppState.autoScrollLogs = !AppState.autoScrollLogs;
+            DOM.btnToggleAutoscroll.classList.toggle('active', AppState.autoScrollLogs);
+            DOM.btnToggleAutoscroll.innerHTML = `<span class="toggle-icon">📌</span> Auto-scroll : ${AppState.autoScrollLogs ? 'ON' : 'OFF'}`;
+        });
+
+        DOM.btnCopyLogs.addEventListener('click', () => {
+            const logsText = AppState.logs.map(l => `[${l.timestamp}] [${l.level}] [${l.tag}] ${l.message}`).join('\n');
+            navigator.clipboard.writeText(logsText).then(() => {
+                showToast('Logs copiés dans le presse-papier !', 'success');
+            });
+        });
+
+        DOM.btnClearLogs.addEventListener('click', () => {
+            AppState.logs = [];
+            renderLogsList();
+            showToast('Affichage des logs réinitialisé', 'info');
+        });
+
+        // Onglets Config
+        DOM.configNavItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const targetTab = item.dataset.tab;
+                AppState.activeConfigTab = targetTab;
+
+                DOM.configNavItems.forEach(i => i.classList.toggle('active', i.dataset.tab === targetTab));
+                DOM.configTabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetTab));
+            });
+        });
+
+        // Sélecteur couleur Welcome
+        DOM.welcomeColor.addEventListener('input', (e) => {
+            DOM.welcomeColorHex.value = e.target.value;
+        });
+        DOM.welcomeColorHex.addEventListener('input', (e) => {
+            DOM.welcomeColor.value = e.target.value;
+        });
+
+        // Formulaires Config
+        DOM.formConfigWelcome.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const configData = {
+                WELCOME_CHANNEL: DOM.welcomeChannelSelect.value,
+                AUTO_ROLES: AppState.config?.welcome?.AUTO_ROLES || [],
+                WELCOME_MESSAGE: {
+                    title: document.getElementById('welcome-title').value,
+                    description: document.getElementById('welcome-desc').value,
+                    color: DOM.welcomeColorHex.value || '#00FF00',
+                    footer: 'Membre #{memberCount}',
+                    fields: AppState.config?.welcome?.WELCOME_MESSAGE?.fields || [],
+                    thumbnail: 'user',
+                    image: null
+                },
+                ENABLED: document.getElementById('welcome-enabled').checked,
+                SEND_DM: document.getElementById('welcome-send-dm').checked,
+                DM_MESSAGE: AppState.config?.welcome?.DM_MESSAGE || {},
+                LOG_TO_CONSOLE: true
+            };
+            saveConfigModule('welcome', configData);
+        });
+
+        DOM.formConfigCaptcha.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const configData = {
+                ENABLED: document.getElementById('captcha-enabled').checked,
+                CAPTCHA_LOG_CHANNEL: DOM.captchaLogChannelSelect.value,
+                CAPTCHA_CHANNEL_ID: AppState.config?.captcha?.CAPTCHA_CHANNEL_ID || null,
+                CAPTCHA_CHANNEL_NAME: '✅-verification-captcha',
+                VERIFIED_ROLE_ID: DOM.captchaRoleSelect.value,
+                CAPTCHA_TIMEOUT: parseInt(document.getElementById('captcha-timeout').value) || 10,
+                MAX_ATTEMPTS: parseInt(document.getElementById('captcha-max-attempts').value) || 3,
+                MATH_QUESTIONS: AppState.config?.captcha?.MATH_QUESTIONS || {},
+                MESSAGES: AppState.config?.captcha?.MESSAGES || {}
+            };
+            saveConfigModule('captcha', configData);
+        });
+
+        DOM.formConfigXp.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const configData = {
+                MESSAGE_XP: {
+                    MIN: parseInt(document.getElementById('xp-min-msg').value) || 15,
+                    MAX: parseInt(document.getElementById('xp-max-msg').value) || 25,
+                    COOLDOWN: parseInt(document.getElementById('xp-cooldown').value) || 10
+                },
+                VOICE_XP: {
+                    PER_MINUTE: parseInt(document.getElementById('xp-voice-per-min').value) || 2,
+                    CHECK_INTERVAL: parseInt(document.getElementById('xp-voice-interval').value) || 5,
+                    MIN_DURATION: 1
+                },
+                LEVEL: AppState.config?.xp?.LEVEL || {},
+                BONUS: {
+                    DAILY_FIRST_MESSAGE: parseInt(document.getElementById('xp-daily-first').value) || 50,
+                    STREAK_MULTIPLIER: 1.1,
+                    EVENT_MULTIPLIER: 2
+                },
+                LIMITS: {
+                    MAX_XP_PER_DAY: parseInt(document.getElementById('xp-max-per-day').value) || 5000,
+                    MAX_MESSAGES_PER_MINUTE: 5
+                },
+                LEVEL_ROLES: AppState.config?.xp?.LEVEL_ROLES || {}
+            };
+            saveConfigModule('xp', configData);
+        });
+
         // Filtres Users
         let searchDebounce = null;
         DOM.userSearchInput.addEventListener('input', (e) => {
@@ -1363,6 +1899,38 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.userSortFilter.addEventListener('change', (e) => {
             AppState.userSortBy = e.target.value;
             fetchUsers();
+        });
+
+        // Événements Forum
+        let forumSearchDebounce = null;
+        DOM.forumSearchInput.addEventListener('input', (e) => {
+            AppState.forumData.search = e.target.value;
+            DOM.btnClearForumSearch.classList.toggle('hidden', !e.target.value);
+            clearTimeout(forumSearchDebounce);
+            forumSearchDebounce = setTimeout(renderForumPosts, 200);
+        });
+
+        DOM.btnClearForumSearch.addEventListener('click', () => {
+            DOM.forumSearchInput.value = '';
+            AppState.forumData.search = '';
+            DOM.btnClearForumSearch.classList.add('hidden');
+            renderForumPosts();
+        });
+
+        DOM.forumSortSelect.addEventListener('change', (e) => {
+            AppState.forumData.sortBy = e.target.value;
+            renderForumPosts();
+        });
+
+        DOM.btnOpenCreatePost.addEventListener('click', openCreatePostModal);
+        DOM.btnClosePostModal.addEventListener('click', () => DOM.createPostModal.classList.add('hidden'));
+        DOM.btnCancelPostModal.addEventListener('click', () => DOM.createPostModal.classList.add('hidden'));
+        DOM.formCreatePost.addEventListener('submit', handleCreatePostSubmit);
+
+        DOM.createPostModal.addEventListener('click', (e) => {
+            if (e.target === DOM.createPostModal) {
+                DOM.createPostModal.classList.add('hidden');
+            }
         });
 
         // Modale Fermeture User

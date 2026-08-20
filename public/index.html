@@ -511,6 +511,54 @@
                     </div>
                 </div>
             </section>
+
+            <!-- VUE 5 : SALON FORUM (EXPLORATEUR DE POSTS) -->
+            <section class="view-panel" id="view-forum">
+                <div class="forum-scroller">
+                    <!-- En-tête / Guidelines du forum -->
+                    <div class="forum-guidelines-card" id="forum-guidelines-card">
+                        <div class="forum-guidelines-header">
+                            <span class="forum-icon">📋</span>
+                            <div class="forum-guidelines-info">
+                                <h3 class="forum-guidelines-title" id="forum-title-display">Bienvenue dans le Forum</h3>
+                                <p class="forum-guidelines-text" id="forum-guidelines-text">Créez ou consultez les discussions de ce forum.</p>
+                            </div>
+                            <button class="btn-create-post" id="btn-open-create-post">
+                                <span>➕</span> Nouveau post
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Barre d'outils du forum (Recherche, Tri, Filtre par Tags) -->
+                    <div class="forum-toolbar">
+                        <div class="forum-search-row">
+                            <div class="search-input-wrapper">
+                                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/>
+                                </svg>
+                                <input type="text" id="forum-search-input" class="discord-input" placeholder="Rechercher des discussions...">
+                                <button class="clear-search-btn hidden" id="btn-clear-forum-search">✕</button>
+                            </div>
+
+                            <div class="forum-sort-wrapper">
+                                <select id="forum-sort-select" class="discord-select">
+                                    <option value="recent">Plus récents</option>
+                                    <option value="messages">Plus de messages</option>
+                                    <option value="oldest">Plus anciens</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Filtres par tags -->
+                        <div class="forum-tags-bar" id="forum-tags-bar">
+                            <button class="forum-tag-pill active" data-tag-id="ALL">Tous les tags</button>
+                        </div>
+                    </div>
+
+                    <!-- Liste/Grille des posts du forum -->
+                    <div class="forum-posts-grid" id="forum-posts-grid"></div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -591,6 +639,38 @@
                 <button type="button" class="btn-secondary" id="btn-cancel-delete">Annuler</button>
                 <button type="button" class="btn-danger" id="btn-confirm-delete">Supprimer</button>
             </footer>
+        </div>
+    </div>
+
+    <!-- MODALE CRÉATION POST DE FORUM -->
+    <div class="modal-backdrop hidden" id="create-post-modal">
+        <div class="modal-card modal-forum-create">
+            <header class="modal-header">
+                <h3 class="modal-title">Créer un nouveau post de Forum</h3>
+                <button class="btn-close-modal" id="btn-close-post-modal">&times;</button>
+            </header>
+            <form id="form-create-post">
+                <div class="modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label" for="new-post-title" style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--header-secondary); margin-bottom: 6px; display: block;">Titre de la discussion :</label>
+                        <input type="text" id="new-post-title" class="discord-input" style="width: 100%;" placeholder="Ex: Suggestion d'amélioration pour le bot" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--header-secondary); margin-bottom: 6px; display: block;">Tags appliqués :</label>
+                        <div class="modal-tags-selector" id="modal-tags-selector" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="new-post-content" style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--header-secondary); margin-bottom: 6px; display: block;">Message initial (Markdown supporté) :</label>
+                        <textarea id="new-post-content" class="discord-textarea" style="width: 100%; min-height: 100px;" rows="4" placeholder="Décrivez votre sujet en détail..." required></textarea>
+                    </div>
+                </div>
+                <footer class="modal-confirm-footer">
+                    <button type="button" class="btn-secondary" id="btn-cancel-post-modal">Annuler</button>
+                    <button type="submit" class="btn-primary" id="btn-submit-post">Publier le post</button>
+                </footer>
+            </form>
         </div>
     </div>
 
