@@ -599,12 +599,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Rendu des Réactions
             let reactionsHtml = '';
             if (msg.reactions && msg.reactions.length > 0) {
-                reactionsHtml = `<div class="message-reactions">` + msg.reactions.map(r => `
-                    <div class="reaction-pill">
-                        <span>${r.emoji}</span>
-                        <span>${r.count}</span>
-                    </div>
-                `).join('') + `</div>`;
+                reactionsHtml = `<div class="message-reactions">` + msg.reactions.map(r => {
+                    const emojiUrl = r.url || (r.id ? `https://cdn.discordapp.com/emojis/${r.id}.${r.animated ? 'gif' : 'png'}?size=48&quality=lossless` : null);
+                    const emojiIcon = emojiUrl
+                        ? `<img class="discord-reaction-emoji" src="${emojiUrl}" alt=":${r.emoji}:" title=":${r.emoji}:" loading="lazy">`
+                        : `<span class="reaction-unicode">${r.emoji}</span>`;
+                    return `
+                        <div class="reaction-pill" title=":${r.emoji}: (${r.count})">
+                            ${emojiIcon}
+                            <span class="reaction-count">${r.count}</span>
+                        </div>
+                    `;
+                }).join('') + `</div>`;
             }
 
             if (isGrouped) {
