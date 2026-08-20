@@ -283,21 +283,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const json = await res.json();
             if (json.success && json.data) {
                 AppState.guild = json.data;
-                DOM.serverNameLabel.textContent = AppState.guild.name || 'Serveur Discord';
-                document.title = `${AppState.guild.name} - Chienne Bot`;
+                if (DOM.serverNameLabel) DOM.serverNameLabel.textContent = AppState.guild.name || 'Serveur Discord';
+                document.title = `${AppState.guild.name || 'Serveur'} - Chienne Bot`;
 
                 if (AppState.guild.icon) {
-                    DOM.guildAvatarRail.innerHTML = `<img src="${AppState.guild.icon}" alt="Guild Icon">`;
+                    if (DOM.guildAvatarRail) DOM.guildAvatarRail.innerHTML = `<img src="${AppState.guild.icon}" alt="Guild Icon">`;
                 } else {
-                    const initials = AppState.guild.name.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase();
-                    DOM.guildInitials.textContent = initials || 'CB';
+                    const initials = (AppState.guild.name || '').split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase();
+                    if (DOM.guildInitials) DOM.guildInitials.textContent = initials || 'CB';
                 }
 
                 if (AppState.guild.bot) {
-                    DOM.botAvatarImg.src = AppState.guild.bot.avatar;
-                    DOM.botUsernameLabel.textContent = AppState.guild.bot.username;
-                    DOM.botStatusDot.className = `status-indicator ${AppState.guild.botOnline ? 'online' : 'offline'}`;
-                    DOM.botCustomStatus.textContent = AppState.guild.botOnline ? 'En ligne' : 'Déconnecté';
+                    if (DOM.botAvatarImg) DOM.botAvatarImg.src = AppState.guild.bot.avatar;
+                    if (DOM.botUsernameLabel) DOM.botUsernameLabel.textContent = AppState.guild.bot.username;
+                    if (DOM.botStatusDot) DOM.botStatusDot.className = `status-indicator ${AppState.guild.botOnline ? 'online' : 'offline'}`;
+                    if (DOM.botCustomStatus) DOM.botCustomStatus.textContent = AppState.guild.botOnline ? 'En ligne' : 'Déconnecté';
                 }
             }
         } catch (e) {
@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         chip.innerHTML = `
                             <span class="role-dot" style="background-color: ${role.color || '#99aab5'}"></span>
                             <span>${window.DiscordMarkdown.escapeHtml(role.name)}</span>
-                            <span class="role-chip-count">${role.memberCount}</span>
+                            <span class="role-chip-count">(${role.memberCount || 0})</span>
                         `;
                         chip.addEventListener('click', () => {
                             AppState.userRoleFilter = (AppState.userRoleFilter === role.id) ? 'ALL' : role.id;
@@ -375,15 +375,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Récupérer la liste des catégories et salons
+    // Récupérer la liste des canaux et catégories
     async function fetchChannels() {
         try {
             const res = await fetch('/api/channels');
             const json = await res.json();
             if (json.success && json.data) {
                 AppState.channels = json.data;
-                renderChannelsSidebar(AppState.channels);
                 populateChannelSelects(AppState.channels);
+                renderChannelsSidebar(AppState.channels);
             }
         } catch (e) {
             console.error('Erreur chargement salons:', e);
@@ -392,8 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Remplir les dropdowns de salons pour la configuration
     function populateChannelSelects(categories) {
-        DOM.welcomeChannelSelect.innerHTML = '<option value="">-- Sélectionner un salon --</option>';
-        DOM.captchaLogChannelSelect.innerHTML = '<option value="">-- Sélectionner un salon --</option>';
+        if (DOM.welcomeChannelSelect) DOM.welcomeChannelSelect.innerHTML = '<option value="">-- Sélectionner un salon --</option>';
+        if (DOM.captchaLogChannelSelect) DOM.captchaLogChannelSelect.innerHTML = '<option value="">-- Sélectionner un salon --</option>';
 
         AppState.channelsMap = {};
 
@@ -402,15 +402,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 cat.channels.forEach(ch => {
                     AppState.channelsMap[ch.id] = ch.name;
                     if (ch.type !== 'voice' && !ch.id.startsWith('virtual-')) {
-                        const optWelcome = document.createElement('option');
-                        optWelcome.value = ch.id;
-                        optWelcome.textContent = `# ${ch.name}`;
-                        DOM.welcomeChannelSelect.appendChild(optWelcome);
+                        if (DOM.welcomeChannelSelect) {
+                            const optWelcome = document.createElement('option');
+                            optWelcome.value = ch.id;
+                            optWelcome.textContent = `# ${ch.name}`;
+                            DOM.welcomeChannelSelect.appendChild(optWelcome);
+                        }
 
-                        const optCaptcha = document.createElement('option');
-                        optCaptcha.value = ch.id;
-                        optCaptcha.textContent = `# ${ch.name}`;
-                        DOM.captchaLogChannelSelect.appendChild(optCaptcha);
+                        if (DOM.captchaLogChannelSelect) {
+                            const optCaptcha = document.createElement('option');
+                            optCaptcha.value = ch.id;
+                            optCaptcha.textContent = `# ${ch.name}`;
+                            DOM.captchaLogChannelSelect.appendChild(optCaptcha);
+                        }
                     }
                 });
             }
@@ -421,6 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. RENDU DE LA SIDEBAR DES SALONS
     // ============================================
     function renderChannelsSidebar(categories) {
+        if (!DOM.channelsList) return;
         DOM.channelsList.innerHTML = '';
 
         categories.forEach(cat => {
