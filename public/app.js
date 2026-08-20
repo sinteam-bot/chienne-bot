@@ -29,7 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
         userSearch: '',
         userRoleFilter: 'ALL',
         userBotFilter: 'all',
+        userXpFilter: 'all',
         userSortBy: 'joined',
+        userOrder: 'desc',
+        userViewMode: 'table', // 'table' | 'grid'
 
         // Config
         config: null,
@@ -142,11 +145,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Vue Users
         userSearchInput: document.getElementById('user-search-input'),
         btnClearUserSearch: document.getElementById('btn-clear-user-search'),
-        userRoleFilter: document.getElementById('user-role-filter'),
-        userBotFilter: document.getElementById('user-bot-filter'),
         userSortFilter: document.getElementById('user-sort-filter'),
+        userOrderFilter: document.getElementById('user-order-filter'),
+        btnUserViewGrid: document.getElementById('btn-user-view-grid'),
+        btnUserViewTable: document.getElementById('btn-user-view-table'),
+        btnResetUserFilters: document.getElementById('btn-reset-user-filters'),
+        userTypeChips: document.getElementById('user-type-chips'),
+        userXpChips: document.getElementById('user-xp-chips'),
+        usersRolesChipsBar: document.getElementById('users-roles-chips-bar'),
         userCountDisplay: document.getElementById('user-count-display'),
         usersGridContainer: document.getElementById('users-grid-container'),
+        usersTableContainer: document.getElementById('users-table-container'),
+        usersTableBody: document.getElementById('users-table-body'),
 
         // Modale User
         userDetailModal: document.getElementById('user-detail-modal'),
@@ -247,28 +257,66 @@ document.addEventListener('DOMContentLoaded', () => {
             if (json.success && json.data) {
                 AppState.roles = json.data;
                 AppState.rolesMap = {};
-                
-                // Mettre à jour les dropdowns de rôles
-                DOM.userRoleFilter.innerHTML = '<option value="ALL">Tous les rôles</option>';
-                DOM.captchaRoleSelect.innerHTML = '<option value="">-- Aucun rôle spécifique --</option>';
+
+                if (DOM.captchaRoleSelect) {
+                    DOM.captchaRoleSelect.innerHTML = '<option value="">-- Aucun rôle spécifique --</option>';
+                }
+
+                if (DOM.usersRolesChipsBar) {
+                    DOM.usersRolesChipsBar.innerHTML = '';
+                    const allChip = document.createElement('button');
+                    allChip.type = 'button';
+                    allChip.className = `role-chip ${AppState.userRoleFilter === 'ALL' ? 'active' : ''}`;
+                    allChip.dataset.roleId = 'ALL';
+                    allChip.textContent = 'Tous les rôles';
+                    allChip.addEventListener('click', () => {
+                        AppState.userRoleFilter = 'ALL';
+                        renderRoleChips();
+                        fetchUsers();
+                    });
+                    DOM.usersRolesChipsBar.appendChild(allChip);
+                }
 
                 AppState.roles.forEach(role => {
                     AppState.rolesMap[role.id] = role.name;
 
-                    const opt = document.createElement('option');
-                    opt.value = role.id;
-                    opt.textContent = `${role.name} (${role.memberCount} membres)`;
-                    DOM.userRoleFilter.appendChild(opt);
+                    if (DOM.captchaRoleSelect) {
+                        const optCaptcha = document.createElement('option');
+                        optCaptcha.value = role.id;
+                        optCaptcha.textContent = role.name;
+                        DOM.captchaRoleSelect.appendChild(optCaptcha);
+                    }
 
-                    const optCaptcha = document.createElement('option');
-                    optCaptcha.value = role.id;
-                    optCaptcha.textContent = role.name;
-                    DOM.captchaRoleSelect.appendChild(optCaptcha);
+                    if (DOM.usersRolesChipsBar) {
+                        const chip = document.createElement('button');
+                        chip.type = 'button';
+                        chip.className = `role-chip ${AppState.userRoleFilter === role.id ? 'active' : ''}`;
+                        chip.dataset.roleId = role.id;
+                        chip.innerHTML = `
+                            <span class="role-dot" style="background-color: ${role.color || '#99aab5'}"></span>
+                            <span>${window.DiscordMarkdown.escapeHtml(role.name)}</span>
+                            <span class="role-chip-count">${role.memberCount}</span>
+                        `;
+                        chip.addEventListener('click', () => {
+                            AppState.userRoleFilter = (AppState.userRoleFilter === role.id) ? 'ALL' : role.id;
+                            renderRoleChips();
+                            fetchUsers();
+                        });
+                        DOM.usersRolesChipsBar.appendChild(chip);
+                    }
                 });
             }
         } catch (e) {
             console.error('Erreur chargement rôles:', e);
         }
+    }
+
+    function renderRoleChips() {
+        if (!DOM.usersRolesChipsBar) return;
+        DOM.usersRolesChipsBar.querySelectorAll('.role-chip').forEach(chip => {
+            const roleId = chip.dataset.roleId;
+            chip.classList.toggle('active', AppState.userRoleFilter === roleId);
+        });
     }
 
     // Récupérer la liste des catégories et salons
@@ -1161,11 +1209,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================
-    // 8. SALON VIRTUEL : USERS (LISTE & RECHERCHE)
+    // 8. SALON VIRTUEL : USERS (LISTE, TABLEAU & RECHERCHE)
     // ============================================
     async function fetchUsers() {
         try {
-            let url = `/api/users?search=${encodeURIComponent(AppState.userSearch)}&role=${encodeURIComponent(AppState.userRoleFilter)}&isBot=${AppState.userBotFilter}&sortBy=${AppState.userSortBy}`;
+            let url = `/api/users?search=${encodeURIComponent(AppState.userSearch)}&role=${encodeURIComponent(AppState.userRoleFilter)}&isBot=${AppState.userBotFilter}&hasXp=${AppState.userXpFilter}&sortBy=${AppState.userSortBy}&order=${AppState.userOrder}&limit=500`;
             const res = await fetch(url);
             const json = await res.json();
             if (json.success && json.data) {
@@ -1173,15 +1221,96 @@ document.addEventListener('DOMContentLoaded', () => {
                 AppState.users.forEach(u => {
                     AppState.usersMap[u.id] = u.displayName || u.username;
                 });
-                renderUsersGrid(AppState.users, json.data.total);
+                renderUsersView(AppState.users, json.data.total);
             }
         } catch (e) {
             console.error('Erreur chargement users:', e);
         }
     }
 
+    function renderUsersView(users = AppState.users, total = AppState.users.length) {
+        if (DOM.userCountDisplay) {
+            DOM.userCountDisplay.textContent = `${total} membre(s)`;
+        }
+        updateSortHeaders();
+
+        if (AppState.userViewMode === 'table') {
+            if (DOM.usersTableContainer) DOM.usersTableContainer.classList.remove('hidden');
+            if (DOM.usersGridContainer) DOM.usersGridContainer.classList.add('hidden');
+            renderUsersTable(users, total);
+        } else {
+            if (DOM.usersGridContainer) DOM.usersGridContainer.classList.remove('hidden');
+            if (DOM.usersTableContainer) DOM.usersTableContainer.classList.add('hidden');
+            renderUsersGrid(users, total);
+        }
+    }
+
+    function renderUsersTable(users, total) {
+        if (!DOM.usersTableBody) return;
+        DOM.usersTableBody.innerHTML = '';
+
+        if (users.length === 0) {
+            DOM.usersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        Aucun membre trouvé avec ces critères de recherche.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        users.forEach(u => {
+            const tr = document.createElement('tr');
+
+            const rolesHtml = u.roles && u.roles.length > 0
+                ? `<div class="user-td-roles">` + u.roles.slice(0, 3).map(r => `
+                    <span class="role-pill">
+                        <span class="role-dot" style="background-color: ${r.color || '#5865F2'}"></span>
+                        <span>${window.DiscordMarkdown.escapeHtml(r.name)}</span>
+                    </span>
+                `).join('') + (u.roles.length > 3 ? `<span class="role-pill">+${u.roles.length - 3}</span>` : '') + `</div>`
+                : '<span class="role-pill">Membre</span>';
+
+            const joinedDate = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString('fr-FR') : '--';
+            const voiceStr = u.voiceMinutes ? (u.voiceMinutes >= 60 ? `${Math.floor(u.voiceMinutes / 60)}h ${u.voiceMinutes % 60}m` : `${u.voiceMinutes}m`) : '0m';
+
+            tr.innerHTML = `
+                <td>
+                    <div class="user-td-member">
+                        <img src="${u.avatar}" class="user-td-avatar" alt="Avatar">
+                        <div class="user-td-info">
+                            <span class="user-td-name">
+                                ${window.DiscordMarkdown.escapeHtml(u.displayName || u.username)}
+                                ${u.isBot ? '<span class="bot-badge">BOT</span>' : ''}
+                            </span>
+                            <span class="user-td-sub">${window.DiscordMarkdown.escapeHtml(u.tag || u.username)}</span>
+                        </div>
+                    </div>
+                </td>
+                <td><code style="font-size: 11px; color: var(--text-muted);">${u.id}</code></td>
+                <td>${u.isBot ? '<span style="color: var(--brand); font-weight: 600;">🤖 Bot</span>' : '<span style="color: var(--text-muted);">👤 Humain</span>'}</td>
+                <td>${rolesHtml}</td>
+                <td><span class="user-level-pill">Niv. ${u.level || 1}</span></td>
+                <td><strong>${(u.xp || 0).toLocaleString()}</strong> XP</td>
+                <td>${(u.messagesCount || 0).toLocaleString()}</td>
+                <td>${voiceStr}</td>
+                <td>${joinedDate}</td>
+                <td style="text-align: right;">
+                    <button type="button" class="btn-user-inspect">Inspecter</button>
+                </td>
+            `;
+
+            tr.addEventListener('click', () => {
+                showUserModal(u);
+            });
+
+            DOM.usersTableBody.appendChild(tr);
+        });
+    }
+
     function renderUsersGrid(users, total) {
-        DOM.userCountDisplay.textContent = `${total} membre(s)`;
+        if (!DOM.usersGridContainer) return;
         DOM.usersGridContainer.innerHTML = '';
 
         if (users.length === 0) {
@@ -1233,6 +1362,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             DOM.usersGridContainer.appendChild(card);
         });
+    }
+
+    function updateSortHeaders() {
+        if (!DOM.usersTableContainer) return;
+        DOM.usersTableContainer.querySelectorAll('.sortable-th').forEach(th => {
+            const sortKey = th.dataset.sort;
+            const isSorted = AppState.userSortBy === sortKey;
+            th.classList.toggle('sorted', isSorted);
+            const iconSpan = th.querySelector('.sort-icon');
+            if (iconSpan) {
+                if (isSorted) {
+                    iconSpan.textContent = AppState.userOrder === 'asc' ? '⬆️' : '⬇️';
+                } else {
+                    iconSpan.textContent = '↕';
+                }
+            }
+        });
+    }
+
+    function updateViewModeButtons() {
+        if (DOM.btnUserViewGrid) DOM.btnUserViewGrid.classList.toggle('active', AppState.userViewMode === 'grid');
+        if (DOM.btnUserViewTable) DOM.btnUserViewTable.classList.toggle('active', AppState.userViewMode === 'table');
     }
 
     function showUserModal(userOrId) {
@@ -1721,68 +1872,84 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        DOM.btnScrollBottom.addEventListener('click', scrollMessagesToBottom);
+        if (DOM.btnScrollBottom) DOM.btnScrollBottom.addEventListener('click', scrollMessagesToBottom);
 
-        // Raccourcis rail gauche
-        DOM.homeGuildBtn.addEventListener('click', () => {
-            if (AppState.channels.length > 0 && AppState.channels[0].channels.length > 0) {
-                selectChannel(AppState.channels[0].channels[0].id);
-            }
-        });
+        // Raccourcis rail gauche (avec vérification null-safe si le rail est masqué/commenté)
+        if (DOM.homeGuildBtn) {
+            DOM.homeGuildBtn.addEventListener('click', () => {
+                if (AppState.channels.length > 0 && AppState.channels[0].channels.length > 0) {
+                    selectChannel(AppState.channels[0].channels[0].id);
+                }
+            });
+        }
 
-        DOM.btnVirtualLogsQuick.addEventListener('click', () => selectChannel('virtual-logs'));
-        DOM.btnVirtualConfigQuick.addEventListener('click', () => selectChannel('virtual-config'));
-        DOM.btnVirtualUsersQuick.addEventListener('click', () => selectChannel('virtual-users'));
+        if (DOM.btnVirtualLogsQuick) DOM.btnVirtualLogsQuick.addEventListener('click', () => selectChannel('virtual-logs'));
+        if (DOM.btnVirtualConfigQuick) DOM.btnVirtualConfigQuick.addEventListener('click', () => selectChannel('virtual-config'));
+        if (DOM.btnVirtualUsersQuick) DOM.btnVirtualUsersQuick.addEventListener('click', () => selectChannel('virtual-users'));
 
         // Envoi de message
-        DOM.sendMessageForm.addEventListener('submit', handleSendMessage);
-        DOM.messageTextInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(e);
-            }
-        });
+        if (DOM.sendMessageForm) DOM.sendMessageForm.addEventListener('submit', handleSendMessage);
+        if (DOM.messageTextInput) {
+            DOM.messageTextInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(e);
+                }
+            });
+        }
 
         // Défilement infini des messages
-        DOM.messagesContainer.addEventListener('scroll', handleMessagesScroll);
+        if (DOM.messagesContainer) DOM.messagesContainer.addEventListener('scroll', handleMessagesScroll);
 
         // Actions Logs
-        DOM.logLevelFilter.addEventListener('change', (e) => {
-            AppState.logFilterLevel = e.target.value;
-            renderLogsList();
-        });
-
-        DOM.logSearchInput.addEventListener('input', (e) => {
-            AppState.logFilterSearch = e.target.value;
-            DOM.btnClearLogSearch.classList.toggle('hidden', !e.target.value);
-            renderLogsList();
-        });
-
-        DOM.btnClearLogSearch.addEventListener('click', () => {
-            DOM.logSearchInput.value = '';
-            AppState.logFilterSearch = '';
-            DOM.btnClearLogSearch.classList.add('hidden');
-            renderLogsList();
-        });
-
-        DOM.btnToggleAutoscroll.addEventListener('click', () => {
-            AppState.autoScrollLogs = !AppState.autoScrollLogs;
-            DOM.btnToggleAutoscroll.classList.toggle('active', AppState.autoScrollLogs);
-            DOM.btnToggleAutoscroll.innerHTML = `<span class="toggle-icon">📌</span> Auto-scroll : ${AppState.autoScrollLogs ? 'ON' : 'OFF'}`;
-        });
-
-        DOM.btnCopyLogs.addEventListener('click', () => {
-            const logsText = AppState.logs.map(l => `[${l.timestamp}] [${l.level}] [${l.tag}] ${l.message}`).join('\n');
-            navigator.clipboard.writeText(logsText).then(() => {
-                showToast('Logs copiés dans le presse-papier !', 'success');
+        if (DOM.logLevelFilter) {
+            DOM.logLevelFilter.addEventListener('change', (e) => {
+                AppState.logFilterLevel = e.target.value;
+                renderLogsList();
             });
-        });
+        }
 
-        DOM.btnClearLogs.addEventListener('click', () => {
-            AppState.logs = [];
-            renderLogsList();
-            showToast('Affichage des logs réinitialisé', 'info');
-        });
+        if (DOM.logSearchInput) {
+            DOM.logSearchInput.addEventListener('input', (e) => {
+                AppState.logFilterSearch = e.target.value;
+                if (DOM.btnClearLogSearch) DOM.btnClearLogSearch.classList.toggle('hidden', !e.target.value);
+                renderLogsList();
+            });
+        }
+
+        if (DOM.btnClearLogSearch) {
+            DOM.btnClearLogSearch.addEventListener('click', () => {
+                DOM.logSearchInput.value = '';
+                AppState.logFilterSearch = '';
+                DOM.btnClearLogSearch.classList.add('hidden');
+                renderLogsList();
+            });
+        }
+
+        if (DOM.btnToggleAutoscroll) {
+            DOM.btnToggleAutoscroll.addEventListener('click', () => {
+                AppState.autoScrollLogs = !AppState.autoScrollLogs;
+                DOM.btnToggleAutoscroll.classList.toggle('active', AppState.autoScrollLogs);
+                DOM.btnToggleAutoscroll.innerHTML = `<span class="toggle-icon">📌</span> Auto-scroll : ${AppState.autoScrollLogs ? 'ON' : 'OFF'}`;
+            });
+        }
+
+        if (DOM.btnCopyLogs) {
+            DOM.btnCopyLogs.addEventListener('click', () => {
+                const logsText = AppState.logs.map(l => `[${l.timestamp}] [${l.level}] [${l.tag}] ${l.message}`).join('\n');
+                navigator.clipboard.writeText(logsText).then(() => {
+                    showToast('Logs copiés dans le presse-papier !', 'success');
+                });
+            });
+        }
+
+        if (DOM.btnClearLogs) {
+            DOM.btnClearLogs.addEventListener('click', () => {
+                AppState.logs = [];
+                renderLogsList();
+                showToast('Affichage des logs réinitialisé', 'info');
+            });
+        }
 
         // Onglets Config
         DOM.configNavItems.forEach(item => {
@@ -1796,110 +1963,220 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Sélecteur couleur Welcome
-        DOM.welcomeColor.addEventListener('input', (e) => {
-            DOM.welcomeColorHex.value = e.target.value;
-        });
-        DOM.welcomeColorHex.addEventListener('input', (e) => {
-            DOM.welcomeColor.value = e.target.value;
-        });
+        if (DOM.welcomeColor && DOM.welcomeColorHex) {
+            DOM.welcomeColor.addEventListener('input', (e) => {
+                DOM.welcomeColorHex.value = e.target.value;
+            });
+            DOM.welcomeColorHex.addEventListener('input', (e) => {
+                DOM.welcomeColor.value = e.target.value;
+            });
+        }
 
         // Formulaires Config
-        DOM.formConfigWelcome.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const configData = {
-                WELCOME_CHANNEL: DOM.welcomeChannelSelect.value,
-                AUTO_ROLES: AppState.config?.welcome?.AUTO_ROLES || [],
-                WELCOME_MESSAGE: {
-                    title: document.getElementById('welcome-title').value,
-                    description: document.getElementById('welcome-desc').value,
-                    color: DOM.welcomeColorHex.value || '#00FF00',
-                    footer: 'Membre #{memberCount}',
-                    fields: AppState.config?.welcome?.WELCOME_MESSAGE?.fields || [],
-                    thumbnail: 'user',
-                    image: null
-                },
-                ENABLED: document.getElementById('welcome-enabled').checked,
-                SEND_DM: document.getElementById('welcome-send-dm').checked,
-                DM_MESSAGE: AppState.config?.welcome?.DM_MESSAGE || {},
-                LOG_TO_CONSOLE: true
-            };
-            saveConfigModule('welcome', configData);
-        });
+        if (DOM.formConfigWelcome) {
+            DOM.formConfigWelcome.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const configData = {
+                    WELCOME_CHANNEL: DOM.welcomeChannelSelect.value,
+                    AUTO_ROLES: AppState.config?.welcome?.AUTO_ROLES || [],
+                    WELCOME_MESSAGE: {
+                        title: document.getElementById('welcome-title').value,
+                        description: document.getElementById('welcome-desc').value,
+                        color: DOM.welcomeColorHex.value || '#00FF00',
+                        footer: 'Membre #{memberCount}',
+                        fields: AppState.config?.welcome?.WELCOME_MESSAGE?.fields || [],
+                        thumbnail: 'user',
+                        image: null
+                    },
+                    ENABLED: document.getElementById('welcome-enabled').checked,
+                    SEND_DM: document.getElementById('welcome-send-dm').checked,
+                    DM_MESSAGE: AppState.config?.welcome?.DM_MESSAGE || {},
+                    LOG_TO_CONSOLE: true
+                };
+                saveConfigModule('welcome', configData);
+            });
+        }
 
-        DOM.formConfigCaptcha.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const configData = {
-                ENABLED: document.getElementById('captcha-enabled').checked,
-                CAPTCHA_LOG_CHANNEL: DOM.captchaLogChannelSelect.value,
-                CAPTCHA_CHANNEL_ID: AppState.config?.captcha?.CAPTCHA_CHANNEL_ID || null,
-                CAPTCHA_CHANNEL_NAME: '✅-verification-captcha',
-                VERIFIED_ROLE_ID: DOM.captchaRoleSelect.value,
-                CAPTCHA_TIMEOUT: parseInt(document.getElementById('captcha-timeout').value) || 10,
-                MAX_ATTEMPTS: parseInt(document.getElementById('captcha-max-attempts').value) || 3,
-                MATH_QUESTIONS: AppState.config?.captcha?.MATH_QUESTIONS || {},
-                MESSAGES: AppState.config?.captcha?.MESSAGES || {}
-            };
-            saveConfigModule('captcha', configData);
-        });
+        if (DOM.formConfigCaptcha) {
+            DOM.formConfigCaptcha.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const configData = {
+                    ENABLED: document.getElementById('captcha-enabled').checked,
+                    CAPTCHA_LOG_CHANNEL: DOM.captchaLogChannelSelect.value,
+                    CAPTCHA_CHANNEL_ID: AppState.config?.captcha?.CAPTCHA_CHANNEL_ID || null,
+                    CAPTCHA_CHANNEL_NAME: '✅-verification-captcha',
+                    VERIFIED_ROLE_ID: DOM.captchaRoleSelect.value,
+                    CAPTCHA_TIMEOUT: parseInt(document.getElementById('captcha-timeout').value) || 10,
+                    MAX_ATTEMPTS: parseInt(document.getElementById('captcha-max-attempts').value) || 3,
+                    MATH_QUESTIONS: AppState.config?.captcha?.MATH_QUESTIONS || {},
+                    MESSAGES: AppState.config?.captcha?.MESSAGES || {}
+                };
+                saveConfigModule('captcha', configData);
+            });
+        }
 
-        DOM.formConfigXp.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const configData = {
-                MESSAGE_XP: {
-                    MIN: parseInt(document.getElementById('xp-min-msg').value) || 15,
-                    MAX: parseInt(document.getElementById('xp-max-msg').value) || 25,
-                    COOLDOWN: parseInt(document.getElementById('xp-cooldown').value) || 10
-                },
-                VOICE_XP: {
-                    PER_MINUTE: parseInt(document.getElementById('xp-voice-per-min').value) || 2,
-                    CHECK_INTERVAL: parseInt(document.getElementById('xp-voice-interval').value) || 5,
-                    MIN_DURATION: 1
-                },
-                LEVEL: AppState.config?.xp?.LEVEL || {},
-                BONUS: {
-                    DAILY_FIRST_MESSAGE: parseInt(document.getElementById('xp-daily-first').value) || 50,
-                    STREAK_MULTIPLIER: 1.1,
-                    EVENT_MULTIPLIER: 2
-                },
-                LIMITS: {
-                    MAX_XP_PER_DAY: parseInt(document.getElementById('xp-max-per-day').value) || 5000,
-                    MAX_MESSAGES_PER_MINUTE: 5
-                },
-                LEVEL_ROLES: AppState.config?.xp?.LEVEL_ROLES || {}
-            };
-            saveConfigModule('xp', configData);
-        });
+        if (DOM.formConfigXp) {
+            DOM.formConfigXp.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const configData = {
+                    MESSAGE_XP: {
+                        MIN: parseInt(document.getElementById('xp-min-msg').value) || 15,
+                        MAX: parseInt(document.getElementById('xp-max-msg').value) || 25,
+                        COOLDOWN: parseInt(document.getElementById('xp-cooldown').value) || 10
+                    },
+                    VOICE_XP: {
+                        PER_MINUTE: parseInt(document.getElementById('xp-voice-per-min').value) || 2,
+                        CHECK_INTERVAL: parseInt(document.getElementById('xp-voice-interval').value) || 5,
+                        MIN_DURATION: 1
+                    },
+                    LEVEL: AppState.config?.xp?.LEVEL || {},
+                    BONUS: {
+                        DAILY_FIRST_MESSAGE: parseInt(document.getElementById('xp-daily-first').value) || 50,
+                        STREAK_MULTIPLIER: 1.1,
+                        EVENT_MULTIPLIER: 2
+                    },
+                    LIMITS: {
+                        MAX_XP_PER_DAY: parseInt(document.getElementById('xp-max-per-day').value) || 5000,
+                        MAX_MESSAGES_PER_MINUTE: 5
+                    },
+                    LEVEL_ROLES: AppState.config?.xp?.LEVEL_ROLES || {}
+                };
+                saveConfigModule('xp', configData);
+            });
+        }
 
-        // Filtres Users
+        // ==========================================
+        // FILTRES ET ACTIONS DE LA VUE UTILISATEURS
+        // ==========================================
+
+        // Recherche texte utilisateurs
         let searchDebounce = null;
-        DOM.userSearchInput.addEventListener('input', (e) => {
-            AppState.userSearch = e.target.value;
-            DOM.btnClearUserSearch.classList.toggle('hidden', !e.target.value);
-            clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(fetchUsers, 250);
-        });
+        if (DOM.userSearchInput) {
+            DOM.userSearchInput.addEventListener('input', (e) => {
+                AppState.userSearch = e.target.value;
+                if (DOM.btnClearUserSearch) DOM.btnClearUserSearch.classList.toggle('hidden', !e.target.value);
+                clearTimeout(searchDebounce);
+                searchDebounce = setTimeout(fetchUsers, 250);
+            });
+        }
 
-        DOM.btnClearUserSearch.addEventListener('click', () => {
-            DOM.userSearchInput.value = '';
-            AppState.userSearch = '';
-            DOM.btnClearUserSearch.classList.add('hidden');
-            fetchUsers();
-        });
+        if (DOM.btnClearUserSearch) {
+            DOM.btnClearUserSearch.addEventListener('click', () => {
+                DOM.userSearchInput.value = '';
+                AppState.userSearch = '';
+                DOM.btnClearUserSearch.classList.add('hidden');
+                fetchUsers();
+            });
+        }
 
-        DOM.userRoleFilter.addEventListener('change', (e) => {
-            AppState.userRoleFilter = e.target.value;
-            fetchUsers();
-        });
+        // Sélecteurs de tri et ordre
+        if (DOM.userSortFilter) {
+            DOM.userSortFilter.addEventListener('change', (e) => {
+                AppState.userSortBy = e.target.value;
+                fetchUsers();
+            });
+        }
 
-        DOM.userBotFilter.addEventListener('change', (e) => {
-            AppState.userBotFilter = e.target.value;
-            fetchUsers();
-        });
+        if (DOM.userOrderFilter) {
+            DOM.userOrderFilter.addEventListener('change', (e) => {
+                AppState.userOrder = e.target.value;
+                fetchUsers();
+            });
+        }
 
-        DOM.userSortFilter.addEventListener('change', (e) => {
-            AppState.userSortBy = e.target.value;
-            fetchUsers();
-        });
+        // Toggle Vue Grille vs Tableau
+        if (DOM.btnUserViewGrid) {
+            DOM.btnUserViewGrid.addEventListener('click', () => {
+                AppState.userViewMode = 'grid';
+                updateViewModeButtons();
+                renderUsersView();
+            });
+        }
+
+        if (DOM.btnUserViewTable) {
+            DOM.btnUserViewTable.addEventListener('click', () => {
+                AppState.userViewMode = 'table';
+                updateViewModeButtons();
+                renderUsersView();
+            });
+        }
+
+        // Bouton Réinitialiser les filtres
+        if (DOM.btnResetUserFilters) {
+            DOM.btnResetUserFilters.addEventListener('click', () => {
+                AppState.userSearch = '';
+                AppState.userRoleFilter = 'ALL';
+                AppState.userBotFilter = 'all';
+                AppState.userXpFilter = 'all';
+                AppState.userSortBy = 'joined';
+                AppState.userOrder = 'desc';
+
+                if (DOM.userSearchInput) DOM.userSearchInput.value = '';
+                if (DOM.btnClearUserSearch) DOM.btnClearUserSearch.classList.add('hidden');
+                if (DOM.userSortFilter) DOM.userSortFilter.value = 'joined';
+                if (DOM.userOrderFilter) DOM.userOrderFilter.value = 'desc';
+
+                if (DOM.userTypeChips) {
+                    DOM.userTypeChips.querySelectorAll('.filter-chip').forEach(c => {
+                        c.classList.toggle('active', c.dataset.type === 'all');
+                    });
+                }
+
+                if (DOM.userXpChips) {
+                    DOM.userXpChips.querySelectorAll('.filter-chip').forEach(c => {
+                        c.classList.toggle('active', c.dataset.xp === 'all');
+                    });
+                }
+
+                renderRoleChips();
+                fetchUsers();
+                showToast('Filtres réinitialisés', 'info');
+            });
+        }
+
+        // Filtres sélectionnables Type (Humains / Bots)
+        if (DOM.userTypeChips) {
+            DOM.userTypeChips.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    AppState.userBotFilter = chip.dataset.type;
+                    DOM.userTypeChips.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    fetchUsers();
+                });
+            });
+        }
+
+        // Filtres sélectionnables Activité XP
+        if (DOM.userXpChips) {
+            DOM.userXpChips.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    AppState.userXpFilter = chip.dataset.xp;
+                    DOM.userXpChips.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    fetchUsers();
+                });
+            });
+        }
+
+        // Clics sur les en-têtes de colonnes du tableau pour tri rapide
+        if (DOM.usersTableContainer) {
+            DOM.usersTableContainer.querySelectorAll('.sortable-th').forEach(th => {
+                th.addEventListener('click', () => {
+                    const sortKey = th.dataset.sort;
+                    if (AppState.userSortBy === sortKey) {
+                        AppState.userOrder = (AppState.userOrder === 'asc') ? 'desc' : 'asc';
+                    } else {
+                        AppState.userSortBy = sortKey;
+                        AppState.userOrder = (sortKey === 'name') ? 'asc' : 'desc';
+                    }
+
+                    if (DOM.userSortFilter) DOM.userSortFilter.value = AppState.userSortBy;
+                    if (DOM.userOrderFilter) DOM.userOrderFilter.value = AppState.userOrder;
+
+                    fetchUsers();
+                });
+            });
+        }
 
         // Événements Forum
         let forumSearchDebounce = null;

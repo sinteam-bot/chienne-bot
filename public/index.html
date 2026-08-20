@@ -465,49 +465,114 @@
 
             <!-- VUE 4 : SALON VIRTUEL USERS -->
             <section class="view-panel" id="view-virtual-users">
-                <div class="users-toolbar">
-                    <div class="search-input-wrapper">
-                        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                        </svg>
-                        <input type="text" id="user-search-input" class="discord-input" placeholder="Rechercher par pseudo, tag ou ID...">
-                        <button class="clear-search-btn hidden" id="btn-clear-user-search">✕</button>
+                <div class="users-toolbar-container">
+                    <!-- Ligne 1 : Recherche, Mode d'affichage, Tri & Actions -->
+                    <div class="users-toolbar">
+                        <div class="search-input-wrapper">
+                            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                            <input type="text" id="user-search-input" class="discord-input" placeholder="Rechercher par pseudo, tag ou ID...">
+                            <button class="clear-search-btn hidden" id="btn-clear-user-search">✕</button>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="user-sort-filter">Trier par :</label>
+                            <select id="user-sort-filter" class="discord-select">
+                                <option value="joined">Date d'arrivée</option>
+                                <option value="name">Nom alphabétique</option>
+                                <option value="level">Niveau XP</option>
+                                <option value="xp">Total XP</option>
+                                <option value="messages">Messages envoyés</option>
+                                <option value="voice">Temps vocal</option>
+                                <option value="created">Date de création compte</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="user-order-filter">Ordre :</label>
+                            <select id="user-order-filter" class="discord-select">
+                                <option value="desc">Décroissant ⬇️</option>
+                                <option value="asc">Croissant ⬆️</option>
+                            </select>
+                        </div>
+
+                        <!-- Sélecteur de mode d'affichage : Grille vs Tableau -->
+                        <div class="view-mode-toggle">
+                            <button type="button" class="view-mode-btn" id="btn-user-view-grid" title="Affichage Grille de Cartes">
+                                <span>🔲</span> Grille
+                            </button>
+                            <button type="button" class="view-mode-btn active" id="btn-user-view-table" title="Affichage Tableau">
+                                <span>📊</span> Tableau
+                            </button>
+                        </div>
+
+                        <div class="user-count-badge" id="user-count-display">
+                            0 membre(s)
+                        </div>
+
+                        <button type="button" class="btn-reset-filters" id="btn-reset-user-filters" title="Réinitialiser tous les filtres">
+                            <span>🔄</span> Réinitialiser
+                        </button>
                     </div>
 
-                    <div class="filter-group">
-                        <label for="user-role-filter">Filtrer par Rôle :</label>
-                        <select id="user-role-filter" class="discord-select">
-                            <option value="ALL">Tous les rôles</option>
-                        </select>
+                    <!-- Ligne 2 : Filtres sélectionnables rapides (Type & Activité XP) -->
+                    <div class="users-filters-row">
+                        <div class="filter-chips-group">
+                            <span class="filter-chips-label">Type :</span>
+                            <div class="filter-chips-list" id="user-type-chips">
+                                <button type="button" class="filter-chip active" data-type="all">👥 Tous</button>
+                                <button type="button" class="filter-chip" data-type="false">👤 Humains</button>
+                                <button type="button" class="filter-chip" data-type="true">🤖 Bots</button>
+                            </div>
+                        </div>
+
+                        <div class="filter-chips-group">
+                            <span class="filter-chips-label">Activité XP :</span>
+                            <div class="filter-chips-list" id="user-xp-chips">
+                                <button type="button" class="filter-chip active" data-xp="all">⭐ Tous</button>
+                                <button type="button" class="filter-chip" data-xp="has_xp">🔥 Avec XP (>0)</button>
+                                <button type="button" class="filter-chip" data-xp="no_xp">💤 Sans XP (0)</button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="filter-group">
-                        <label for="user-bot-filter">Type :</label>
-                        <select id="user-bot-filter" class="discord-select">
-                            <option value="all">Tous</option>
-                            <option value="false">Humains uniquement</option>
-                            <option value="true">Bots uniquement</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="user-sort-filter">Trier par :</label>
-                        <select id="user-sort-filter" class="discord-select">
-                            <option value="joined">Date d'arrivée</option>
-                            <option value="name">Nom alphabétique</option>
-                            <option value="xp">Total XP</option>
-                            <option value="level">Niveau XP</option>
-                        </select>
-                    </div>
-
-                    <div class="user-count-badge" id="user-count-display">
-                        0 membre(s)
+                    <!-- Ligne 3 : Filtres sélectionnables par Rôles (Chips dynamiques) -->
+                    <div class="users-roles-chips-container">
+                        <span class="filter-chips-label">Rôles :</span>
+                        <div class="users-roles-chips-bar" id="users-roles-chips-bar">
+                            <button type="button" class="role-chip active" data-role-id="ALL">Tous les rôles</button>
+                        </div>
                     </div>
                 </div>
 
                 <div class="users-content-scroller">
-                    <div class="users-grid" id="users-grid-container">
+                    <!-- 1. Vue Grille de cartes -->
+                    <div class="users-grid hidden" id="users-grid-container">
                         <!-- Cartes d'utilisateurs injectées ici -->
+                    </div>
+
+                    <!-- 2. Vue Tableau -->
+                    <div class="users-table-wrapper" id="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable-th" data-sort="name">Membre <span class="sort-icon">↕</span></th>
+                                    <th>ID Discord</th>
+                                    <th class="sortable-th" data-sort="type">Type <span class="sort-icon">↕</span></th>
+                                    <th>Rôles</th>
+                                    <th class="sortable-th" data-sort="level">Niveau <span class="sort-icon">↕</span></th>
+                                    <th class="sortable-th" data-sort="xp">XP Total <span class="sort-icon">↕</span></th>
+                                    <th class="sortable-th" data-sort="messages">Messages <span class="sort-icon">↕</span></th>
+                                    <th class="sortable-th" data-sort="voice">Vocal <span class="sort-icon">↕</span></th>
+                                    <th class="sortable-th" data-sort="joined">Arrivée <span class="sort-icon">↕</span></th>
+                                    <th style="text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Lignes de tableau injectées ici -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
