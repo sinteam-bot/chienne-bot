@@ -429,6 +429,10 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.channelsList.innerHTML = '';
 
         categories.forEach(cat => {
+            // Filtrer pour exclure les salons de type forum et threads
+            const visibleChannels = (cat.channels || []).filter(ch => ch.type !== 'forum' && ch.type !== 'thread');
+            if (visibleChannels.length === 0 && !cat.isVirtual) return;
+
             const catEl = document.createElement('div');
             catEl.className = `channel-category ${cat.isVirtual ? 'virtual-category' : ''}`;
 
@@ -449,8 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const catChannels = document.createElement('div');
             catChannels.className = 'category-channels';
 
-            if (cat.channels && cat.channels.length > 0) {
-                cat.channels.forEach(ch => {
+            if (visibleChannels.length > 0) {
+                visibleChannels.forEach(ch => {
                     const chItem = document.createElement('div');
                     chItem.className = `channel-item ${ch.id.startsWith('virtual-') ? 'virtual-channel' : ''}`;
                     chItem.dataset.channelId = ch.id;
@@ -459,6 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (ch.icon === 'scroll') iconSymbol = '📜';
                     else if (ch.icon === 'gear') iconSymbol = '⚙️';
                     else if (ch.icon === 'users') iconSymbol = '👥';
+                    else if (ch.icon === 'sun') iconSymbol = '🌅';
+                    else if (ch.icon === 'shield') iconSymbol = '🛡️';
                     else if (ch.icon === 'volume-2') iconSymbol = '🔊';
                     else if (ch.icon === 'megaphone') iconSymbol = '📢';
                     else if (ch.icon === 'message-square') iconSymbol = '💬';
@@ -473,32 +479,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     catChannels.appendChild(chItem);
-
-                    // Si le salon a des fils de discussion (threads)
-                    if (ch.threads && ch.threads.length > 0) {
-                        const threadWrapper = document.createElement('div');
-                        threadWrapper.className = 'thread-list-wrapper';
-
-                        ch.threads.forEach(th => {
-                            const thItem = document.createElement('div');
-                            thItem.className = 'thread-item';
-                            thItem.dataset.channelId = th.id;
-                            thItem.innerHTML = `
-                                <span class="thread-icon">🧵</span>
-                                <span class="thread-name">${th.name}</span>
-                                ${th.archived ? '<span class="thread-badge archived">Archivé</span>' : ''}
-                            `;
-
-                            thItem.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                selectChannel(th.id);
-                            });
-
-                            threadWrapper.appendChild(thItem);
-                        });
-
-                        catChannels.appendChild(threadWrapper);
-                    }
                 });
             }
 
