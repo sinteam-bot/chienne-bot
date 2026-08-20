@@ -710,6 +710,7 @@ html, body {
 }
 
 .message-group {
+    position: relative;
     display: flex;
     gap: 16px;
     padding: 4px 12px;
@@ -720,6 +721,123 @@ html, body {
 
 .message-group:hover {
     background-color: var(--bg-modifier-hover);
+}
+
+/* Barre d'actions flottante au survol d'un message */
+.message-actions-bar {
+    position: absolute;
+    top: -14px;
+    right: 16px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    box-shadow: var(--elevation-low);
+    display: none;
+    align-items: center;
+    overflow: hidden;
+    z-index: 5;
+}
+
+.message-group:hover .message-actions-bar {
+    display: flex;
+}
+
+.message-action-btn {
+    background: transparent;
+    border: none;
+    color: var(--interactive-normal);
+    width: 30px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.message-action-btn:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--interactive-hover);
+}
+
+.message-action-btn.btn-delete-msg:hover {
+    color: var(--red);
+    background-color: rgba(242, 63, 67, 0.15);
+}
+
+/* Édition en ligne */
+.message-edit-container {
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.message-edit-textarea {
+    width: 100%;
+    background-color: #383a40;
+    color: var(--text-normal);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: var(--font-primary);
+    font-size: 14px;
+    line-height: 1.4;
+    resize: none;
+    outline: none;
+}
+
+.message-edit-textarea:focus {
+    box-shadow: 0 0 0 2px var(--brand);
+}
+
+.message-edit-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.message-edit-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-edit-cancel {
+    background: transparent;
+    border: none;
+    color: var(--text-normal);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+.btn-edit-cancel:hover {
+    text-decoration: underline;
+}
+
+.btn-edit-save {
+    background-color: var(--brand);
+    color: #ffffff;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+.btn-edit-save:hover {
+    background-color: var(--brand-hover);
+}
+
+.message-edited-tag {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: 4px;
+    user-select: none;
 }
 
 .message-group.grouped {
@@ -1889,6 +2007,76 @@ input:checked + .slider:before {
 @keyframes toastSlide {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Styles Modale Confirmation */
+.modal-confirm {
+    width: 440px;
+    padding: 24px;
+    background-color: var(--bg-primary);
+}
+
+.modal-confirm-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--header-primary);
+    margin-bottom: 8px;
+}
+
+.modal-confirm-body p {
+    font-size: 14px;
+    color: var(--text-normal);
+    line-height: 1.4;
+}
+
+.delete-message-preview {
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin: 12px 0 0 0;
+    border-left: 3px solid var(--red);
+    font-size: 13px;
+    color: var(--text-muted);
+    max-height: 120px;
+    overflow-y: auto;
+    word-break: break-word;
+}
+
+.modal-confirm-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: none;
+    color: var(--text-normal);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 4px;
+}
+.btn-secondary:hover {
+    text-decoration: underline;
+}
+
+.btn-danger {
+    background-color: var(--red);
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+.btn-danger:hover {
+    background-color: var(--red-hover);
 }
 
 /* Helpers */

@@ -577,6 +577,23 @@
         </div>
     </div>
 
+    <!-- MODALE DE SUPPRESSION DE MESSAGE -->
+    <div class="modal-backdrop hidden" id="delete-message-modal">
+        <div class="modal-card modal-confirm">
+            <header class="modal-confirm-header">
+                <h3>Supprimer le message</h3>
+            </header>
+            <div class="modal-confirm-body">
+                <p>Es-tu sûr de vouloir supprimer ce message ? Cette action est irréversible.</p>
+                <div class="delete-message-preview" id="delete-message-preview-content"></div>
+            </div>
+            <footer class="modal-confirm-footer">
+                <button type="button" class="btn-secondary" id="btn-cancel-delete">Annuler</button>
+                <button type="button" class="btn-danger" id="btn-confirm-delete">Supprimer</button>
+            </footer>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATIONS CONTAINER -->
     <div id="toast-container" class="toast-container"></div>
 

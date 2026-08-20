@@ -132,6 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
         modalDateJoined: document.getElementById('modal-date-joined'),
         modalDateCreated: document.getElementById('modal-date-created'),
 
+        // Modale Suppression Message
+        deleteMessageModal: document.getElementById('delete-message-modal'),
+        btnCancelDelete: document.getElementById('btn-cancel-delete'),
+        btnConfirmDelete: document.getElementById('btn-confirm-delete'),
+        deleteMessagePreviewContent: document.getElementById('delete-message-preview-content'),
+
         // Toasts
         toastContainer: document.getElementById('toast-container')
     };
@@ -506,12 +512,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const timeFormatted = formatMessageTime(msgDate);
 
+            // Vérifier si l'auteur est le bot connecté
+            const isAuthorBot = msg.author.bot || (AppState.guild?.bot?.id && msg.author.id === AppState.guild.bot.id) || (AppState.guild?.bot?.username && msg.author.username === AppState.guild.bot.username);
+
             // Formater le markdown
             const renderedContent = window.DiscordMarkdown.render(msg.content, {
                 usersMap: AppState.usersMap,
                 rolesMap: AppState.rolesMap,
                 channelsMap: AppState.channelsMap
             });
+
+            // Indicateur de modification
+            const editedTag = msg.editedAt ? `<span class="message-edited-tag" title="Modifié le ${new Date(msg.editedAt).toLocaleString('fr-FR')}">(modifié)</span>` : '';
+
+            // Actions flottantes
+            const actionsBarHtml = `
+                <div class="message-actions-bar">
+                    ${isAuthorBot ? `<button class="message-action-btn btn-edit-msg" title="Modifier le message" onclick="AppState.startEditMessage('${msg.id}')">✏️</button>` : ''}
+                    <button class="message-action-btn" title="Copier le texte" onclick="AppState.copyMessageText('${msg.id}')">📋</button>
+                    <button class="message-action-btn btn-delete-msg" title="Supprimer le message" onclick="AppState.promptDeleteMessage('${msg.id}')">🗑️</button>
+                </div>
+            `;
 
             // Rendu des Embeds
             let embedsHtml = '';
@@ -588,11 +609,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isGrouped) {
                 groupEl.innerHTML = `
+                    ${actionsBarHtml}
                     <div class="message-avatar-col">
                         <span class="grouped-timestamp">${timeFormatted.short}</span>
                     </div>
                     <div class="message-content-col">
-                        <div class="message-text">${renderedContent}</div>
+                        <div class="message-text">${renderedContent}${editedTag}</div>
                         ${embedsHtml}
                         ${attachmentsHtml}
                         ${reactionsHtml}
@@ -601,6 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const authorColorStyle = msg.author.roleColor ? `style="color: ${msg.author.roleColor}"` : '';
                 groupEl.innerHTML = `
+                    ${actionsBarHtml}
                     <div class="message-avatar-col">
                         <img class="message-avatar" src="${msg.author.avatar}" alt="Avatar" onclick="AppState.showUserModal('${msg.author.id}')">
                     </div>
@@ -612,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${msg.author.bot ? '<span class="bot-badge">BOT</span>' : ''}
                             <span class="message-timestamp">${timeFormatted.full}</span>
                         </div>
-                        <div class="message-text">${renderedContent}</div>
+                        <div class="message-text">${renderedContent}${editedTag}</div>
                         ${embedsHtml}
                         ${attachmentsHtml}
                         ${reactionsHtml}
@@ -623,6 +646,172 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.messagesList.appendChild(groupEl);
         });
     }
+
+    // ============================================
+    // GESTION MODIFICATION & SUPPRESSION MESSAGES
+    // ============================================
+    function startEditMessage(messageId) {
+        if (!AppState.currentChannel) return;
+        const channelId = AppState.currentChannel.id;
+        const message = AppState.messages[channelId]?.find(m => m.id === messageId);
+        if (!message) return;
+
+        const groupEl = document.querySelector(`.message-group[data-message-id="${messageId}"]`);
+        if (!groupEl) return;
+
+        const textEl = groupEl.querySelector('.message-text');
+        if (!textEl || textEl.querySelector('.message-edit-container')) return;
+
+        const rawContent = message.content;
+        textEl.innerHTML = `
+            <div class="message-edit-container">
+                <textarea class="message-edit-textarea" rows="2">${window.DiscordMarkdown.escapeHtml(rawContent)}</textarea>
+                <div class="message-edit-footer">
+                    <span>Échap pour <a href="javascript:void(0)" class="btn-edit-cancel">annuler</a> • Entrée pour <a href="javascript:void(0)" class="btn-edit-save">enregistrer</a></span>
+                    <div class="message-edit-buttons">
+                        <button type="button" class="btn-edit-cancel">Annuler</button>
+                        <button type="button" class="btn-edit-save">Enregistrer</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const textarea = textEl.querySelector('.message-edit-textarea');
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+        const cancelBtns = textEl.querySelectorAll('.btn-edit-cancel');
+        cancelBtns.forEach(btn => btn.addEventListener('click', () => cancelEditMessage(messageId, rawContent)));
+
+        const saveBtns = textEl.querySelectorAll('.btn-edit-save');
+        saveBtns.forEach(btn => btn.addEventListener('click', () => saveEditMessage(messageId, textarea.value)));
+
+        textarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelEditMessage(messageId, rawContent);
+            } else if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                saveEditMessage(messageId, textarea.value);
+            }
+        });
+    }
+
+    function cancelEditMessage(messageId, originalContent) {
+        const groupEl = document.querySelector(`.message-group[data-message-id="${messageId}"]`);
+        if (!groupEl) return;
+        const textEl = groupEl.querySelector('.message-text');
+        if (!textEl) return;
+
+        const channelId = AppState.currentChannel.id;
+        const message = AppState.messages[channelId]?.find(m => m.id === messageId);
+        const editedTag = message?.editedAt ? '<span class="message-edited-tag">(modifié)</span>' : '';
+
+        textEl.innerHTML = window.DiscordMarkdown.render(originalContent, {
+            usersMap: AppState.usersMap,
+            rolesMap: AppState.rolesMap,
+            channelsMap: AppState.channelsMap
+        }) + editedTag;
+    }
+
+    async function saveEditMessage(messageId, newContent) {
+        if (!newContent || !newContent.trim()) return;
+        const channelId = AppState.currentChannel.id;
+
+        try {
+            const res = await fetch(`/api/channels/${channelId}/messages/${messageId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newContent.trim() })
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                showToast('Message modifié avec succès', 'success');
+                const msg = AppState.messages[channelId]?.find(m => m.id === messageId);
+                if (msg) {
+                    msg.content = json.data.content;
+                    msg.editedAt = json.data.editedAt || new Date().toISOString();
+                }
+
+                const groupEl = document.querySelector(`.message-group[data-message-id="${messageId}"]`);
+                if (groupEl) {
+                    const textEl = groupEl.querySelector('.message-text');
+                    if (textEl) {
+                        textEl.innerHTML = window.DiscordMarkdown.render(json.data.content, {
+                            usersMap: AppState.usersMap,
+                            rolesMap: AppState.rolesMap,
+                            channelsMap: AppState.channelsMap
+                        }) + '<span class="message-edited-tag">(modifié)</span>';
+                    }
+                }
+            } else {
+                showToast(json.error || 'Erreur lors de la modification', 'error');
+            }
+        } catch (e) {
+            showToast('Erreur de connexion', 'error');
+        }
+    }
+
+    function copyMessageText(messageId) {
+        const channelId = AppState.currentChannel?.id;
+        const message = AppState.messages[channelId]?.find(m => m.id === messageId);
+        if (!message) return;
+
+        navigator.clipboard.writeText(message.content).then(() => {
+            showToast('Message copié dans le presse-papier !', 'success');
+        });
+    }
+
+    function promptDeleteMessage(messageId) {
+        const channelId = AppState.currentChannel?.id;
+        const message = AppState.messages[channelId]?.find(m => m.id === messageId);
+        if (!message) return;
+
+        AppState.pendingDeleteMessageId = messageId;
+        DOM.deleteMessagePreviewContent.textContent = message.content || '[Contenu vide ou embed uniquement]';
+        DOM.deleteMessageModal.classList.remove('hidden');
+    }
+
+    async function confirmDeleteMessage() {
+        const messageId = AppState.pendingDeleteMessageId;
+        if (!messageId || !AppState.currentChannel) return;
+        const channelId = AppState.currentChannel.id;
+
+        DOM.deleteMessageModal.classList.add('hidden');
+        AppState.pendingDeleteMessageId = null;
+
+        try {
+            const res = await fetch(`/api/channels/${channelId}/messages/${messageId}`, {
+                method: 'DELETE'
+            });
+            const json = await res.json();
+
+            if (json.success) {
+                showToast('Message supprimé avec succès', 'success');
+                if (AppState.messages[channelId]) {
+                    AppState.messages[channelId] = AppState.messages[channelId].filter(m => m.id !== messageId);
+                }
+
+                const groupEl = document.querySelector(`.message-group[data-message-id="${messageId}"]`);
+                if (groupEl) {
+                    groupEl.style.opacity = '0';
+                    groupEl.style.transform = 'scale(0.95)';
+                    groupEl.style.transition = 'all 0.25s ease';
+                    setTimeout(() => groupEl.remove(), 250);
+                }
+            } else {
+                showToast(json.error || 'Erreur lors de la suppression', 'error');
+            }
+        } catch (e) {
+            showToast('Erreur de connexion', 'error');
+        }
+    }
+
+    // Exposer sur AppState pour les onclick
+    AppState.startEditMessage = startEditMessage;
+    AppState.copyMessageText = copyMessageText;
+    AppState.promptDeleteMessage = promptDeleteMessage;
 
     function scrollMessagesToBottom() {
         setTimeout(() => {
@@ -1170,7 +1359,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchUsers();
         });
 
-        // Modale Fermeture
+        // Modale Fermeture User
         DOM.btnCloseModal.addEventListener('click', () => {
             DOM.userDetailModal.classList.add('hidden');
         });
@@ -1178,6 +1367,21 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.userDetailModal.addEventListener('click', (e) => {
             if (e.target === DOM.userDetailModal) {
                 DOM.userDetailModal.classList.add('hidden');
+            }
+        });
+
+        // Modale Suppression Message
+        DOM.btnCancelDelete.addEventListener('click', () => {
+            DOM.deleteMessageModal.classList.add('hidden');
+            AppState.pendingDeleteMessageId = null;
+        });
+
+        DOM.btnConfirmDelete.addEventListener('click', confirmDeleteMessage);
+
+        DOM.deleteMessageModal.addEventListener('click', (e) => {
+            if (e.target === DOM.deleteMessageModal) {
+                DOM.deleteMessageModal.classList.add('hidden');
+                AppState.pendingDeleteMessageId = null;
             }
         });
     }
