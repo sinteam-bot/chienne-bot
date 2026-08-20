@@ -1448,7 +1448,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             saveConfigModule('xp', configData);
         });
-
+    }
     // ============================================
     // GESTION DES FORUMS DISCORD
     // ============================================
