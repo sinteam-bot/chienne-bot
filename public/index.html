@@ -706,6 +706,113 @@
                     </div>
                 </div>
             </section>
+
+            <!-- VUE 7 : SALON VIRTUEL CAPTCHA LOGS -->
+            <section class="view-panel" id="view-virtual-captcha-logs">
+                <div class="captcha-view-scroller">
+                    <!-- Bannière de statistiques Captcha -->
+                    <div class="captcha-stats-banner">
+                        <div class="captcha-stat-card">
+                            <div class="captcha-stat-icon">🛡️</div>
+                            <div class="captcha-stat-info">
+                                <span class="captcha-stat-label">Protection Captcha</span>
+                                <span class="captcha-stat-value" id="captcha-stat-status">Actif</span>
+                                <span class="captcha-stat-sub" id="captcha-stat-timeout-sub">Timeout: 10 min • Max 3 essais</span>
+                            </div>
+                        </div>
+
+                        <div class="captcha-stat-card">
+                            <div class="captcha-stat-icon">📈</div>
+                            <div class="captcha-stat-info">
+                                <span class="captcha-stat-label">Taux de Réussite</span>
+                                <span class="captcha-stat-value" id="captcha-stat-rate">100%</span>
+                                <span class="captcha-stat-sub" id="captcha-stat-counts-sub">0 validés / 0 total</span>
+                            </div>
+                        </div>
+
+                        <div class="captcha-stat-card">
+                            <div class="captcha-stat-icon">⏳</div>
+                            <div class="captcha-stat-info">
+                                <span class="captcha-stat-label">En Attente</span>
+                                <span class="captcha-stat-value" id="captcha-stat-pending">0</span>
+                                <span class="captcha-stat-sub">Vérifications en cours</span>
+                            </div>
+                        </div>
+
+                        <div class="captcha-stat-card">
+                            <div class="captcha-stat-icon">🎯</div>
+                            <div class="captcha-stat-info">
+                                <span class="captcha-stat-label">Rôle & Logs</span>
+                                <span class="captcha-stat-value" id="captcha-stat-role">@Vérifié</span>
+                                <span class="captcha-stat-sub" id="captcha-stat-channel">#logs-captcha</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Barre d'outils (Recherche, Filtres rapides Chips, Actualiser) -->
+                    <div class="captcha-toolbar">
+                        <div class="search-input-wrapper" style="flex: 1; min-width: 240px;">
+                            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/>
+                            </svg>
+                            <input type="text" id="captcha-search-input" class="discord-input" placeholder="Rechercher par membre, ID, question ou réponse...">
+                            <button class="clear-search-btn hidden" id="btn-clear-captcha-search">✕</button>
+                        </div>
+
+                        <div class="captcha-filter-chips" id="captcha-status-chips">
+                            <button type="button" class="filter-chip active" data-status="all">🛡️ Tous (<span id="chip-count-all">0</span>)</button>
+                            <button type="button" class="filter-chip" data-status="verified">✅ Validés (<span id="chip-count-verified">0</span>)</button>
+                            <button type="button" class="filter-chip" data-status="pending">⏳ En attente (<span id="chip-count-pending">0</span>)</button>
+                            <button type="button" class="filter-chip" data-status="failed">❌ Échoués / Expirés (<span id="chip-count-failed">0</span>)</button>
+                        </div>
+
+                        <button type="button" class="action-btn" id="btn-refresh-captcha-list" title="Actualiser la liste">
+                            <span>🔄</span> Actualiser
+                        </button>
+                    </div>
+
+                    <!-- Sous-onglets de navigation : Tableau des membres vs Journal d'événements -->
+                    <div class="captcha-subtabs">
+                        <button type="button" class="captcha-subtab-btn active" data-tab="tab-captcha-table">
+                            <span>📋</span> Historique des Vérifications Membres
+                        </button>
+                        <button type="button" class="captcha-subtab-btn" data-tab="tab-captcha-stream">
+                            <span>📜</span> Journal des Événements Direct
+                        </button>
+                    </div>
+
+                    <!-- 1. Tableau des Captchas Utilisateurs -->
+                    <div class="captcha-tab-panel active" id="tab-captcha-table">
+                        <div class="captcha-table-wrapper">
+                            <table class="captcha-table">
+                                <thead>
+                                    <tr>
+                                        <th>Membre</th>
+                                        <th>Calcul / Question</th>
+                                        <th>Réponse Attendue</th>
+                                        <th>Tentatives</th>
+                                        <th>Statut</th>
+                                        <th>Temps Réponse</th>
+                                        <th>Date Création</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="captcha-table-body">
+                                    <!-- Lignes injectées dynamiquement -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 2. Journal des événements direct -->
+                    <div class="captcha-tab-panel" id="tab-captcha-stream">
+                        <div class="captcha-logs-container" id="captcha-logs-container">
+                            <div class="captcha-logs-list" id="captcha-logs-list">
+                                <!-- Entrées de logs injectées ici -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 

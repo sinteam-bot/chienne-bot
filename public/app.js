@@ -60,6 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
             stats: {},
             pending: null,
             search: ''
+        },
+
+        // Données Captcha Logs
+        captchaData: {
+            captchas: [],
+            logs: [],
+            stats: {},
+            search: '',
+            activeFilter: 'all',
+            activeTab: 'tab-captcha-table'
         }
     };
 
@@ -99,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         viewVirtualConfig: document.getElementById('view-virtual-config'),
         viewVirtualUsers: document.getElementById('view-virtual-users'),
         viewVirtualDailyMessages: document.getElementById('view-virtual-daily-messages'),
+        viewVirtualCaptchaLogs: document.getElementById('view-virtual-captcha-logs'),
         viewForum: document.getElementById('view-forum'),
 
         // Vue Messages
@@ -181,6 +192,27 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyPendingContent: document.getElementById('daily-pending-content'),
         dailyHistoryCountBadge: document.getElementById('daily-history-count-badge'),
         dailyCardsContainer: document.getElementById('daily-cards-container'),
+
+        // Vue Captcha Logs
+        captchaStatStatus: document.getElementById('captcha-stat-status'),
+        captchaStatTimeoutSub: document.getElementById('captcha-stat-timeout-sub'),
+        captchaStatRate: document.getElementById('captcha-stat-rate'),
+        captchaStatCountsSub: document.getElementById('captcha-stat-counts-sub'),
+        captchaStatPending: document.getElementById('captcha-stat-pending'),
+        captchaStatRole: document.getElementById('captcha-stat-role'),
+        captchaStatChannel: document.getElementById('captcha-stat-channel'),
+        captchaSearchInput: document.getElementById('captcha-search-input'),
+        btnClearCaptchaSearch: document.getElementById('btn-clear-captcha-search'),
+        captchaStatusChips: document.getElementById('captcha-status-chips'),
+        chipCountAll: document.getElementById('chip-count-all'),
+        chipCountVerified: document.getElementById('chip-count-verified'),
+        chipCountPending: document.getElementById('chip-count-pending'),
+        chipCountFailed: document.getElementById('chip-count-failed'),
+        btnRefreshCaptchaList: document.getElementById('btn-refresh-captcha-list'),
+        captchaSubtabBtns: document.querySelectorAll('.captcha-subtab-btn'),
+        captchaTabPanels: document.querySelectorAll('.captcha-tab-panel'),
+        captchaTableBody: document.getElementById('captcha-table-body'),
+        captchaLogsList: document.getElementById('captcha-logs-list'),
 
         // Modale User
         userDetailModal: document.getElementById('user-detail-modal'),
@@ -546,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.viewVirtualConfig.classList.remove('active');
         DOM.viewVirtualUsers.classList.remove('active');
         if (DOM.viewVirtualDailyMessages) DOM.viewVirtualDailyMessages.classList.remove('active');
+        if (DOM.viewVirtualCaptchaLogs) DOM.viewVirtualCaptchaLogs.classList.remove('active');
         DOM.viewForum.classList.remove('active');
         DOM.logsLiveBadge.classList.add('hidden');
 
@@ -566,6 +599,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (channelId === 'virtual-daily-messages') {
             if (DOM.viewVirtualDailyMessages) DOM.viewVirtualDailyMessages.classList.add('active');
             await fetchDailyMessages();
+        } else if (channelId === 'virtual-captcha-logs') {
+            if (DOM.viewVirtualCaptchaLogs) DOM.viewVirtualCaptchaLogs.classList.add('active');
+            await fetchCaptchaLogs();
         } else if (targetChannel.type === 'forum') {
             // Salon Forum Discord
             DOM.viewForum.classList.add('active');
@@ -2105,6 +2141,190 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================
+    // 10. SALON VIRTUEL : CAPTCHA LOGS (HISTORIQUE ET SÉCURITÉ)
+    // ============================================
+    async function fetchCaptchaLogs() {
+        try {
+            const res = await fetch('/api/captcha-logs');
+            const json = await res.json();
+            if (json.success && json.data) {
+                AppState.captchaData.captchas = json.data.captchas || [];
+                AppState.captchaData.logs = json.data.logs || [];
+                AppState.captchaData.stats = json.data.stats || {};
+                renderCaptchaView();
+            } else {
+                showToast(json.error || 'Erreur lors de la récupération des logs captcha', 'error');
+            }
+        } catch (err) {
+            showToast('Erreur de connexion avec le serveur', 'error');
+        }
+    }
+
+    function renderCaptchaView() {
+        const stats = AppState.captchaData.stats;
+        const captchas = AppState.captchaData.captchas;
+
+        // 1. Statistiques dans la bannière
+        if (DOM.captchaStatStatus) {
+            DOM.captchaStatStatus.textContent = stats.isEnabled ? '✅ Actif' : '❌ Désactivé';
+            DOM.captchaStatStatus.style.color = stats.isEnabled ? '#23a559' : '#ed4245';
+        }
+        if (DOM.captchaStatTimeoutSub) {
+            DOM.captchaStatTimeoutSub.textContent = `Timeout: ${stats.timeoutMinutes || 10} min • Max ${stats.maxAttempts || 3} essais`;
+        }
+        if (DOM.captchaStatRate) {
+            DOM.captchaStatRate.textContent = `${stats.successRate || 0}%`;
+        }
+        if (DOM.captchaStatCountsSub) {
+            DOM.captchaStatCountsSub.textContent = `${stats.verifiedCount || 0} validés / ${stats.total || 0} total`;
+        }
+        if (DOM.captchaStatPending) {
+            DOM.captchaStatPending.textContent = stats.pendingCount || 0;
+        }
+        if (DOM.captchaStatRole) {
+            DOM.captchaStatRole.textContent = stats.verifiedRoleName || 'Non défini';
+        }
+        if (DOM.captchaStatChannel) {
+            DOM.captchaStatChannel.textContent = stats.logChannelName || 'Non défini';
+        }
+
+        // 2. Compteurs sur les chips
+        const total = captchas.length;
+        const verified = captchas.filter(c => c.status === 'verified').length;
+        const pending = captchas.filter(c => c.status === 'pending').length;
+        const failed = captchas.filter(c => c.status === 'failed' || c.status === 'expired').length;
+
+        if (DOM.chipCountAll) DOM.chipCountAll.textContent = total;
+        if (DOM.chipCountVerified) DOM.chipCountVerified.textContent = verified;
+        if (DOM.chipCountPending) DOM.chipCountPending.textContent = pending;
+        if (DOM.chipCountFailed) DOM.chipCountFailed.textContent = failed;
+
+        // 3. Rendu du tableau
+        renderCaptchaTable();
+
+        // 4. Rendu du flux de logs
+        renderCaptchaStream();
+    }
+
+    function renderCaptchaTable() {
+        if (!DOM.captchaTableBody) return;
+
+        const captchas = AppState.captchaData.captchas;
+        const filter = AppState.captchaData.activeFilter;
+        const query = (AppState.captchaData.search || '').trim().toLowerCase();
+
+        const filtered = captchas.filter(c => {
+            if (filter === 'verified' && c.status !== 'verified') return false;
+            if (filter === 'pending' && c.status !== 'pending') return false;
+            if (filter === 'failed' && (c.status !== 'failed' && c.status !== 'expired')) return false;
+
+            if (query) {
+                const username = (c.username || '').toLowerCase();
+                const userId = (c.userId || '').toLowerCase();
+                const question = (c.question || '').toLowerCase();
+                const answer = (c.answer || '').toLowerCase();
+                const statusLabel = (c.statusLabel || '').toLowerCase();
+                return username.includes(query) || userId.includes(query) || question.includes(query) || answer.includes(query) || statusLabel.includes(query);
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            DOM.captchaTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <div style="font-size: 28px; margin-bottom: 6px;">🛡️</div>
+                        <div style="font-size: 15px; font-weight: 600; color: var(--header-primary);">Aucune vérification captcha trouvée</div>
+                        <div style="font-size: 12px; margin-top: 4px;">Modifiez vos critères de recherche ou filtre.</div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        DOM.captchaTableBody.innerHTML = filtered.map(c => {
+            const dateCreated = c.createdAt ? new Date(c.createdAt).toLocaleString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : '--';
+
+            let statusPillClass = 'pending';
+            let statusIcon = '⏳';
+            if (c.status === 'verified') {
+                statusPillClass = 'verified';
+                statusIcon = '✅';
+            } else if (c.status === 'failed') {
+                statusPillClass = 'failed';
+                statusIcon = '⛔';
+            } else if (c.status === 'expired') {
+                statusPillClass = 'expired';
+                statusIcon = '❌';
+            }
+
+            const attemptsClass = c.attempts >= (c.maxAttempts || 3) ? 'danger' : '';
+
+            return `
+                <tr>
+                    <td>
+                        <div style="display: flex; flex-direction: column;">
+                            <strong style="color: var(--header-primary); font-size: 14px;">${escapeHtml(c.username || 'Inconnu')}</strong>
+                            <span style="font-size: 11px; color: var(--text-muted); font-family: monospace;">ID: ${escapeHtml(c.userId || '')}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: var(--header-primary);">${escapeHtml(c.question || '--')}</span>
+                    </td>
+                    <td>
+                        <span style="font-family: monospace; background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: var(--brand);">${escapeHtml(c.answer || '--')}</span>
+                    </td>
+                    <td>
+                        <span class="captcha-attempts-pill ${attemptsClass}">${c.attempts || 0} / ${c.maxAttempts || 3}</span>
+                    </td>
+                    <td>
+                        <span class="captcha-status-pill ${statusPillClass}">
+                            <span>${statusIcon}</span>
+                            <span>${escapeHtml(c.statusLabel)}</span>
+                        </span>
+                    </td>
+                    <td>
+                        <span style="color: var(--text-muted); font-size: 12px;">${c.durationFormatted ? `⚡ ${c.durationFormatted}` : '--'}</span>
+                    </td>
+                    <td>
+                        <span style="color: var(--text-muted); font-size: 12px;">${escapeHtml(dateCreated)}</span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderCaptchaStream() {
+        if (!DOM.captchaLogsList) return;
+
+        const logs = AppState.captchaData.logs;
+        if (logs.length === 0) {
+            DOM.captchaLogsList.innerHTML = `
+                <div style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    Aucun log d'événement captcha récent enregistré en mémoire.
+                </div>
+            `;
+            return;
+        }
+
+        DOM.captchaLogsList.innerHTML = logs.map(l => {
+            let rowClass = '';
+            if (l.level === 'SUCCESS' || (l.message && (l.message.includes('validé') || l.message.includes('Succès')))) rowClass = 'success';
+            if (l.level === 'WARN' || (l.message && (l.message.includes('Tentative') || l.message.includes('échoué')))) rowClass = 'warn';
+            if (l.level === 'ERROR' || (l.message && (l.message.includes('expiré') || l.message.includes('Erreur')))) rowClass = 'error';
+
+            return `
+                <div class="captcha-log-row ${rowClass}">
+                    <span class="captcha-log-time">[${escapeHtml(l.timestamp)}]</span>
+                    <span class="captcha-log-msg">${escapeHtml(l.message)}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ============================================
     // ÉCOUTEURS D'ÉVÉNEMENTS
     // ============================================
     function setupEventListeners() {
@@ -2121,6 +2341,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     fetchForumPosts(AppState.currentChannel.id);
                 } else if (AppState.currentChannel.id === 'virtual-daily-messages') {
                     fetchDailyMessages();
+                } else if (AppState.currentChannel.id === 'virtual-captcha-logs') {
+                    fetchCaptchaLogs();
                 } else if (!AppState.currentChannel.id.startsWith('virtual-')) {
                     loadChannelMessages(AppState.currentChannel.id);
                 }
@@ -2464,6 +2686,58 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.btnRefreshDailyList.addEventListener('click', () => {
                 fetchDailyMessages();
                 showToast('Historique des messages actualisé', 'info');
+            });
+        }
+
+        // ==========================================
+        // ACTIONS CAPTCHA LOGS
+        // ==========================================
+        let captchaSearchDebounce = null;
+        if (DOM.captchaSearchInput) {
+            DOM.captchaSearchInput.addEventListener('input', (e) => {
+                AppState.captchaData.search = e.target.value;
+                if (DOM.btnClearCaptchaSearch) DOM.btnClearCaptchaSearch.classList.toggle('hidden', !e.target.value);
+                clearTimeout(captchaSearchDebounce);
+                captchaSearchDebounce = setTimeout(renderCaptchaTable, 200);
+            });
+        }
+
+        if (DOM.btnClearCaptchaSearch) {
+            DOM.btnClearCaptchaSearch.addEventListener('click', () => {
+                DOM.captchaSearchInput.value = '';
+                AppState.captchaData.search = '';
+                DOM.btnClearCaptchaSearch.classList.add('hidden');
+                renderCaptchaTable();
+            });
+        }
+
+        if (DOM.captchaStatusChips) {
+            DOM.captchaStatusChips.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    AppState.captchaData.activeFilter = chip.dataset.status;
+                    DOM.captchaStatusChips.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    renderCaptchaTable();
+                });
+            });
+        }
+
+        if (DOM.captchaSubtabBtns) {
+            DOM.captchaSubtabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetTab = btn.dataset.tab;
+                    AppState.captchaData.activeTab = targetTab;
+
+                    DOM.captchaSubtabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === targetTab));
+                    DOM.captchaTabPanels.forEach(p => p.classList.toggle('active', p.id === targetTab));
+                });
+            });
+        }
+
+        if (DOM.btnRefreshCaptchaList) {
+            DOM.btnRefreshCaptchaList.addEventListener('click', () => {
+                fetchCaptchaLogs();
+                showToast('Logs Captcha actualisés', 'info');
             });
         }
 
