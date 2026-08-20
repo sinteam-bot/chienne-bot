@@ -1490,180 +1490,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     AppState.showUserModal = showUserModal;
 
-    // ============================================
-    // 9. EVENT LISTENERS
-    // ============================================
-    function setupEventListeners() {
-        // Envoi de message
-        DOM.sendMessageForm.addEventListener('submit', handleSendMessage);
-        DOM.messageTextInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(e);
-            }
-        });
 
-        // Défilement infini vers le haut pour charger les anciens messages
-        DOM.messagesContainer.addEventListener('scroll', () => {
-            if (DOM.messagesContainer.scrollTop < 60 && !AppState.isLoadingOlder && AppState.currentChannel) {
-                const channelId = AppState.currentChannel.id;
-                if (!channelId.startsWith('virtual-') && AppState.hasMoreMessages[channelId]) {
-                    const oldestId = AppState.oldestMessageId[channelId];
-                    if (oldestId) {
-                        loadChannelMessages(channelId, oldestId);
-                    }
-                }
-            }
-        });
-
-        // Boutons outils d'en-tête
-        DOM.btnScrollBottom.addEventListener('click', scrollMessagesToBottom);
-        DOM.btnRefreshChannel.addEventListener('click', () => {
-            if (AppState.currentChannel) selectChannel(AppState.currentChannel.id);
-        });
-
-        // Boutons rapides du rail gauche
-        DOM.homeGuildBtn.addEventListener('click', () => selectChannel('virtual-logs'));
-        DOM.btnVirtualLogsQuick.addEventListener('click', () => selectChannel('virtual-logs'));
-        DOM.btnVirtualConfigQuick.addEventListener('click', () => selectChannel('virtual-config'));
-        DOM.btnVirtualUsersQuick.addEventListener('click', () => selectChannel('virtual-users'));
-        DOM.btnOpenSettings.addEventListener('click', () => selectChannel('virtual-config'));
-
-        DOM.btnRefreshAll.addEventListener('click', async () => {
-            showToast('Rafraîchissement des données...', 'info', 1500);
-            await fetchGuildInfo();
-            await fetchRoles();
-            await fetchChannels();
-            if (AppState.currentChannel) selectChannel(AppState.currentChannel.id);
-        });
-
-        // Filtres Logs
-        DOM.logLevelFilter.addEventListener('change', (e) => {
-            AppState.logLevelFilter = e.target.value;
-            renderLogsList();
-        });
-
-        DOM.logSearchInput.addEventListener('input', (e) => {
-            AppState.logSearch = e.target.value;
-            DOM.btnClearLogSearch.classList.toggle('hidden', !e.target.value);
-            renderLogsList();
-        });
-
-        DOM.btnClearLogSearch.addEventListener('click', () => {
-            DOM.logSearchInput.value = '';
-            AppState.logSearch = '';
-            DOM.btnClearLogSearch.classList.add('hidden');
-            renderLogsList();
-        });
-
-        DOM.btnToggleAutoscroll.addEventListener('click', () => {
-            AppState.autoScrollLogs = !AppState.autoScrollLogs;
-            DOM.btnToggleAutoscroll.classList.toggle('active', AppState.autoScrollLogs);
-            DOM.btnToggleAutoscroll.innerHTML = `<span class="toggle-icon">📌</span> Auto-scroll : ${AppState.autoScrollLogs ? 'ON' : 'OFF'}`;
-        });
-
-        DOM.btnCopyLogs.addEventListener('click', () => {
-            const filtered = getFilteredLogs();
-            const text = filtered.map(l => `[${l.timestamp}] [${l.category || l.level}] ${l.message}`).join('\n');
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('Logs copiés dans le presse-papier !', 'success');
-            });
-        });
-
-        DOM.btnClearLogs.addEventListener('click', async () => {
-            await fetch('/api/logs', { method: 'DELETE' });
-            AppState.logs = [];
-            DOM.logEntriesList.innerHTML = '';
-            showToast('Logs effacés', 'info');
-        });
-
-        // Navigation Tabs Config
-        DOM.configNavItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const targetTab = item.dataset.tab;
-                DOM.configNavItems.forEach(i => i.classList.toggle('active', i === item));
-                DOM.configTabPanels.forEach(panel => {
-                    panel.classList.toggle('active', panel.dataset.tabContent === targetTab);
-                });
-            });
-        });
-
-        // Formulaires de Configuration
-        DOM.welcomeColor.addEventListener('input', (e) => {
-            DOM.welcomeColorHex.value = e.target.value.toUpperCase();
-        });
-        DOM.welcomeColorHex.addEventListener('input', (e) => {
-            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                DOM.welcomeColor.value = e.target.value;
-            }
-        });
-
-        DOM.formConfigWelcome.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const configData = {
-                WELCOME_CHANNEL_ID: DOM.welcomeChannelSelect.value,
-                AUTO_ROLES: AppState.config?.welcome?.AUTO_ROLES || [],
-                WELCOME_MESSAGE: {
-                    title: document.getElementById('welcome-title').value,
-                    description: document.getElementById('welcome-desc').value,
-                    color: DOM.welcomeColorHex.value || '#00FF00',
-                    footer: 'Membre #{memberCount}',
-                    fields: AppState.config?.welcome?.WELCOME_MESSAGE?.fields || [],
-                    thumbnail: 'user',
-                    image: null
-                },
-                ENABLED: document.getElementById('welcome-enabled').checked,
-                SEND_DM: document.getElementById('welcome-send-dm').checked,
-                DM_MESSAGE: AppState.config?.welcome?.DM_MESSAGE || {},
-                LOG_TO_CONSOLE: true
-            };
-            saveConfigModule('welcome', configData);
-        });
-
-        DOM.formConfigCaptcha.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const configData = {
-                ENABLED: document.getElementById('captcha-enabled').checked,
-                CAPTCHA_LOG_CHANNEL: DOM.captchaLogChannelSelect.value,
-                CAPTCHA_CHANNEL_ID: AppState.config?.captcha?.CAPTCHA_CHANNEL_ID || null,
-                CAPTCHA_CHANNEL_NAME: '✅-verification-captcha',
-                VERIFIED_ROLE_ID: DOM.captchaRoleSelect.value,
-                CAPTCHA_TIMEOUT: parseInt(document.getElementById('captcha-timeout').value) || 10,
-                MAX_ATTEMPTS: parseInt(document.getElementById('captcha-max-attempts').value) || 3,
-                MATH_QUESTIONS: AppState.config?.captcha?.MATH_QUESTIONS || {},
-                MESSAGES: AppState.config?.captcha?.MESSAGES || {}
-            };
-            saveConfigModule('captcha', configData);
-        });
-
-        DOM.formConfigXp.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const configData = {
-                MESSAGE_XP: {
-                    MIN: parseInt(document.getElementById('xp-min-msg').value) || 15,
-                    MAX: parseInt(document.getElementById('xp-max-msg').value) || 25,
-                    COOLDOWN: parseInt(document.getElementById('xp-cooldown').value) || 10
-                },
-                VOICE_XP: {
-                    PER_MINUTE: parseInt(document.getElementById('xp-voice-per-min').value) || 2,
-                    CHECK_INTERVAL: parseInt(document.getElementById('xp-voice-interval').value) || 5,
-                    MIN_DURATION: 1
-                },
-                LEVEL: AppState.config?.xp?.LEVEL || {},
-                BONUS: {
-                    DAILY_FIRST_MESSAGE: parseInt(document.getElementById('xp-daily-first').value) || 50,
-                    STREAK_MULTIPLIER: 1.1,
-                    EVENT_MULTIPLIER: 2
-                },
-                LIMITS: {
-                    MAX_XP_PER_DAY: parseInt(document.getElementById('xp-max-per-day').value) || 5000,
-                    MAX_MESSAGES_PER_MINUTE: 5
-                },
-                LEVEL_ROLES: AppState.config?.xp?.LEVEL_ROLES || {}
-            };
-            saveConfigModule('xp', configData);
-        });
-    }
     // ============================================
     // GESTION DES FORUMS DISCORD
     // ============================================
@@ -2329,26 +2156,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
     function setupEventListeners() {
         // Rafraîchissement global
-        DOM.btnRefreshAll.addEventListener('click', () => {
-            fetchGuildInfo();
-            fetchChannels();
-            showToast('Données rafraîchies', 'info');
-        });
-
-        DOM.btnRefreshChannel.addEventListener('click', () => {
-            if (AppState.currentChannel) {
-                if (AppState.currentChannel.type === 'forum') {
-                    fetchForumPosts(AppState.currentChannel.id);
-                } else if (AppState.currentChannel.id === 'virtual-daily-messages') {
-                    fetchDailyMessages();
-                } else if (AppState.currentChannel.id === 'virtual-captcha-logs') {
-                    fetchCaptchaLogs();
-                } else if (!AppState.currentChannel.id.startsWith('virtual-')) {
-                    loadChannelMessages(AppState.currentChannel.id);
+        if (DOM.btnRefreshAll) {
+            DOM.btnRefreshAll.addEventListener('click', async () => {
+                showToast('Rafraîchissement des données...', 'info', 1500);
+                await fetchGuildInfo();
+                await fetchRoles();
+                await fetchChannels();
+                if (AppState.currentChannel) {
+                    if (AppState.currentChannel.type === 'forum') {
+                        fetchForumPosts(AppState.currentChannel.id);
+                    } else if (AppState.currentChannel.id === 'virtual-daily-messages') {
+                        fetchDailyMessages();
+                    } else if (AppState.currentChannel.id === 'virtual-captcha-logs') {
+                        fetchCaptchaLogs();
+                    } else if (AppState.currentChannel.id === 'virtual-users') {
+                        fetchUsers();
+                    } else if (AppState.currentChannel.id === 'virtual-config') {
+                        fetchBotConfig();
+                    } else if (!AppState.currentChannel.id.startsWith('virtual-')) {
+                        loadChannelMessages(AppState.currentChannel.id);
+                    }
                 }
-                showToast('Salon actualisé', 'info');
-            }
-        });
+            });
+        }
+
+        if (DOM.btnRefreshChannel) {
+            DOM.btnRefreshChannel.addEventListener('click', () => {
+                if (AppState.currentChannel) {
+                    if (AppState.currentChannel.type === 'forum') {
+                        fetchForumPosts(AppState.currentChannel.id);
+                    } else if (AppState.currentChannel.id === 'virtual-daily-messages') {
+                        fetchDailyMessages();
+                    } else if (AppState.currentChannel.id === 'virtual-captcha-logs') {
+                        fetchCaptchaLogs();
+                    } else if (AppState.currentChannel.id === 'virtual-users') {
+                        fetchUsers();
+                    } else if (AppState.currentChannel.id === 'virtual-config') {
+                        fetchBotConfig();
+                    } else if (!AppState.currentChannel.id.startsWith('virtual-')) {
+                        loadChannelMessages(AppState.currentChannel.id);
+                    }
+                    showToast('Salon actualisé', 'info');
+                }
+            });
+        }
 
         if (DOM.btnScrollBottom) DOM.btnScrollBottom.addEventListener('click', scrollMessagesToBottom);
 
@@ -2357,6 +2208,8 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.homeGuildBtn.addEventListener('click', () => {
                 if (AppState.channels.length > 0 && AppState.channels[0].channels.length > 0) {
                     selectChannel(AppState.channels[0].channels[0].id);
+                } else {
+                    selectChannel('virtual-logs');
                 }
             });
         }
@@ -2364,6 +2217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (DOM.btnVirtualLogsQuick) DOM.btnVirtualLogsQuick.addEventListener('click', () => selectChannel('virtual-logs'));
         if (DOM.btnVirtualConfigQuick) DOM.btnVirtualConfigQuick.addEventListener('click', () => selectChannel('virtual-config'));
         if (DOM.btnVirtualUsersQuick) DOM.btnVirtualUsersQuick.addEventListener('click', () => selectChannel('virtual-users'));
+        if (DOM.btnOpenSettings) DOM.btnOpenSettings.addEventListener('click', () => selectChannel('virtual-config'));
 
         // Envoi de message
         if (DOM.sendMessageForm) DOM.sendMessageForm.addEventListener('submit', handleSendMessage);
@@ -2376,20 +2230,32 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Défilement infini des messages
+        // Défilement infini des messages vers le haut
+        function handleMessagesScroll() {
+            if (!DOM.messagesContainer) return;
+            if (DOM.messagesContainer.scrollTop < 60 && !AppState.isLoadingOlder && AppState.currentChannel) {
+                const channelId = AppState.currentChannel.id;
+                if (!channelId.startsWith('virtual-') && AppState.hasMoreMessages[channelId]) {
+                    const oldestId = AppState.oldestMessageId[channelId];
+                    if (oldestId) {
+                        loadChannelMessages(channelId, oldestId);
+                    }
+                }
+            }
+        }
         if (DOM.messagesContainer) DOM.messagesContainer.addEventListener('scroll', handleMessagesScroll);
 
         // Actions Logs
         if (DOM.logLevelFilter) {
             DOM.logLevelFilter.addEventListener('change', (e) => {
-                AppState.logFilterLevel = e.target.value;
+                AppState.logLevelFilter = e.target.value;
                 renderLogsList();
             });
         }
 
         if (DOM.logSearchInput) {
             DOM.logSearchInput.addEventListener('input', (e) => {
-                AppState.logFilterSearch = e.target.value;
+                AppState.logSearch = e.target.value;
                 if (DOM.btnClearLogSearch) DOM.btnClearLogSearch.classList.toggle('hidden', !e.target.value);
                 renderLogsList();
             });
@@ -2397,8 +2263,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (DOM.btnClearLogSearch) {
             DOM.btnClearLogSearch.addEventListener('click', () => {
-                DOM.logSearchInput.value = '';
-                AppState.logFilterSearch = '';
+                if (DOM.logSearchInput) DOM.logSearchInput.value = '';
+                AppState.logSearch = '';
                 DOM.btnClearLogSearch.classList.add('hidden');
                 renderLogsList();
             });
@@ -2414,7 +2280,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (DOM.btnCopyLogs) {
             DOM.btnCopyLogs.addEventListener('click', () => {
-                const logsText = AppState.logs.map(l => `[${l.timestamp}] [${l.level}] [${l.tag}] ${l.message}`).join('\n');
+                const filtered = getFilteredLogs();
+                const logsText = filtered.map(l => `[${l.timestamp}] [${l.category || l.level}] ${l.message}`).join('\n');
                 navigator.clipboard.writeText(logsText).then(() => {
                     showToast('Logs copiés dans le presse-papier !', 'success');
                 });
@@ -2422,31 +2289,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (DOM.btnClearLogs) {
-            DOM.btnClearLogs.addEventListener('click', () => {
+            DOM.btnClearLogs.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/logs', { method: 'DELETE' });
+                } catch (e) {
+                    console.error('Erreur suppression logs:', e);
+                }
                 AppState.logs = [];
+                if (DOM.logEntriesList) DOM.logEntriesList.innerHTML = '';
                 renderLogsList();
-                showToast('Affichage des logs réinitialisé', 'info');
+                showToast('Logs effacés', 'info');
             });
         }
 
         // Onglets Config
-        DOM.configNavItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const targetTab = item.dataset.tab;
-                AppState.activeConfigTab = targetTab;
+        if (DOM.configNavItems) {
+            DOM.configNavItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const targetTab = item.dataset.tab;
+                    AppState.activeConfigTab = targetTab;
 
-                DOM.configNavItems.forEach(i => i.classList.toggle('active', i.dataset.tab === targetTab));
-                DOM.configTabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetTab));
+                    DOM.configNavItems.forEach(i => i.classList.toggle('active', i.dataset.tab === targetTab || i === item));
+                    DOM.configTabPanels.forEach(panel => panel.classList.toggle('active', panel.id === targetTab || panel.dataset.tabContent === targetTab));
+                });
             });
-        });
+        }
 
         // Sélecteur couleur Welcome
         if (DOM.welcomeColor && DOM.welcomeColorHex) {
             DOM.welcomeColor.addEventListener('input', (e) => {
-                DOM.welcomeColorHex.value = e.target.value;
+                DOM.welcomeColorHex.value = e.target.value.toUpperCase();
             });
             DOM.welcomeColorHex.addEventListener('input', (e) => {
-                DOM.welcomeColor.value = e.target.value;
+                if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                    DOM.welcomeColor.value = e.target.value;
+                }
             });
         }
 
@@ -2455,19 +2332,19 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.formConfigWelcome.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const configData = {
-                    WELCOME_CHANNEL: DOM.welcomeChannelSelect.value,
+                    WELCOME_CHANNEL_ID: DOM.welcomeChannelSelect ? DOM.welcomeChannelSelect.value : '',
                     AUTO_ROLES: AppState.config?.welcome?.AUTO_ROLES || [],
                     WELCOME_MESSAGE: {
-                        title: document.getElementById('welcome-title').value,
-                        description: document.getElementById('welcome-desc').value,
-                        color: DOM.welcomeColorHex.value || '#00FF00',
+                        title: document.getElementById('welcome-title')?.value || '',
+                        description: document.getElementById('welcome-desc')?.value || '',
+                        color: DOM.welcomeColorHex?.value || '#00FF00',
                         footer: 'Membre #{memberCount}',
                         fields: AppState.config?.welcome?.WELCOME_MESSAGE?.fields || [],
                         thumbnail: 'user',
                         image: null
                     },
-                    ENABLED: document.getElementById('welcome-enabled').checked,
-                    SEND_DM: document.getElementById('welcome-send-dm').checked,
+                    ENABLED: document.getElementById('welcome-enabled')?.checked ?? true,
+                    SEND_DM: document.getElementById('welcome-send-dm')?.checked ?? false,
                     DM_MESSAGE: AppState.config?.welcome?.DM_MESSAGE || {},
                     LOG_TO_CONSOLE: true
                 };
@@ -2479,13 +2356,13 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.formConfigCaptcha.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const configData = {
-                    ENABLED: document.getElementById('captcha-enabled').checked,
-                    CAPTCHA_LOG_CHANNEL: DOM.captchaLogChannelSelect.value,
+                    ENABLED: document.getElementById('captcha-enabled')?.checked ?? true,
+                    CAPTCHA_LOG_CHANNEL: DOM.captchaLogChannelSelect ? DOM.captchaLogChannelSelect.value : '',
                     CAPTCHA_CHANNEL_ID: AppState.config?.captcha?.CAPTCHA_CHANNEL_ID || null,
                     CAPTCHA_CHANNEL_NAME: '✅-verification-captcha',
-                    VERIFIED_ROLE_ID: DOM.captchaRoleSelect.value,
-                    CAPTCHA_TIMEOUT: parseInt(document.getElementById('captcha-timeout').value) || 10,
-                    MAX_ATTEMPTS: parseInt(document.getElementById('captcha-max-attempts').value) || 3,
+                    VERIFIED_ROLE_ID: DOM.captchaRoleSelect ? DOM.captchaRoleSelect.value : '',
+                    CAPTCHA_TIMEOUT: parseInt(document.getElementById('captcha-timeout')?.value) || 10,
+                    MAX_ATTEMPTS: parseInt(document.getElementById('captcha-max-attempts')?.value) || 3,
                     MATH_QUESTIONS: AppState.config?.captcha?.MATH_QUESTIONS || {},
                     MESSAGES: AppState.config?.captcha?.MESSAGES || {}
                 };
@@ -2498,23 +2375,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 const configData = {
                     MESSAGE_XP: {
-                        MIN: parseInt(document.getElementById('xp-min-msg').value) || 15,
-                        MAX: parseInt(document.getElementById('xp-max-msg').value) || 25,
-                        COOLDOWN: parseInt(document.getElementById('xp-cooldown').value) || 10
+                        MIN: parseInt(document.getElementById('xp-min-msg')?.value) || 15,
+                        MAX: parseInt(document.getElementById('xp-max-msg')?.value) || 25,
+                        COOLDOWN: parseInt(document.getElementById('xp-cooldown')?.value) || 10
                     },
                     VOICE_XP: {
-                        PER_MINUTE: parseInt(document.getElementById('xp-voice-per-min').value) || 2,
-                        CHECK_INTERVAL: parseInt(document.getElementById('xp-voice-interval').value) || 5,
+                        PER_MINUTE: parseInt(document.getElementById('xp-voice-per-min')?.value) || 2,
+                        CHECK_INTERVAL: parseInt(document.getElementById('xp-voice-interval')?.value) || 5,
                         MIN_DURATION: 1
                     },
                     LEVEL: AppState.config?.xp?.LEVEL || {},
                     BONUS: {
-                        DAILY_FIRST_MESSAGE: parseInt(document.getElementById('xp-daily-first').value) || 50,
+                        DAILY_FIRST_MESSAGE: parseInt(document.getElementById('xp-daily-first')?.value) || 50,
                         STREAK_MULTIPLIER: 1.1,
                         EVENT_MULTIPLIER: 2
                     },
                     LIMITS: {
-                        MAX_XP_PER_DAY: parseInt(document.getElementById('xp-max-per-day').value) || 5000,
+                        MAX_XP_PER_DAY: parseInt(document.getElementById('xp-max-per-day')?.value) || 5000,
                         MAX_MESSAGES_PER_MINUTE: 5
                     },
                     LEVEL_ROLES: AppState.config?.xp?.LEVEL_ROLES || {}
@@ -2540,7 +2417,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (DOM.btnClearUserSearch) {
             DOM.btnClearUserSearch.addEventListener('click', () => {
-                DOM.userSearchInput.value = '';
+                if (DOM.userSearchInput) DOM.userSearchInput.value = '';
                 AppState.userSearch = '';
                 DOM.btnClearUserSearch.classList.add('hidden');
                 fetchUsers();
@@ -2671,7 +2548,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (DOM.btnClearDailySearch) {
             DOM.btnClearDailySearch.addEventListener('click', () => {
-                DOM.dailySearchInput.value = '';
+                if (DOM.dailySearchInput) DOM.dailySearchInput.value = '';
                 AppState.dailyData.search = '';
                 DOM.btnClearDailySearch.classList.add('hidden');
                 renderDailyMessages();
@@ -2704,7 +2581,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (DOM.btnClearCaptchaSearch) {
             DOM.btnClearCaptchaSearch.addEventListener('click', () => {
-                DOM.captchaSearchInput.value = '';
+                if (DOM.captchaSearchInput) DOM.captchaSearchInput.value = '';
                 AppState.captchaData.search = '';
                 DOM.btnClearCaptchaSearch.classList.add('hidden');
                 renderCaptchaTable();
@@ -2743,61 +2620,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Événements Forum
         let forumSearchDebounce = null;
-        DOM.forumSearchInput.addEventListener('input', (e) => {
-            AppState.forumData.search = e.target.value;
-            DOM.btnClearForumSearch.classList.toggle('hidden', !e.target.value);
-            clearTimeout(forumSearchDebounce);
-            forumSearchDebounce = setTimeout(renderForumPosts, 200);
-        });
+        if (DOM.forumSearchInput) {
+            DOM.forumSearchInput.addEventListener('input', (e) => {
+                AppState.forumData.search = e.target.value;
+                if (DOM.btnClearForumSearch) DOM.btnClearForumSearch.classList.toggle('hidden', !e.target.value);
+                clearTimeout(forumSearchDebounce);
+                forumSearchDebounce = setTimeout(renderForumPosts, 200);
+            });
+        }
 
-        DOM.btnClearForumSearch.addEventListener('click', () => {
-            DOM.forumSearchInput.value = '';
-            AppState.forumData.search = '';
-            DOM.btnClearForumSearch.classList.add('hidden');
-            renderForumPosts();
-        });
+        if (DOM.btnClearForumSearch) {
+            DOM.btnClearForumSearch.addEventListener('click', () => {
+                if (DOM.forumSearchInput) DOM.forumSearchInput.value = '';
+                AppState.forumData.search = '';
+                DOM.btnClearForumSearch.classList.add('hidden');
+                renderForumPosts();
+            });
+        }
 
-        DOM.forumSortSelect.addEventListener('change', (e) => {
-            AppState.forumData.sortBy = e.target.value;
-            renderForumPosts();
-        });
+        if (DOM.forumSortSelect) {
+            DOM.forumSortSelect.addEventListener('change', (e) => {
+                AppState.forumData.sortBy = e.target.value;
+                renderForumPosts();
+            });
+        }
 
-        DOM.btnOpenCreatePost.addEventListener('click', openCreatePostModal);
-        DOM.btnClosePostModal.addEventListener('click', () => DOM.createPostModal.classList.add('hidden'));
-        DOM.btnCancelPostModal.addEventListener('click', () => DOM.createPostModal.classList.add('hidden'));
-        DOM.formCreatePost.addEventListener('submit', handleCreatePostSubmit);
+        if (DOM.btnOpenCreatePost) DOM.btnOpenCreatePost.addEventListener('click', openCreatePostModal);
+        if (DOM.btnClosePostModal) DOM.btnClosePostModal.addEventListener('click', () => DOM.createPostModal && DOM.createPostModal.classList.add('hidden'));
+        if (DOM.btnCancelPostModal) DOM.btnCancelPostModal.addEventListener('click', () => DOM.createPostModal && DOM.createPostModal.classList.add('hidden'));
+        if (DOM.formCreatePost) DOM.formCreatePost.addEventListener('submit', handleCreatePostSubmit);
 
-        DOM.createPostModal.addEventListener('click', (e) => {
-            if (e.target === DOM.createPostModal) {
-                DOM.createPostModal.classList.add('hidden');
-            }
-        });
+        if (DOM.createPostModal) {
+            DOM.createPostModal.addEventListener('click', (e) => {
+                if (e.target === DOM.createPostModal) {
+                    DOM.createPostModal.classList.add('hidden');
+                }
+            });
+        }
 
         // Modale Fermeture User
-        DOM.btnCloseModal.addEventListener('click', () => {
-            DOM.userDetailModal.classList.add('hidden');
-        });
+        if (DOM.btnCloseModal) {
+            DOM.btnCloseModal.addEventListener('click', () => {
+                if (DOM.userDetailModal) DOM.userDetailModal.classList.add('hidden');
+            });
+        }
 
-        DOM.userDetailModal.addEventListener('click', (e) => {
-            if (e.target === DOM.userDetailModal) {
-                DOM.userDetailModal.classList.add('hidden');
-            }
-        });
+        if (DOM.userDetailModal) {
+            DOM.userDetailModal.addEventListener('click', (e) => {
+                if (e.target === DOM.userDetailModal) {
+                    DOM.userDetailModal.classList.add('hidden');
+                }
+            });
+        }
 
         // Modale Suppression Message
-        DOM.btnCancelDelete.addEventListener('click', () => {
-            DOM.deleteMessageModal.classList.add('hidden');
-            AppState.pendingDeleteMessageId = null;
-        });
-
-        DOM.btnConfirmDelete.addEventListener('click', confirmDeleteMessage);
-
-        DOM.deleteMessageModal.addEventListener('click', (e) => {
-            if (e.target === DOM.deleteMessageModal) {
-                DOM.deleteMessageModal.classList.add('hidden');
+        if (DOM.btnCancelDelete) {
+            DOM.btnCancelDelete.addEventListener('click', () => {
+                if (DOM.deleteMessageModal) DOM.deleteMessageModal.classList.add('hidden');
                 AppState.pendingDeleteMessageId = null;
-            }
-        });
+            });
+        }
+
+        if (DOM.btnConfirmDelete) DOM.btnConfirmDelete.addEventListener('click', confirmDeleteMessage);
+
+        if (DOM.deleteMessageModal) {
+            DOM.deleteMessageModal.addEventListener('click', (e) => {
+                if (e.target === DOM.deleteMessageModal) {
+                    DOM.deleteMessageModal.classList.add('hidden');
+                    AppState.pendingDeleteMessageId = null;
+                }
+            });
+        }
     }
 
     // Démarrer l'application
