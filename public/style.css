@@ -2818,6 +2818,302 @@ input:checked + .slider:before {
     border-color: var(--brand);
 }
 
+/* ==========================================================================
+   VUE 6 : SALON VIRTUEL DAILY MESSAGES
+   ========================================================================== */
+
+.daily-scroller {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Bannière de statistiques */
+.daily-stats-banner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.daily-stat-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.daily-stat-icon {
+    font-size: 26px;
+}
+
+.daily-stat-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.daily-stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.daily-stat-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--header-primary);
+    margin: 2px 0;
+    word-break: break-word;
+}
+
+.daily-stat-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Barre d'outils */
+.daily-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: var(--bg-secondary);
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+}
+
+/* Conteneur en attente */
+.daily-pending-container {
+    background-color: rgba(245, 176, 65, 0.08);
+    border: 1px solid rgba(245, 176, 65, 0.3);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.daily-pending-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.badge-pending {
+    font-size: 11px;
+    font-weight: 700;
+    background-color: #f5b041;
+    color: #1a1a1a;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+}
+
+.daily-pending-time {
+    font-size: 12px;
+    color: #f5b041;
+    font-weight: 600;
+}
+
+/* En-tête historique */
+.daily-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+}
+
+.daily-history-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--header-primary);
+}
+
+.daily-history-badge {
+    font-size: 12px;
+    color: var(--text-muted);
+    background-color: var(--bg-secondary);
+    padding: 3px 8px;
+    border-radius: 10px;
+}
+
+/* Liste des cartes d'historique */
+.daily-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.daily-history-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color 0.15s ease;
+}
+
+.daily-history-card:hover {
+    border-color: var(--brand);
+}
+
+.daily-history-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 10px;
+}
+
+.daily-card-date {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--header-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.daily-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.daily-badge-model {
+    background-color: rgba(88, 101, 242, 0.15);
+    color: #c9cdfb;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.daily-badge-tokens {
+    background-color: var(--bg-tertiary);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+/* Message principal Discord */
+.daily-message-preview-box {
+    background-color: var(--bg-tertiary);
+    border-left: 4px solid var(--brand);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--text-normal);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Accordéon / Détails de génération IA */
+.daily-generation-details {
+    background-color: var(--bg-secondary-alt);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.daily-details-toggle {
+    width: 100%;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    color: var(--text-normal);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background-color 0.15s ease;
+}
+
+.daily-details-toggle:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--header-primary);
+}
+
+.daily-details-body {
+    padding: 14px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.generation-step {
+    background-color: var(--bg-secondary);
+    border-radius: 6px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.generation-step-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--header-primary);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.generation-step-content {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+    white-space: pre-wrap;
+    background-color: var(--bg-tertiary);
+    padding: 8px 10px;
+    border-radius: 4px;
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+.daily-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.btn-daily-action {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-normal);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+}
+
+.btn-daily-action:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--header-primary);
+}
+
 /* Helpers */
 .hidden {
     display: none !important;

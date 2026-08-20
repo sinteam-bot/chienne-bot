@@ -52,7 +52,15 @@ document.addEventListener('DOMContentLoaded', () => {
             search: '',
             sortBy: 'recent'
         },
-        selectedNewPostTags: new Set()
+        selectedNewPostTags: new Set(),
+
+        // Données Daily Messages
+        dailyData: {
+            messages: [],
+            stats: {},
+            pending: null,
+            search: ''
+        }
     };
 
     // ============================================
@@ -90,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         viewVirtualLogs: document.getElementById('view-virtual-logs'),
         viewVirtualConfig: document.getElementById('view-virtual-config'),
         viewVirtualUsers: document.getElementById('view-virtual-users'),
+        viewVirtualDailyMessages: document.getElementById('view-virtual-daily-messages'),
         viewForum: document.getElementById('view-forum'),
 
         // Vue Messages
@@ -157,6 +166,21 @@ document.addEventListener('DOMContentLoaded', () => {
         usersGridContainer: document.getElementById('users-grid-container'),
         usersTableContainer: document.getElementById('users-table-container'),
         usersTableBody: document.getElementById('users-table-body'),
+
+        // Vue Daily Messages
+        dailyStatScheduleSub: document.getElementById('daily-stat-schedule-sub'),
+        dailyStatModel: document.getElementById('daily-stat-model'),
+        dailyStatCount: document.getElementById('daily-stat-count'),
+        dailyStatTokens: document.getElementById('daily-stat-tokens'),
+        dailySearchInput: document.getElementById('daily-search-input'),
+        btnClearDailySearch: document.getElementById('btn-clear-daily-search'),
+        btnGenerateDailyPreview: document.getElementById('btn-generate-daily-preview'),
+        btnRefreshDailyList: document.getElementById('btn-refresh-daily-list'),
+        dailyPendingCard: document.getElementById('daily-pending-card'),
+        dailyPendingTime: document.getElementById('daily-pending-time'),
+        dailyPendingContent: document.getElementById('daily-pending-content'),
+        dailyHistoryCountBadge: document.getElementById('daily-history-count-badge'),
+        dailyCardsContainer: document.getElementById('daily-cards-container'),
 
         // Modale User
         userDetailModal: document.getElementById('user-detail-modal'),
@@ -521,6 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.viewVirtualLogs.classList.remove('active');
         DOM.viewVirtualConfig.classList.remove('active');
         DOM.viewVirtualUsers.classList.remove('active');
+        if (DOM.viewVirtualDailyMessages) DOM.viewVirtualDailyMessages.classList.remove('active');
         DOM.viewForum.classList.remove('active');
         DOM.logsLiveBadge.classList.add('hidden');
 
@@ -538,6 +563,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (channelId === 'virtual-users') {
             DOM.viewVirtualUsers.classList.add('active');
             await fetchUsers();
+        } else if (channelId === 'virtual-daily-messages') {
+            if (DOM.viewVirtualDailyMessages) DOM.viewVirtualDailyMessages.classList.add('active');
+            await fetchDailyMessages();
         } else if (targetChannel.type === 'forum') {
             // Salon Forum Discord
             DOM.viewForum.classList.add('active');
@@ -1851,6 +1879,232 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================
+    // 9. SALON VIRTUEL : DAILY MESSAGES (HISTORIQUE ET INFOS IA)
+    // ============================================
+    async function fetchDailyMessages() {
+        try {
+            const res = await fetch('/api/daily-messages');
+            const json = await res.json();
+            if (json.success && json.data) {
+                AppState.dailyData.messages = json.data.history || [];
+                AppState.dailyData.stats = json.data.stats || {};
+                AppState.dailyData.pending = json.data.pendingPublish || null;
+                renderDailyMessages();
+            } else {
+                showToast(json.error || 'Erreur lors de la récupération des daily messages', 'error');
+            }
+        } catch (err) {
+            showToast('Erreur de connexion avec le serveur', 'error');
+        }
+    }
+
+    function renderDailyMessages() {
+        const stats = AppState.dailyData.stats;
+        const history = AppState.dailyData.messages;
+        const pending = AppState.dailyData.pending;
+
+        // 1. Mettre à jour les stats dans les cartes
+        if (DOM.dailyStatModel) DOM.dailyStatModel.textContent = stats.configuredModel || 'gpt-4o-mini';
+        if (DOM.dailyStatCount) DOM.dailyStatCount.textContent = stats.totalMessages || history.length || 0;
+        if (DOM.dailyStatTokens) DOM.dailyStatTokens.textContent = (stats.totalTokens || 0).toLocaleString();
+        if (DOM.dailyStatScheduleSub) DOM.dailyStatScheduleSub.textContent = `Pré-rendu à ${stats.previewTime || '08:30'} • Canal: ${stats.configuredChannelId ? '#' + stats.configuredChannelId : 'Non défini'}`;
+
+        // 2. Message en attente de publication
+        if (pending && DOM.dailyPendingCard) {
+            DOM.dailyPendingCard.classList.remove('hidden');
+            if (DOM.dailyPendingTime) {
+                DOM.dailyPendingTime.textContent = `Publication prévue à ${stats.scheduleTime || '09:00'} dans #${pending.targetChannelId || stats.configuredChannelId}`;
+            }
+            
+            if (DOM.dailyPendingContent) {
+                DOM.dailyPendingContent.innerHTML = `
+                    <div class="daily-message-preview-box">
+                        <div style="font-weight: 700; margin-bottom: 6px; color: var(--header-primary);">💬 Contenu validé :</div>
+                        ${escapeHtml(pending.text || '')}
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted);">
+                        <span class="daily-badge-model">🤖 Modèle : ${escapeHtml(pending.model || 'gpt-4o-mini')}</span>
+                        <span class="daily-badge-tokens">⚡ Tokens : ${pending.messageResponse?.usage?.totalTokens || 0}</span>
+                    </div>
+                `;
+            }
+        } else if (DOM.dailyPendingCard) {
+            DOM.dailyPendingCard.classList.add('hidden');
+        }
+
+        // 3. Filtrer l'historique par recherche
+        let filtered = history;
+        const query = (AppState.dailyData.search || '').trim().toLowerCase();
+        if (query) {
+            filtered = history.filter(m => {
+                const content = (m.content || '').toLowerCase();
+                const prompt = (m.prompt || '').toLowerCase();
+                const creativePrompt = (m.step1?.creativePrompt || '').toLowerCase();
+                const metaPrompt = (m.step1?.metaPrompt || '').toLowerCase();
+                const dateStr = (m.createdAt || '').toLowerCase();
+                return content.includes(query) || prompt.includes(query) || creativePrompt.includes(query) || metaPrompt.includes(query) || dateStr.includes(query);
+            });
+        }
+
+        if (DOM.dailyHistoryCountBadge) {
+            DOM.dailyHistoryCountBadge.textContent = `${filtered.length} message(s)`;
+        }
+
+        if (!DOM.dailyCardsContainer) return;
+
+        if (filtered.length === 0) {
+            DOM.dailyCardsContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: var(--text-muted); background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 32px; margin-bottom: 8px;">🌅</div>
+                    <div style="font-size: 16px; font-weight: 600; color: var(--header-primary);">Aucun message du jour trouvé</div>
+                    <div style="font-size: 13px; margin-top: 4px;">${query ? 'Essayez un autre mot-clé de recherche.' : 'Générez votre premier message quotidien avec le bouton "Générer un test IA".'}</div>
+                </div>
+            `;
+            return;
+        }
+
+        DOM.dailyCardsContainer.innerHTML = filtered.map((item, index) => {
+            const dateFormatted = item.createdAt ? new Date(item.createdAt).toLocaleString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : 'Date inconnue';
+
+            const totalTokens = (item.tokens?.total || 0) + (item.step1?.tokens?.total || 0);
+            const detailsId = `daily-details-${item.id || index}`;
+
+            return `
+                <div class="daily-history-card">
+                    <div class="daily-history-card-header">
+                        <div class="daily-card-date">
+                            <span>☀️</span>
+                            <span>${escapeHtml(dateFormatted)}</span>
+                        </div>
+                        <div class="daily-card-meta">
+                            <span class="daily-badge-model">🤖 ${escapeHtml(item.model || 'gpt-4o-mini')}</span>
+                            <span class="daily-badge-tokens" title="Entrée: ${item.tokens.input} tokens | Sortie: ${item.tokens.output} tokens">⚡ ${totalTokens} tokens</span>
+                            <span class="daily-badge-tokens" style="font-family: monospace; font-size: 10px;">ID: ${escapeHtml(item.msgId || '')}</span>
+                        </div>
+                    </div>
+
+                    <!-- Aperçu du message final Discord -->
+                    <div class="daily-message-preview-box">${escapeHtml(item.content || '(Contenu vide)')}</div>
+
+                    <!-- Détails & Métadonnées de génération IA -->
+                    <div class="daily-generation-details">
+                        <button type="button" class="daily-details-toggle" data-target="${detailsId}">
+                            <span>🧠 Métadonnées de génération IA (2 étapes)</span>
+                            <span class="accordion-arrow">▼</span>
+                        </button>
+                        <div class="daily-details-body hidden" id="${detailsId}">
+                            ${item.step1 ? `
+                                <div class="generation-step">
+                                    <div class="generation-step-title">
+                                        <span>🔄 Étape 1 : Méta-Prompt & Idée Créative</span>
+                                        <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">${item.step1.tokens?.total || 0} tokens</span>
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Prompt initial envoyé à l'IA :</div>
+                                    <div class="generation-step-content">${escapeHtml(item.step1.metaPrompt || '')}</div>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; margin-bottom: 4px;">Idée créative retournée par l'IA :</div>
+                                    <div class="generation-step-content">${escapeHtml(item.step1.creativePrompt || '')}</div>
+                                </div>
+                            ` : ''}
+
+                            <div class="generation-step">
+                                <div class="generation-step-title">
+                                    <span>🎯 Étape 2 : Instructions & Prompt Final</span>
+                                    <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">${item.tokens.total} tokens</span>
+                                </div>
+                                ${item.instruction ? `
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">System Prompt / Instructions :</div>
+                                    <div class="generation-step-content">${escapeHtml(item.instruction)}</div>
+                                ` : ''}
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; margin-bottom: 4px;">Prompt de rédaction final :</div>
+                                <div class="generation-step-content">${escapeHtml(item.prompt || '')}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions rapides -->
+                    <div class="daily-card-actions">
+                        <button type="button" class="btn-daily-action btn-copy-daily-text" data-content="${encodeURIComponent(item.content || '')}">
+                            📋 Copier le message
+                        </button>
+                        ${item.step1?.creativePrompt ? `
+                            <button type="button" class="btn-daily-action btn-copy-daily-prompt" data-prompt="${encodeURIComponent(item.step1.creativePrompt)}">
+                                💡 Copier l'idée IA
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Attacher les écouteurs pour les accordéons
+        DOM.dailyCardsContainer.querySelectorAll('.daily-details-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.target;
+                const body = document.getElementById(targetId);
+                const arrow = btn.querySelector('.accordion-arrow');
+                if (body) {
+                    const isHidden = body.classList.toggle('hidden');
+                    if (arrow) arrow.textContent = isHidden ? '▼' : '▲';
+                }
+            });
+        });
+
+        // Attacher les écouteurs de copie
+        DOM.dailyCardsContainer.querySelectorAll('.btn-copy-daily-text').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const text = decodeURIComponent(btn.dataset.content || '');
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Message copié dans le presse-papier !', 'success');
+                });
+            });
+        });
+
+        DOM.dailyCardsContainer.querySelectorAll('.btn-copy-daily-prompt').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const promptText = decodeURIComponent(btn.dataset.prompt || '');
+                navigator.clipboard.writeText(promptText).then(() => {
+                    showToast('Idée créative copiée !', 'success');
+                });
+            });
+        });
+    }
+
+    async function handleGenerateDailyPreview() {
+        if (DOM.btnGenerateDailyPreview) {
+            DOM.btnGenerateDailyPreview.disabled = true;
+            DOM.btnGenerateDailyPreview.innerHTML = '<span>⏳</span> Génération en cours...';
+        }
+
+        try {
+            const res = await fetch('/api/daily-messages/generate-preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const json = await res.json();
+            if (json.success && json.data) {
+                showToast('Message test généré avec succès !', 'success');
+                await fetchDailyMessages();
+            } else {
+                showToast(json.error || 'Erreur lors de la génération', 'error');
+            }
+        } catch (err) {
+            showToast('Erreur lors de la communication avec le serveur', 'error');
+        } finally {
+            if (DOM.btnGenerateDailyPreview) {
+                DOM.btnGenerateDailyPreview.disabled = false;
+                DOM.btnGenerateDailyPreview.innerHTML = '<span>✨</span> Générer un test IA';
+            }
+        }
+    }
+
+    // ============================================
     // ÉCOUTEURS D'ÉVÉNEMENTS
     // ============================================
     function setupEventListeners() {
@@ -1865,6 +2119,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (AppState.currentChannel) {
                 if (AppState.currentChannel.type === 'forum') {
                     fetchForumPosts(AppState.currentChannel.id);
+                } else if (AppState.currentChannel.id === 'virtual-daily-messages') {
+                    fetchDailyMessages();
                 } else if (!AppState.currentChannel.id.startsWith('virtual-')) {
                     loadChannelMessages(AppState.currentChannel.id);
                 }
@@ -2175,6 +2431,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     fetchUsers();
                 });
+            });
+        }
+
+        // ==========================================
+        // ACTIONS DAILY MESSAGES
+        // ==========================================
+        let dailySearchDebounce = null;
+        if (DOM.dailySearchInput) {
+            DOM.dailySearchInput.addEventListener('input', (e) => {
+                AppState.dailyData.search = e.target.value;
+                if (DOM.btnClearDailySearch) DOM.btnClearDailySearch.classList.toggle('hidden', !e.target.value);
+                clearTimeout(dailySearchDebounce);
+                dailySearchDebounce = setTimeout(renderDailyMessages, 200);
+            });
+        }
+
+        if (DOM.btnClearDailySearch) {
+            DOM.btnClearDailySearch.addEventListener('click', () => {
+                DOM.dailySearchInput.value = '';
+                AppState.dailyData.search = '';
+                DOM.btnClearDailySearch.classList.add('hidden');
+                renderDailyMessages();
+            });
+        }
+
+        if (DOM.btnGenerateDailyPreview) {
+            DOM.btnGenerateDailyPreview.addEventListener('click', handleGenerateDailyPreview);
+        }
+
+        if (DOM.btnRefreshDailyList) {
+            DOM.btnRefreshDailyList.addEventListener('click', () => {
+                fetchDailyMessages();
+                showToast('Historique des messages actualisé', 'info');
             });
         }
 

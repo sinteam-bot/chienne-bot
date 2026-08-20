@@ -624,6 +624,88 @@
                     <div class="forum-posts-grid" id="forum-posts-grid"></div>
                 </div>
             </section>
+
+            <!-- VUE 6 : SALON VIRTUEL DAILY MESSAGES -->
+            <section class="view-panel" id="view-virtual-daily-messages">
+                <div class="daily-scroller">
+                    <!-- Bannière d'en-tête / Statistiques Daily -->
+                    <div class="daily-stats-banner">
+                        <div class="daily-stat-card">
+                            <div class="daily-stat-icon">⏰</div>
+                            <div class="daily-stat-info">
+                                <span class="daily-stat-label">Publication Quotidienne</span>
+                                <span class="daily-stat-value">Tous les jours à 09:00</span>
+                                <span class="daily-stat-sub" id="daily-stat-schedule-sub">Pré-rendu Discord à 08:30</span>
+                            </div>
+                        </div>
+
+                        <div class="daily-stat-card">
+                            <div class="daily-stat-icon">🤖</div>
+                            <div class="daily-stat-info">
+                                <span class="daily-stat-label">Modèle IA</span>
+                                <span class="daily-stat-value" id="daily-stat-model">gpt-4o-mini</span>
+                                <span class="daily-stat-sub">Génération en 2 étapes (Prompt + Message)</span>
+                            </div>
+                        </div>
+
+                        <div class="daily-stat-card">
+                            <div class="daily-stat-icon">💬</div>
+                            <div class="daily-stat-info">
+                                <span class="daily-stat-label">Messages Archivés</span>
+                                <span class="daily-stat-value" id="daily-stat-count">0</span>
+                                <span class="daily-stat-sub">Historique complet des générations</span>
+                            </div>
+                        </div>
+
+                        <div class="daily-stat-card">
+                            <div class="daily-stat-icon">⚡</div>
+                            <div class="daily-stat-info">
+                                <span class="daily-stat-label">Tokens IA Consommés</span>
+                                <span class="daily-stat-value" id="daily-stat-tokens">0</span>
+                                <span class="daily-stat-sub">Entrée + Sortie IA</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Barre d'outils (Recherche, Déclencher un test, Rafraîchir) -->
+                    <div class="daily-toolbar">
+                        <div class="search-input-wrapper" style="flex: 1;">
+                            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/>
+                            </svg>
+                            <input type="text" id="daily-search-input" class="discord-input" placeholder="Rechercher par mot-clé, date ou prompt...">
+                            <button class="clear-search-btn hidden" id="btn-clear-daily-search">✕</button>
+                        </div>
+
+                        <button type="button" class="btn-primary" id="btn-generate-daily-preview" title="Générer un message test via l'IA maintenant">
+                            <span>✨</span> Générer un test IA
+                        </button>
+
+                        <button type="button" class="action-btn" id="btn-refresh-daily-list" title="Actualiser l'historique">
+                            <span>🔄</span> Actualiser
+                        </button>
+                    </div>
+
+                    <!-- Message en attente de publication aujourd'hui (si présent) -->
+                    <div class="daily-pending-container hidden" id="daily-pending-card">
+                        <div class="daily-pending-header">
+                            <span class="badge-pending">⏳ EN ATTENTE DE PUBLICATION</span>
+                            <span class="daily-pending-time" id="daily-pending-time">Prévu pour 09:00</span>
+                        </div>
+                        <div class="daily-pending-content" id="daily-pending-content"></div>
+                    </div>
+
+                    <!-- Liste de l'historique des Daily Messages -->
+                    <div class="daily-history-header">
+                        <h3>Historique des Daily Messages</h3>
+                        <span class="daily-history-badge" id="daily-history-count-badge">0 message(s)</span>
+                    </div>
+
+                    <div class="daily-cards-list" id="daily-cards-container">
+                        <!-- Cartes injectées dynamiquement -->
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
