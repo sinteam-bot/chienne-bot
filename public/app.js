@@ -4,6 +4,40 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Intercepteur Fetch pour authentification API transparente (x-api-key)
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+        let [resource, config] = args;
+        config = config || {};
+        config.headers = config.headers || {};
+
+        const storedKey = localStorage.getItem('chienne_bot_api_key');
+        if (storedKey) {
+            if (config.headers instanceof Headers) {
+                if (!config.headers.has('x-api-key')) config.headers.set('x-api-key', storedKey);
+            } else if (Array.isArray(config.headers)) {
+                config.headers.push(['x-api-key', storedKey]);
+            } else {
+                config.headers['x-api-key'] = storedKey;
+            }
+        }
+
+        const response = await originalFetch(resource, config);
+        if (response.status === 401 && String(resource).includes('/api/') && !String(resource).includes('/api/auth/')) {
+            const newKey = prompt('🔒 Accès protégé : Veuillez saisir la clé API / mot de passe d\'accès :');
+            if (newKey) {
+                localStorage.setItem('chienne_bot_api_key', newKey.trim());
+                if (config.headers instanceof Headers) {
+                    config.headers.set('x-api-key', newKey.trim());
+                } else if (!Array.isArray(config.headers)) {
+                    config.headers['x-api-key'] = newKey.trim();
+                }
+                return await originalFetch(resource, config);
+            }
+        }
+        return response;
+    };
+
     // ============================================
     // ÉTAT DE L'APPLICATION
     // ============================================
@@ -1200,36 +1234,42 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Welcome
         if (config.welcome) {
             const w = config.welcome;
-            document.getElementById('welcome-enabled').checked = !!w.ENABLED;
-            DOM.welcomeChannelSelect.value = w.WELCOME_CHANNEL_ID || '';
-            document.getElementById('welcome-title').value = w.WELCOME_MESSAGE?.title || '';
-            document.getElementById('welcome-desc').value = w.WELCOME_MESSAGE?.description || '';
-            const col = w.WELCOME_MESSAGE?.color || '#00FF00';
-            DOM.welcomeColor.value = col.startsWith('#') ? col : '#00FF00';
+            const welcomeMsg = w.WELCOME_MESSAGE || w.welcome_message || {};
+            document.getElementById('welcome-enabled').checked = w.ENABLED !== undefined ? !!w.ENABLED : (w.enabled !== undefined ? !!w.enabled : true);
+            DOM.welcomeChannelSelect.value = w.WELCOME_CHANNEL_ID || w.channel_id || '';
+            document.getElementById('welcome-title').value = welcomeMsg.title || '';
+            document.getElementById('welcome-desc').value = welcomeMsg.description || '';
+            const col = welcomeMsg.color || w.welcome_color || '#f2c7ce';
+            DOM.welcomeColor.value = col.startsWith('#') ? col : '#f2c7ce';
             DOM.welcomeColorHex.value = col;
-            document.getElementById('welcome-send-dm').checked = !!w.SEND_DM;
+            document.getElementById('welcome-send-dm').checked = w.SEND_DM !== undefined ? !!w.SEND_DM : (w.dm_message?.enabled !== undefined ? !!w.dm_message.enabled : true);
         }
 
         // 2. Captcha
         if (config.captcha) {
             const c = config.captcha;
-            document.getElementById('captcha-enabled').checked = !!c.ENABLED;
-            DOM.captchaRoleSelect.value = c.VERIFIED_ROLE_ID || '';
-            DOM.captchaLogChannelSelect.value = c.CAPTCHA_LOG_CHANNEL || '';
-            document.getElementById('captcha-timeout').value = c.CAPTCHA_TIMEOUT || 10;
-            document.getElementById('captcha-max-attempts').value = c.MAX_ATTEMPTS || 3;
+            document.getElementById('captcha-enabled').checked = c.ENABLED !== undefined ? !!c.ENABLED : (c.enabled !== undefined ? !!c.enabled : true);
+            DOM.captchaRoleSelect.value = c.VERIFIED_ROLE_ID || c.verified_role_id || '';
+            DOM.captchaLogChannelSelect.value = c.CAPTCHA_LOG_CHANNEL || c.channel_id || '';
+            document.getElementById('captcha-timeout').value = c.CAPTCHA_TIMEOUT || c.captcha_timeout || 10;
+            document.getElementById('captcha-max-attempts').value = c.MAX_ATTEMPTS || c.max_attempts || 3;
         }
 
         // 3. XP
         if (config.xp) {
             const x = config.xp;
-            document.getElementById('xp-min-msg').value = x.MESSAGE_XP?.MIN || 15;
-            document.getElementById('xp-max-msg').value = x.MESSAGE_XP?.MAX || 25;
-            document.getElementById('xp-cooldown').value = x.MESSAGE_XP?.COOLDOWN || 10;
-            document.getElementById('xp-voice-per-min').value = x.VOICE_XP?.PER_MINUTE || 2;
-            document.getElementById('xp-voice-interval').value = x.VOICE_XP?.CHECK_INTERVAL || 5;
-            document.getElementById('xp-daily-first').value = x.BONUS?.DAILY_FIRST_MESSAGE || 50;
-            document.getElementById('xp-max-per-day').value = x.LIMITS?.MAX_XP_PER_DAY || 5000;
+            const msgXp = x.MESSAGE_XP || x.message_xp || {};
+            const voiceXp = x.VOICE_XP || x.voice_xp || {};
+            const bonusXp = x.BONUS || x.bonus || {};
+            const limitsXp = x.LIMITS || x.limits || {};
+
+            document.getElementById('xp-min-msg').value = msgXp.MIN ?? msgXp.min ?? 15;
+            document.getElementById('xp-max-msg').value = msgXp.MAX ?? msgXp.max ?? 25;
+            document.getElementById('xp-cooldown').value = msgXp.COOLDOWN ?? msgXp.cooldown ?? 10;
+            document.getElementById('xp-voice-per-min').value = voiceXp.PER_MINUTE ?? voiceXp.per_minute ?? 2;
+            document.getElementById('xp-voice-interval').value = voiceXp.CHECK_INTERVAL ?? voiceXp.check_interval ?? 5;
+            document.getElementById('xp-daily-first').value = bonusXp.DAILY_FIRST_MESSAGE ?? bonusXp.daily_first_message ?? 50;
+            document.getElementById('xp-max-per-day').value = limitsXp.MAX_XP_PER_DAY ?? limitsXp.max_xp_per_day ?? 5000;
         }
 
         // 4. Daily

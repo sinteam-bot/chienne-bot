@@ -1,26 +1,87 @@
 # Database Configuration (SQLite)
 db_path: ./data/bot.db
 
-# Server Configuration
+# ==============================================================================
+# CONFIGURATION DU SERVEUR WEB & PROTECTION API / DASHBOARD
+# ==============================================================================
+web:
+  port: 3000
+  node_env: production
+  # Protection de l'accès à l'API et au Webhook
+  auth:
+    enabled: false # Passer à true pour activer la protection par clé secrète
+    api_key: "changez_cette_cle_secrete" # Clé API acceptée via header 'x-api-key', 'Authorization: Bearer <key>' ou '?api_key='
+    protect_static: false # Si true, protège également l'accès aux pages HTML/statiques
+    allowed_ips: [] # Liste blanche d'adresses IP autorisées (vide = toutes les adresses)
+
+# Server Configuration (compatibilité directe)
 port: 3000
 node_env: production
+
+# ==============================================================================
+# CONFIGURATION DU PLANIFICATEUR DE TÂCHES (SCHEDULER / CRON)
+# ==============================================================================
+scheduler:
+  enabled: true # Activer ou désactiver globalement le planificateur de tâches
+  timezone: "Europe/Paris" # Fuseau horaire pour l'exécution des tâches cron
+  tasks:
+    # Tâche 1 : Vérification des rappels de bump Obsydian
+    bump_reminders:
+      enabled: true
+      cron: "* * * * *" # Toutes les minutes
+    # Tâche 2 : Prévisualisation du message du jour (envoyé la veille au soir à 21h)
+    daily_preview:
+      enabled: true
+      cron: "0 21 * * *"
+    # Tâche 3 : Publication automatique du message validé à 09h00
+    daily_publish:
+      enabled: true
+      cron: "0 9 * * *"
+    # Tâche 4 : Validation et publication automatique à 11h00 si non validé manuellement
+    daily_autovalidate:
+      enabled: true
+      cron: "0 11 * * *"
 
 # OpenAI API Configuration
 openai:
   api_key: "votre_cle_openai_ici"
   default_model: "gpt-4o-mini"
+  max_tokens: 500
+  temperature: 0.7
 
 # OpenRouter API Configuration
 openrouter:
   api_key: "votre_cle_openrouter_ici"
   default_model: "openai/gpt-oss-20b:free"
 
-# Discord Configuration
+# ==============================================================================
+# CONFIGURATION DISCORD & COMMANDES
+# ==============================================================================
 discord:
   token: "votre_discord_token_ici"
   client_id: "votre_client_id_ici"
   guild_id: "votre_guild_id_ici"
   default_color: "couleur_du_bot_dans_le_salon"
+
+  # Protection & Permissions des Commandes Discord
+  commands:
+    enabled: true # Activer ou désactiver l'exécution des commandes
+    # Rôles autorisés à exécuter des commandes (vide = tous les membres)
+    allowed_roles: []
+    # Utilisateurs autorisés à exécuter des commandes (IDs Discord, vide = tous)
+    allowed_users: []
+    # Salons autorisés pour exécuter des commandes (IDs Discord, vide = tous)
+    allowed_channels: []
+    # Permissions spécifiques par commande
+    permissions:
+      config:
+        allowed_roles: []
+        allowed_users: []
+        allowed_channels: ["votre_salon_reserver"]
+      confirm_member:
+        allowed_roles: []
+        allowed_users: []
+        allowed_channels: []
 
 # Notifications de démarrage
 startup_notifier:
@@ -92,23 +153,19 @@ daily_message:
       - " jus d’orange"
       - " amour"
       - " gorgée"
+
 # CONFIGURATION DU SYSTÈME DE CAPTCHA
 captcha:
   # Activer ou désactiver le système de captcha
   enabled: true
   # ID du canal où les captchas seront envoyés
   # Si non défini, un canal sera créé automatiquement
-  channel_id: "votre_salon_captcha"
+  channel_id: null
   # Nom du canal captcha à créer (si CAPTCHA_CHANNEL_ID est null)
-  captcha_channel_name: "votre_salon_captcha"
+  captcha_channel_name: "✅-verification-captcha"
   color: "couleur_du_bot_dans_le_salon"
   # ID du rôle à donner après validation du captcha
-  # Remplacez par l'ID réel de votre rôle "✅ Vérifié" (obtenu via mode développeur Discord)
-  verified_role_id: "votre_role_id"
-  # Nom du rôle à créer si VERIFIED_ROLE_ID est null
-  #VERIFIED_ROLE_NAME: '✅ Vérifié',
-  # Couleur du rôle vérifié
-  #VERIFIED_ROLE_COLOR: '#2ecc71',
+  verified_role_id: "votre_role_verifie"
   # Temps avant expiration du captcha (en minutes)
   captcha_timeout: 10
   # Nombre de tentatives autorisées
@@ -130,8 +187,8 @@ captcha:
       captcha_question: "Combien font {num1} {operator} {num2} ?"
       instructions: "Réponds avec le résultat **en chiffres** (exemple: 18) dans ce canal."
       success_message: "✅ Bravo ! Ta réponse est correcte. Tu as maintenant accès au serveur !"
-      fail_message: "Mauvaise réponse, tu n'as plus que {attempts} tentative(s) <:Obsydemoncouverture:1488145689916473544>. '
-        timeout_message: '⏰ Temps écoulé ! Le captcha a expiré. Veuillez réessayer en rejoignant à nouveau le serveur."
+      fail_message: "Mauvaise réponse, tu n'as plus que {attempts} tentative(s) <:Obsydemoncouverture:1488145689916473544>."
+      timeout_message: "⏰ Temps écoulé ! Le captcha a expiré. Veuillez réessayer en rejoignant à nouveau le serveur."
       max_attempts_message: "❌ Trop de tentatives incorrectes. Veuillez quitter et rejoindre le serveur pour réessayer."
       already_verified: "✅ Tu as déjà été vérifié !"
     # Messages pour les logs
@@ -153,11 +210,7 @@ welcome:
   # Couleur du bot dans le salon accueil
   welcome_color: "couleur_du_bot_dans_le_salon"
   # IDs des rôles à attribuer automatiquement
-  # Pour obtenir les IDs : Mode développeur Discord → Clic droit sur rôle → Copier l'ID
-  AUTO_ROLES:
-  # Exemple :
-  # '123456789012345678',  // Rôle "Membre"
-  # '234567890123456789',  // Rôle "Nouveau"
+  AUTO_ROLES: []
 
   # Message de bienvenue (peut contenir des variables)
   # {user} = mention de l'utilisateur
@@ -165,7 +218,6 @@ welcome:
   # {server} = nom du serveur
   # {memberCount} = nombre de membres
   welcome_message:
-    # Activer/désactiver le système
     enabled: true
     title: "🎉 Bienvenue sur {server} !"
     description: "Bienvenue {user} !\n\nNous sommes ravis de t'accueillir parmi nous ! 🎊"
@@ -211,12 +263,6 @@ welcome:
     level:
       base_xp: 100 # XP requis pour le niveau 1
       multiplier: 1.5 # Multiplicateur par niveau
-    # Formule : BASE_XP * (niveau ^ MULTIPLIER)
-    # Niveau 1: 100 XP
-    # Niveau 2: 225 XP
-    # Niveau 3: 520 XP
-    # Niveau 10: ~3162 XP
-    # Niveau 20: ~17889 XP
 
     # Bonus
     bonus:
@@ -236,3 +282,42 @@ welcome:
       20: "Vétéran"
       30: "Légende"
       50: "Dieu du serveur"
+
+# ==============================================================================
+# CONFIGURATION DU JEU DU COMPTEUR (ROUTE DE L'INFINI)
+# ==============================================================================
+counter:
+  enabled: true
+  channel_id: "votre_salon_compteur_id"
+  emojis:
+    obsybon_id: "1524104068514189422"
+    obsydemon_id: "1488145689916473544"
+  messages:
+    double_post_message: "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>"
+    ranking_header: "**<@{userId}> a ruiné la Route de l'Infini en envoyant un nombre incorrect !** \n\n 🏆 **Classement de la Route de l'Infini**\n"
+    ranking_footer: "\n\nLe compteur a été réinitialisé, le prochain nombre est 1."
+    no_participation: "Aucune participation enregistrée pour cette session."
+    embed_title: "❌ Perdu !"
+    embed_color: "#F2C7CE"
+
+# ==============================================================================
+# CONFIGURATION DU JEU DU COMPTE À REBOURS (COUNTDOWN)
+# ==============================================================================
+countdown:
+  enabled: true
+  channel_id: "votre_salon_countdown_id"
+  start_number: 900
+  trap_chance: 0.15 # ~15% de chance d'activer un piège
+  emojis:
+    obsybon_id: "1524104068514189422"
+    obsydemon_id: "1488145689916473544"
+  messages:
+    start_message: "**Allez la chienne commence :** {number}"
+    double_post_message: "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>"
+    trap_dodge_message: "**J’ai cru que j’allais vous avoir <:Obsydemoncouverture:{emojiObsydemon}>**"
+    trap_failed_message: "<@{userId}>**, Je t’ai eu ** <:Obsydemoncouverture:{emojiObsydemon}>"
+    finish_message: "**Je suis émue, vous ne vous êtes pas trompés mais ce n’est pas fini <:Obsydemoncouverture:{emojiObsydemon}>**"
+    error_message: "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre ** <:Obsydemoncouverture:{emojiObsydemon}>"
+    no_participation: "Aucune participation enregistrée."
+    embed_title: "🏆 **Classement de la partie**"
+    embed_color: "#F2C7CE"
