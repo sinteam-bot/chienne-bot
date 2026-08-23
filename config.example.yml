@@ -1,0 +1,238 @@
+# Database Configuration (SQLite)
+db_path: ./data/bot.db
+
+# Server Configuration
+port: 3000
+node_env: production
+
+# OpenAI API Configuration
+openai:
+  api_key: "votre_cle_openai_ici"
+  default_model: "gpt-4o-mini"
+
+# OpenRouter API Configuration
+openrouter:
+  api_key: "votre_cle_openrouter_ici"
+  default_model: "openai/gpt-oss-20b:free"
+
+# Discord Configuration
+discord:
+  token: "votre_discord_token_ici"
+  client_id: "votre_client_id_ici"
+  guild_id: "votre_guild_id_ici"
+  default_color: "couleur_du_bot_dans_le_salon"
+
+# Notifications de démarrage
+startup_notifier:
+  enabled: true
+  channel_id: "votre_salon_reserver"
+  color: "couleur_du_bot_dans_le_salon"
+  last_commit_sha: "" # À remplir avec le dernier commit sha du bot
+  github:
+    repo: "sinteam-bot/chienne-bot"
+    token: ""
+
+# Message du jour
+daily_message:
+  enabled: true
+  channel_id: "votre_salon_message_du_jour"
+  color: "couleur_du_bot_dans_le_salon"
+  preview_channel_id: "votre_salon_preview_message_du_jour"
+  preview_color: "couleur_du_bot_dans_le_salon"
+  ai_config:
+    model: "gpt-4o-mini"
+    temperature: 0.7
+    max_tokens: 500
+    prompt: "Date : ${dateStr}. Objectif : souhaiter une bonne journée en ambiance petit déjeuner. Voici les mots à inclure dans le texte : ${pickRandom(ajoutMod, 2)}"
+    instruction: "Écris uniquement le message final. Commence les message par 'En ce ' suivi de la date du jour (exemple format : lundi 1 janvier 2025). Le message doit être clair et compréhensible de tous. Maximum 3 phrases sans emoji."
+    angle_humour:
+      - "observation du quotidien"
+      - "energie du matin"
+      - "bienveillance complice"
+    style_ecriture:
+      - "philosophique"
+      - "familier chaleureux"
+    dispositif_narratif:
+      - "classique"
+    contrainte_legere:
+      - "interdire_les_mots: soleil"
+      - "pas_de_point_dexclamation"
+      - "utiliser_une_image_concrete"
+      - "aucune_reference_au_temps"
+      - "aucun_pronom_personnel"
+    ajoutMod:
+      - "Petit déjeuner"
+      - " boisson"
+      - " matin"
+      - " réconfortant"
+      - " motivation"
+      - " avec du pep’s"
+      - " le lever"
+      - " le lit"
+      - " doudou"
+      - " boire"
+      - " bol"
+      - " tasse"
+      - " verre"
+      - " coucher"
+      - " ambition"
+      - " sérénité"
+      - " tendresse"
+      - " chaleur"
+      - " café"
+      - " thé"
+      - " chocolat chaud"
+      - " confiance"
+      - " opportunité"
+      - " fraicheur"
+      - " oreiller"
+      - " couette"
+      - " cuisine"
+      - " tartine"
+      - " jus d’orange"
+      - " amour"
+      - " gorgée"
+# CONFIGURATION DU SYSTÈME DE CAPTCHA
+captcha:
+  # Activer ou désactiver le système de captcha
+  enabled: true
+  # ID du canal où les captchas seront envoyés
+  # Si non défini, un canal sera créé automatiquement
+  channel_id: "votre_salon_captcha"
+  # Nom du canal captcha à créer (si CAPTCHA_CHANNEL_ID est null)
+  captcha_channel_name: "votre_salon_captcha"
+  color: "couleur_du_bot_dans_le_salon"
+  # ID du rôle à donner après validation du captcha
+  # Remplacez par l'ID réel de votre rôle "✅ Vérifié" (obtenu via mode développeur Discord)
+  verified_role_id: "votre_role_id"
+  # Nom du rôle à créer si VERIFIED_ROLE_ID est null
+  #VERIFIED_ROLE_NAME: '✅ Vérifié',
+  # Couleur du rôle vérifié
+  #VERIFIED_ROLE_COLOR: '#2ecc71',
+  # Temps avant expiration du captcha (en minutes)
+  captcha_timeout: 10
+  # Nombre de tentatives autorisées
+  max_attempts: 3
+  # Configuration des questions mathématiques
+  math_questions:
+    min_number: 1
+    max_number: 20
+    # Types d'opérations possibles
+    operations: ["+", "-", "*"]
+    # Poids de chaque opération (pour la sélection aléatoire)
+    operation_weights:
+      - "+": 0.6
+      - "-": 0.3
+      - "*": 0.1
+    # Messages
+    messages:
+      welcome_message: "Bienvenue sur le serveur ! Pour accéder au reste du serveur, tu dois résoudre ce captcha :"
+      captcha_question: "Combien font {num1} {operator} {num2} ?"
+      instructions: "Réponds avec le résultat **en chiffres** (exemple: 18) dans ce canal."
+      success_message: "✅ Bravo ! Ta réponse est correcte. Tu as maintenant accès au serveur !"
+      fail_message: "Mauvaise réponse, tu n'as plus que {attempts} tentative(s) <:Obsydemoncouverture:1488145689916473544>. '
+        timeout_message: '⏰ Temps écoulé ! Le captcha a expiré. Veuillez réessayer en rejoignant à nouveau le serveur."
+      max_attempts_message: "❌ Trop de tentatives incorrectes. Veuillez quitter et rejoindre le serveur pour réessayer."
+      already_verified: "✅ Tu as déjà été vérifié !"
+    # Messages pour les logs
+    log_messages:
+      captcha_created: "🔒 Captcha créé pour {username} ({userId})"
+      captcha_success: "✅ Captcha validé pour {username} ({userId})"
+      captcha_failed: "❌ Captcha échoué pour {username} ({userId}) - Tentative {attempt}/{max}"
+      captcha_timeout: "⏰ Captcha expiré pour {username} ({userId})"
+
+# CONFIGURATION DU SYSTÈME D'ACCUEIL
+welcome:
+  enabled: true
+  # Logs
+  LOG_TO_CONSOLE: true
+  # ID du channel où envoyer les messages de bienvenue
+  channel_id: "votre_salon_accueil"
+  # Nom du channel accueil à créer (si WELCOME_CHANNEL_ID est null)
+  welcome_channel_name: "votre_salon_accueil"
+  # Couleur du bot dans le salon accueil
+  welcome_color: "couleur_du_bot_dans_le_salon"
+  # IDs des rôles à attribuer automatiquement
+  # Pour obtenir les IDs : Mode développeur Discord → Clic droit sur rôle → Copier l'ID
+  AUTO_ROLES:
+  # Exemple :
+  # '123456789012345678',  // Rôle "Membre"
+  # '234567890123456789',  // Rôle "Nouveau"
+
+  # Message de bienvenue (peut contenir des variables)
+  # {user} = mention de l'utilisateur
+  # {username} = nom de l'utilisateur
+  # {server} = nom du serveur
+  # {memberCount} = nombre de membres
+  welcome_message:
+    # Activer/désactiver le système
+    enabled: true
+    title: "🎉 Bienvenue sur {server} !"
+    description: "Bienvenue {user} !\n\nNous sommes ravis de t'accueillir parmi nous ! 🎊"
+    color: "#f2c7ce"
+    footer: "Membre #{memberCount}"
+    thumbnail: "user" # 'user' = avatar de l'utilisateur, ou URL d'une image
+    image: null # URL d'une image de bannière (optionnel)
+    fields:
+      - name: "📚 Pour commencer"
+        value: "• Lis les règles dans <#CHANNEL_REGLES_ID>\n• Présente-toi dans <#CHANNEL_PRESENTATION_ID>\n• N'hésite pas à poser des questions !"
+        inline: false
+      - name: "🎮 Commandes utiles"
+        value: "`/help` - Liste des commandes\n`/rank` - Voir ton niveau"
+        inline: true
+
+  # Envoyer un message privé au nouveau membre
+  dm_message:
+    enabled: true
+    title: "👋 Bienvenue !"
+    description: "Salut {username} !\n\nBienvenue sur **{server}** ! Nous espérons que tu vas t'amuser avec nous. 😊"
+    color: "#f2c7ce"
+    fields:
+      - name: "💡 Conseil"
+        value: "N'oublie pas de te présenter pour que la communauté apprenne à te connaître !"
+        inline: false
+
+  # Configuration du système XP
+  xp:
+    enabled: false
+    # XP par message
+    message_xp:
+      min: 15
+      max: 25
+      cooldown: 10 # Cooldown en secondes entre deux gains d'XP
+
+    # XP vocal
+    voice_xp:
+      per_minute: 2 # XP par minute en vocal
+      check_interval: 5 # Vérifier toutes les X minutes
+      min_duration: 1 # Minimum de minutes pour gagner de l'XP
+
+    # Formule de calcul de niveau
+    level:
+      base_xp: 100 # XP requis pour le niveau 1
+      multiplier: 1.5 # Multiplicateur par niveau
+    # Formule : BASE_XP * (niveau ^ MULTIPLIER)
+    # Niveau 1: 100 XP
+    # Niveau 2: 225 XP
+    # Niveau 3: 520 XP
+    # Niveau 10: ~3162 XP
+    # Niveau 20: ~17889 XP
+
+    # Bonus
+    bonus:
+      daily_first_message: 50 # Bonus pour le premier message du jour
+      streak_multiplier: 1.1 # +10% XP par jour consécutif (max 7 jours)
+      event_multiplier: 2 # Double XP pendant les événements
+
+    # Limites anti-spam
+    limits:
+      max_xp_per_day: 5000 # Maximum d'XP par jour
+      max_messages_per_minute: 5 # Ignorer après X messages par minute
+
+    # Récompenses de niveau (à personnaliser selon vos rôles)
+    level_roles:
+      5: "Membre Actif"
+      10: "Membre Dévoué"
+      20: "Vétéran"
+      30: "Légende"
+      50: "Dieu du serveur"
