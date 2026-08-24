@@ -1,7 +1,7 @@
 <template>
-  <aside class="channels-sidebar" aria-label="Salons">
+  <aside class="channels-sidebar" aria-label="Menu Principal">
     <!-- En-tête du serveur -->
-    <header class="server-header" @click="navigateTo('info')">
+    <header class="server-header" @click="goTo('/info')">
       <div class="server-name-wrapper">
         <span class="server-badge">⭐</span>
         <h1 class="server-name">{{ guild?.name || 'Chienne Bot' }}</h1>
@@ -15,7 +15,7 @@
 
     <!-- Liste des sections et menus scrollable -->
     <div class="channels-scroller">
-      <!-- 1. SECTIONS PRINCIPALES (Chienne Bot, Modules, Games) -->
+      <!-- SECTIONS PRINCIPALES (Chienne Bot, Modules, Games) -->
       <div
         v-for="section in sections"
         :key="section.id"
@@ -31,29 +31,11 @@
           <div
             v-for="item in section.items"
             :key="item.id"
-            :class="['channel-item', 'virtual-channel', { active: activeView === item.id }]"
-            @click="navigateTo(item.id)"
+            :class="['channel-item', 'virtual-channel', { active: isItemActive(item) }]"
+            @click="goTo(item.routePath || ('/' + item.id))"
           >
             <span class="channel-icon">{{ item.icon }}</span>
             <span class="channel-name">{{ item.name }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. SECTION SALONS DISCORD RÉELS (Si l'utilisateur est dans Archives) -->
-      <div v-if="activeView === 'archives' && discordChannels.length > 0" class="channel-category">
-        <div class="category-header">
-          <span>📁 Salons Textuels</span>
-        </div>
-        <div class="category-channels">
-          <div
-            v-for="ch in discordChannels"
-            :key="ch.id"
-            :class="['channel-item', { active: activeDiscordChannel?.id === ch.id }]"
-            @click="navigateTo('archives', ch)"
-          >
-            <span class="channel-icon">#</span>
-            <span class="channel-name">{{ ch.name }}</span>
           </div>
         </div>
       </div>
@@ -65,8 +47,29 @@
 </template>
 
 <script setup lang="ts">
-import { useAppState } from '~/composables/useAppState.ts';
+import { useRoute, useRouter } from 'vue-router';
+import { useAppState, type ChannelItem } from '~/composables/useAppState.ts';
 import BotFooter from './BotFooter.vue';
 
-const { guild, sections, activeView, activeDiscordChannel, discordChannels, navigateTo } = useAppState();
+const route = useRoute();
+const router = useRouter();
+const { guild, sections, navigateTo } = useAppState();
+
+function isItemActive(item: ChannelItem): boolean {
+  const currentPath = route.path;
+  if (!item.routePath) return false;
+
+  if (item.id === 'info' && (currentPath === '/' || currentPath === '/info')) {
+    return true;
+  }
+  if (item.id === 'archives' && currentPath.startsWith('/archives')) {
+    return true;
+  }
+  return currentPath === item.routePath;
+}
+
+function goTo(path: string) {
+  navigateTo(path.replace('/', '').replace('modules/', 'module-').replace('games/', 'game-') || 'info');
+  router.push(path);
+}
 </script>

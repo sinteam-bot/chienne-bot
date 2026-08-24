@@ -91,9 +91,11 @@ async function loadMessages(channelId: string) {
   hasMoreMessages.value = true;
 
   try {
-    const res = await apiFetch<{ success: boolean; data: any[] }>(`/api/channels/${channelId}/messages?limit=50`);
-    if (res.success && Array.isArray(res.data)) {
-      messages.value = res.data;
+    const res = await apiFetch<{ success: boolean; data: any }>(`/api/channels/${channelId}/messages?limit=50`);
+    if (res.success && res.data) {
+      const msgList = Array.isArray(res.data) ? res.data : (res.data.messages || []);
+      messages.value = msgList;
+      hasMoreMessages.value = res.data.hasMore !== undefined ? res.data.hasMore : msgList.length >= 50;
       scrollToBottom();
     }
   } catch (err: any) {
@@ -113,14 +115,16 @@ async function loadOlderMessages() {
   const prevScrollHeight = scrollerRef.value?.scrollHeight || 0;
 
   try {
-    const res = await apiFetch<{ success: boolean; data: any[] }>(
+    const res = await apiFetch<{ success: boolean; data: any }>(
       `/api/channels/${props.channel.id}/messages?limit=50&before=${oldestMsg.id}`
     );
-    if (res.success && Array.isArray(res.data)) {
-      if (res.data.length === 0) {
+    if (res.success && res.data) {
+      const olderList = Array.isArray(res.data) ? res.data : (res.data.messages || []);
+      if (olderList.length === 0) {
         hasMoreMessages.value = false;
       } else {
-        messages.value = [...res.data, ...messages.value];
+        messages.value = [...olderList, ...messages.value];
+        hasMoreMessages.value = res.data.hasMore !== undefined ? res.data.hasMore : olderList.length >= 50;
         nextTick(() => {
           if (scrollerRef.value) {
             const newScrollHeight = scrollerRef.value.scrollHeight;

@@ -203,17 +203,14 @@ async function loadEventsSilent() {
 
 async function fetchEventsData() {
   try {
-    let eventNameParam = '';
+    let categoryParam = '';
     if (selectedCategory.value !== 'ALL') {
-      if (selectedCategory.value === 'channel') eventNameParam = '&eventName=channelCreate';
-      else if (selectedCategory.value === 'role') eventNameParam = '&eventName=roleCreate';
-      else if (selectedCategory.value === 'message') eventNameParam = '&eventName=messageDelete';
-      else if (selectedCategory.value === 'guildMember') eventNameParam = '&eventName=guildMemberRemove';
+      categoryParam = `&category=${encodeURIComponent(selectedCategory.value)}`;
     }
 
     const searchParam = searchQuery.value ? `&search=${encodeURIComponent(searchQuery.value)}` : '';
     const res = await apiFetch<{ success: boolean; data?: { total: number; events: any[] } }>(
-      `/api/events/archive?limit=100&offset=${page.value * 100}${eventNameParam}${searchParam}`
+      `/api/events/archive?limit=100&offset=${page.value * 100}${categoryParam}${searchParam}`
     );
 
     if (res.success && res.data) {

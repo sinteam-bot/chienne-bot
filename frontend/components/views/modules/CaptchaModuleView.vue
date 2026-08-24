@@ -196,9 +196,13 @@ onMounted(async () => {
 async function loadCaptchaLogs() {
   isLoading.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; data?: any[] }>('/api/captcha-logs');
-    if (res.success && Array.isArray(res.data)) {
-      logs.value = res.data;
+    const res = await apiFetch<{ success: boolean; data?: any }>('/api/captcha-logs');
+    if (res.success && res.data) {
+      if (Array.isArray(res.data)) {
+        logs.value = res.data;
+      } else if (Array.isArray(res.data.captchas)) {
+        logs.value = res.data.captchas;
+      }
     }
   } catch (err) {
     console.error('Erreur logs captcha:', err);
