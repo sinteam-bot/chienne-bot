@@ -1,22 +1,15 @@
 <template>
   <header class="chat-header">
     <div class="channel-title-wrapper">
-      <span class="channel-icon-header">
-        <template v-if="activeChannel?.id === 'virtual-logs'">📜</template>
-        <template v-else-if="activeChannel?.id === 'virtual-config'">⚙️</template>
-        <template v-else-if="activeChannel?.id === 'virtual-users'">👥</template>
-        <template v-else-if="activeChannel?.id === 'virtual-daily-messages'">🌅</template>
-        <template v-else-if="activeChannel?.id === 'virtual-captcha-logs'">🔒</template>
-        <template v-else>#</template>
-      </span>
-      <h2 class="channel-name-header">{{ activeChannel?.name || 'Général' }}</h2>
+      <span class="channel-icon-header">{{ currentViewTitle.icon }}</span>
+      <h2 class="channel-name-header">{{ currentViewTitle.name }}</h2>
     </div>
 
-    <div v-if="activeChannel?.topic" class="header-divider"></div>
-    <div v-if="activeChannel?.topic" class="channel-topic">{{ activeChannel.topic }}</div>
+    <div v-if="currentViewTitle.topic" class="header-divider"></div>
+    <div v-if="currentViewTitle.topic" class="channel-topic">{{ currentViewTitle.topic }}</div>
 
     <div class="header-tools">
-      <div v-if="activeChannel?.id === 'virtual-logs'" class="live-status-pill">
+      <div v-if="activeView === 'logs'" class="live-status-pill">
         <span class="live-dot pulse"></span>
         <span>SSE EN DIRECT</span>
       </div>
@@ -31,5 +24,5 @@
 <script setup lang="ts">
 import { useAppState } from '~/composables/useAppState';
 
-const { activeChannel } = useAppState();
+const { activeView, currentViewTitle } = useAppState();
 </script>

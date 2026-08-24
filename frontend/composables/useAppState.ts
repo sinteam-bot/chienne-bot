@@ -4,21 +4,23 @@ import { useToast } from './useToast';
 export interface ChannelItem {
   id: string;
   name: string;
-  type: number | string;
+  type?: number | string;
   topic?: string;
   parentId?: string | null;
   parentName?: string;
   position?: number;
   isVirtual?: boolean;
+  section?: 'bot' | 'modules' | 'games' | 'discord';
+  icon?: string;
 }
 
-export interface ChannelCategory {
-  id: string;
-  name: string;
-  position: number;
-  channels: ChannelItem[];
+export interface NavigationSection {
+  id: 'bot' | 'modules' | 'games' | 'discord';
+  title: string;
+  icon: string;
+  badge?: string;
+  items: ChannelItem[];
   collapsed?: boolean;
-  isVirtual?: boolean;
 }
 
 export interface GuildInfo {
@@ -41,9 +43,9 @@ export interface BotProfile {
 }
 
 const guild = ref<GuildInfo | null>(null);
-const categories = ref<ChannelCategory[]>([]);
-const activeChannel = ref<ChannelItem | null>(null);
-const activeVirtualView = ref<string>('messages');
+const activeView = ref<string>('info'); // default view: info
+const activeDiscordChannel = ref<ChannelItem | null>(null);
+const discordChannels = ref<ChannelItem[]>([]);
 const botProfile = ref<BotProfile>({
   id: '',
   username: 'Chienne Bot',
@@ -54,19 +56,60 @@ const botProfile = ref<BotProfile>({
 });
 const users = ref<any[]>([]);
 const roles = ref<any[]>([]);
+const stats = ref<any>({});
 const isLoading = ref(false);
 
 export function useAppState() {
   const { apiFetch } = useDiscordApi();
   const { showToast } = useToast();
 
-  const VIRTUAL_CHANNELS: ChannelItem[] = [
-    { id: 'virtual-logs', name: '📜-logs-console', type: 'virtual', isVirtual: true, topic: 'Journal d\'exécution et logs en temps réel (SSE)' },
-    { id: 'virtual-config', name: '⚙️-configuration-bot', type: 'virtual', isVirtual: true, topic: 'Tableau de bord de gestion unifié (config.yml)' },
-    { id: 'virtual-users', name: '👥-membres-et-roles', type: 'virtual', isVirtual: true, topic: 'Annuaire des utilisateurs, rôles et statistiques XP' },
-    { id: 'virtual-daily-messages', name: '🌅-pensee-du-jour-ia', type: 'virtual', isVirtual: true, topic: 'Historique et validation des messages quotidiens générés par IA' },
-    { id: 'virtual-captcha-logs', name: '🔒-logs-captchas', type: 'virtual', isVirtual: true, topic: 'Suivi et historique des vérifications Captcha' }
+  const BOT_SECTION_ITEMS: ChannelItem[] = [
+    { id: 'info', name: 'Informations', icon: '📊', section: 'bot', topic: 'Statistiques globales, performances et état du bot' },
+    { id: 'archives', name: 'Archives & Salons', icon: '💬', section: 'bot', topic: 'Explorateur de salons Discord et historique' },
+    { id: 'events', name: 'Événements Discord', icon: '📡', section: 'bot', topic: 'Journal et archivage en direct de tous les événements Discord (v14)' },
+    { id: 'commands', name: 'Commandes', icon: '⚡', section: 'bot', topic: 'Liste des commandes Discord et permissions' },
+    { id: 'logs', name: 'Logs Console', icon: '📜', section: 'bot', topic: 'Console en direct via Server-Sent Events (SSE)' },
+    { id: 'users', name: 'Membres & Rôles', icon: '👥', section: 'bot', topic: 'Annuaire des utilisateurs, rôles et modale d\'inspection' },
+    { id: 'general-config', name: 'Config Générale', icon: '⚙️', section: 'bot', topic: 'Configuration générale du bot (Tokens, Auth Web, Scheduler)' }
   ];
+
+  const MODULE_SECTION_ITEMS: ChannelItem[] = [
+    { id: 'module-daily-message', name: 'Daily Message (Pensée)', icon: '🌅', section: 'modules', topic: 'Statistiques, pré-rendu et configuration de la pensée du jour' },
+    { id: 'module-captcha', name: 'Captcha Mathématique', icon: '🔒', section: 'modules', topic: 'Statistiques, suivi des vérifications et réglages captcha' },
+    { id: 'module-welcome', name: 'Message de Bienvenue', icon: '👋', section: 'modules', topic: 'Statistiques d\'arrivées, aperçu live et configuration d\'accueil' },
+    { id: 'module-xp-level', name: 'Système XP & Level', icon: '⭐', section: 'modules', topic: 'Leaderboard XP des membres et réglages des multiplicateurs/paliers' }
+  ];
+
+  const GAME_SECTION_ITEMS: ChannelItem[] = [
+    { id: 'game-road-to-infinite', name: 'Road to Infinite', icon: '🔢', section: 'games', topic: 'Jeu du Compteur : Classement des compteurs et configuration' },
+    { id: 'game-countdown', name: 'Countdown (900 -> 0)', icon: '⏳', section: 'games', topic: 'Compte à rebours, statistiques des pièges et réglages' }
+  ];
+
+  const sections = ref<NavigationSection[]>([
+    {
+      id: 'bot',
+      title: 'Chienne Bot',
+      icon: '🐕',
+      items: BOT_SECTION_ITEMS,
+      collapsed: false
+    },
+    {
+      id: 'modules',
+      title: 'Modules',
+      icon: '🧩',
+      badge: '4',
+      items: MODULE_SECTION_ITEMS,
+      collapsed: false
+    },
+    {
+      id: 'games',
+      title: 'Games',
+      icon: '🎮',
+      badge: '2',
+      items: GAME_SECTION_ITEMS,
+      collapsed: false
+    }
+  ]);
 
   async function fetchGuild() {
     try {
@@ -82,92 +125,35 @@ export function useAppState() {
         guild.value = { ...g, initials };
       }
       if (res.bot) {
-        botProfile.value = {
-          ...botProfile.value,
-          ...res.bot
-        };
+        botProfile.value = { ...botProfile.value, ...res.bot };
       }
     } catch (e: any) {
-      console.warn('Erreur chargement informations guild:', e.message);
+      console.warn('Erreur chargement guild:', e.message);
     }
   }
 
   async function fetchChannels() {
     try {
-      isLoading.value = true;
       const res = await apiFetch<{ success: boolean; data: any[] }>('/api/channels');
       if (res.success && Array.isArray(res.data)) {
-        const rawChannels = res.data;
-        
-        // Regrouper par catégorie
-        const catMap = new Map<string, ChannelCategory>();
-
-        // Catégorie sans catégorie
-        const defaultCat: ChannelCategory = {
-          id: 'no-category',
-          name: 'Salons Textuels',
-          position: 0,
-          channels: [],
-          collapsed: false
-        };
-
-        for (const ch of rawChannels) {
-          // Filtrer les salons vocaux ou non textuels si nécessaire (on garde textuels + annonces + forums)
-          if (ch.parentId && ch.parentName) {
-            if (!catMap.has(ch.parentId)) {
-              catMap.set(ch.parentId, {
-                id: ch.parentId,
-                name: ch.parentName,
-                position: ch.parentPosition ?? 1,
-                channels: [],
-                collapsed: false
-              });
-            }
-            catMap.get(ch.parentId)!.channels.push(ch);
-          } else {
-            defaultCat.channels.push(ch);
-          }
-        }
-
-        const sortedCategories = Array.from(catMap.values()).sort((a, b) => a.position - b.position);
-        if (defaultCat.channels.length > 0) {
-          sortedCategories.unshift(defaultCat);
-        }
-
-        // Ajouter la catégorie spéciale Salons Virtuels Bot en tête
-        const virtualCat: ChannelCategory = {
-          id: 'virtual-cat',
-          name: '⭐ Salons Virtuels Bot',
-          position: -1,
-          channels: VIRTUAL_CHANNELS,
-          isVirtual: true,
-          collapsed: false
-        };
-
-        categories.value = [virtualCat, ...sortedCategories];
-
-        // Sélectionner par défaut le premier salon textuel réel si aucun salon actif
-        if (!activeChannel.value) {
-          const firstRealChannel = defaultCat.channels[0] || sortedCategories[0]?.channels[0] || VIRTUAL_CHANNELS[0];
-          if (firstRealChannel) {
-            selectChannel(firstRealChannel);
-          }
+        discordChannels.value = res.data;
+        if (!activeDiscordChannel.value && res.data.length > 0) {
+          activeDiscordChannel.value = res.data[0];
         }
       }
     } catch (e: any) {
-      console.error('Erreur chargement salons:', e.message);
-      showToast('Impossible de charger les salons Discord', 'error');
-    } finally {
-      isLoading.value = false;
+      console.warn('Erreur chargement salons discord:', e.message);
     }
   }
 
-  function selectChannel(channel: ChannelItem) {
-    activeChannel.value = channel;
-    if (channel.id.startsWith('virtual-')) {
-      activeVirtualView.value = channel.id.replace('virtual-', '');
-    } else {
-      activeVirtualView.value = 'messages';
+  async function fetchStats() {
+    try {
+      const res = await apiFetch<{ success: boolean; data: any }>('/api/stats');
+      if (res.success && res.data) {
+        stats.value = res.data;
+      }
+    } catch (e: any) {
+      console.warn('Erreur chargement stats globales:', e.message);
     }
   }
 
@@ -181,32 +167,65 @@ export function useAppState() {
       if (usersRes.success) users.value = usersRes.data || [];
       if (rolesRes.success) roles.value = rolesRes.data || [];
     } catch (e: any) {
-      console.warn('Erreur chargement utilisateurs/rôles:', e.message);
+      console.warn('Erreur chargement users/roles:', e.message);
+    }
+  }
+
+  function navigateTo(viewId: string, discordChannel?: ChannelItem) {
+    activeView.value = viewId;
+    if (discordChannel) {
+      activeDiscordChannel.value = discordChannel;
     }
   }
 
   async function refreshAll() {
-    await Promise.all([
-      fetchGuild(),
-      fetchChannels(),
-      fetchUsersAndRoles()
-    ]);
-    showToast('Données rafraîchies avec succès', 'success');
+    isLoading.value = true;
+    try {
+      await Promise.all([
+        fetchGuild(),
+        fetchChannels(),
+        fetchStats(),
+        fetchUsersAndRoles()
+      ]);
+      showToast('Données rafraîchies avec succès !', 'success');
+    } finally {
+      isLoading.value = false;
+    }
   }
+
+  const currentViewTitle = computed(() => {
+    for (const sec of sections.value) {
+      const found = sec.items.find(i => i.id === activeView.value);
+      if (found) return found;
+    }
+    if (activeView.value === 'archives' && activeDiscordChannel.value) {
+      return {
+        id: activeDiscordChannel.value.id,
+        name: `#${activeDiscordChannel.value.name}`,
+        icon: '💬',
+        topic: activeDiscordChannel.value.topic || 'Historique du salon'
+      };
+    }
+    return { id: activeView.value, name: activeView.value, icon: '⭐', topic: '' };
+  });
 
   return {
     guild: readonly(guild),
-    categories,
-    activeChannel: readonly(activeChannel),
-    activeVirtualView: readonly(activeVirtualView),
+    sections,
+    activeView: readonly(activeView),
+    activeDiscordChannel,
+    discordChannels: readonly(discordChannels),
     botProfile: readonly(botProfile),
     users: readonly(users),
     roles: readonly(roles),
+    stats: readonly(stats),
     isLoading: readonly(isLoading),
+    currentViewTitle,
     fetchGuild,
     fetchChannels,
+    fetchStats,
     fetchUsersAndRoles,
-    selectChannel,
+    navigateTo,
     refreshAll
   };
 }
