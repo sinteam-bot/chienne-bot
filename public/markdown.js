@@ -1,1 +1,0 @@
-// Ancien parseur markdown déprécié
