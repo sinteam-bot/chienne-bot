@@ -114,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAppState } from '~/composables/useAppState';
+import { useAppState } from '~/composables/useAppState.ts';
 
 const { guild, botProfile, users, roles, discordChannels, stats, navigateTo, refreshAll } = useAppState();
 </script>

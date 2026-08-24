@@ -50,8 +50,8 @@
 </template>
 
 <script setup lang="ts">
-import { useAuth } from '~/composables/useAuth';
-import { useToast } from '~/composables/useToast';
+import { useAuth } from '~/composables/useAuth.ts';
+import { useToast } from '~/composables/useToast.ts';
 
 const { isAuthModalOpen, closeAuthModal, getApiKey, verifyKey } = useAuth();
 const { showToast } = useToast();

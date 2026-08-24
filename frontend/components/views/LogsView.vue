@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { useLogsSSE } from '~/composables/useLogsSSE';
+import { useLogsSSE } from '~/composables/useLogsSSE.ts';
 
 const {
   filteredLogs,

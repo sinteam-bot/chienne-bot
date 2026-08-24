@@ -132,13 +132,13 @@
 </template>
 
 <script setup lang="ts">
-import { useDiscordApi } from '~/composables/useDiscordApi';
-import { useToast } from '~/composables/useToast';
-import { useAppState } from '~/composables/useAppState';
+import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import { useToast } from '~/composables/useToast.ts';
+import { useAppState } from '~/composables/useAppState.ts';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
-const { categories } = useAppState();
+const { discordChannels } = useAppState();
 
 const history = ref<any[]>([]);
 const pendingMessage = ref<any>(null);
@@ -150,11 +150,8 @@ const isPublishing = ref(false);
 const targetChannelName = computed(() => {
   const channelId = envInfo.value?.dailyMessageChannelId;
   if (!channelId) return 'général';
-  for (const cat of categories.value) {
-    const found = cat.channels.find(c => c.id === channelId);
-    if (found) return found.name;
-  }
-  return channelId;
+  const found = discordChannels.value.find(c => c.id === channelId);
+  return found ? found.name : channelId;
 });
 
 onMounted(() => {

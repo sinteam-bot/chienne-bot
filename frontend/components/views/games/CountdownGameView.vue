@@ -185,9 +185,9 @@
 </template>
 
 <script setup lang="ts">
-import { useDiscordApi } from '~/composables/useDiscordApi';
-import { useToast } from '~/composables/useToast';
-import { useAppState } from '~/composables/useAppState';
+import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import { useToast } from '~/composables/useToast.ts';
+import { useAppState } from '~/composables/useAppState.ts';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

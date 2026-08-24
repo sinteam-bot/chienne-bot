@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import { useAppState } from '~/composables/useAppState';
 import { useAuth } from '~/composables/useAuth';
 

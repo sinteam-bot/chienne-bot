@@ -118,10 +118,10 @@
 </template>
 
 <script setup lang="ts">
-import { useDiscordApi } from '~/composables/useDiscordApi';
-import { useToast } from '~/composables/useToast';
-import { useAppState } from '~/composables/useAppState';
-import DiscordEmbed from '../common/DiscordEmbed.vue';
+import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import { useToast } from '~/composables/useToast.ts';
+import { useAppState } from '~/composables/useAppState.ts';
+import DiscordEmbed from '~/components/common/DiscordEmbed.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

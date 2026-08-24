@@ -54,9 +54,9 @@
 </template>
 
 <script setup lang="ts">
-import { useDiscordApi } from '~/composables/useDiscordApi';
-import { useToast } from '~/composables/useToast';
-import type { ChannelItem } from '~/composables/useAppState';
+import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import { useToast } from '~/composables/useToast.ts';
+import type { ChannelItem } from '~/composables/useAppState.ts';
 import DiscordMessage from '../common/DiscordMessage.vue';
 
 const props = defineProps<{

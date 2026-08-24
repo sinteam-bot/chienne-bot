@@ -199,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAppState } from '~/composables/useAppState';
+import { useAppState } from '~/composables/useAppState.ts';
 
 defineEmits<{
   (e: 'inspect-user', user: any): void;

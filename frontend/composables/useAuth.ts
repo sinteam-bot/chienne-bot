@@ -1,3 +1,5 @@
+import { ref, readonly } from 'vue';
+
 const isAuthModalOpen = ref(false);
 const authRequired = ref(false);
 const savedApiKey = ref('');

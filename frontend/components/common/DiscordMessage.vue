@@ -143,7 +143,7 @@ const formattedContent = computed(() => {
     .replace(/>/g, '&gt;');
 
   // Blocs de code ```js
-  content = content.replace(/```([a-z]*)\n([\s\S]*?)```/gi, (match, lang, code) => {
+  content = content.replace(/```([a-z]*)\n([\s\S]*?)```/gi, (_match: string, lang: string, code: string) => {
     return `<pre class="discord-code-block"><span class="code-lang-tag">${lang}</span><code>${code}</code></pre>`;
   });
 
@@ -160,7 +160,7 @@ const formattedContent = computed(() => {
   content = content.replace(/__(.*?)__/g, '<u>$1</u>');
 
   // Emojis personnalisés Discord <:name:id> ou <a:name:id>
-  content = content.replace(/&lt;(a?):([a-zA-Z0-9_]+):(\d+)&gt;/g, (match, animated, name, id) => {
+  content = content.replace(/&lt;(a?):([a-zA-Z0-9_]+):(\d+)&gt;/g, (_match: string, animated: string, name: string, id: string) => {
     const ext = animated ? 'gif' : 'png';
     return `<img class="discord-custom-emoji" src="https://cdn.discordapp.com/emojis/${id}.${ext}?size=48&quality=lossless" alt=":${name}:" title=":${name}:" />`;
   });

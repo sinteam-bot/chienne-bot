@@ -1,4 +1,5 @@
-import { useAuth } from './useAuth';
+import { ref, computed, readonly } from 'vue';
+import { useAuth } from './useAuth.ts';
 
 export interface LogEntry {
   id: number;

@@ -1,5 +1,5 @@
-import { useAuth } from './useAuth';
-import { useToast } from './useToast';
+import { useAuth } from "./useAuth.ts";
+import { useToast } from "./useToast.ts";
 
 export function useDiscordApi() {
   const { getApiKey, openAuthModal } = useAuth();

@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAppState } from '~/composables/useAppState';
+import { useAppState } from '~/composables/useAppState.ts';
 import BotFooter from './BotFooter.vue';
 
 const { guild, sections, activeView, activeDiscordChannel, discordChannels, navigateTo } = useAppState();

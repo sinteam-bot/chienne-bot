@@ -27,8 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import { useAppState } from '~/composables/useAppState';
-import { useAuth } from '~/composables/useAuth';
+import { useAppState } from '~/composables/useAppState.ts';
+import { useAuth } from '~/composables/useAuth.ts';
 
 const { botProfile, refreshAll } = useAppState();
 const { openAuthModal } = useAuth();

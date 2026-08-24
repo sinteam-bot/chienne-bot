@@ -149,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { useDiscordApi } from '~/composables/useDiscordApi';
+import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 
 const { apiFetch } = useDiscordApi();
 
