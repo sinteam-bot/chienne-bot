@@ -96,6 +96,7 @@ export function useAppState() {
 
   const MODULE_SECTION_ITEMS: ChannelItem[] = [
     { id: 'module-daily-message', name: 'Daily Message (Pensée)', icon: '🌅', routePath: '/modules/daily-message', section: 'modules', topic: 'Statistiques, pré-rendu et configuration de la pensée du jour' },
+    { id: 'module-bump-reminder', name: 'Rappels de Bump', icon: '⏰', routePath: '/modules/bump-reminder', section: 'modules', topic: 'Décompte Disboard en temps réel, historique des bumps et configuration' },
     { id: 'module-captcha', name: 'Captcha Mathématique', icon: '🔒', routePath: '/modules/captcha', section: 'modules', topic: 'Statistiques, suivi des vérifications et réglages captcha' },
     { id: 'module-welcome', name: 'Message de Bienvenue', icon: '👋', routePath: '/modules/welcome', section: 'modules', topic: 'Statistiques d\'arrivées, aperçu live et configuration d\'accueil' },
     { id: 'module-xp-level', name: 'Système XP & Level', icon: '⭐', routePath: '/modules/xp-level', section: 'modules', topic: 'Leaderboard XP des membres et réglages des multiplicateurs/paliers' }
@@ -118,7 +119,7 @@ export function useAppState() {
       id: 'modules',
       title: 'Modules',
       icon: '🧩',
-      badge: '4',
+      badge: '5',
       items: MODULE_SECTION_ITEMS,
       collapsed: false
     },
