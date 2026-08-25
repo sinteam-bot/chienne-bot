@@ -105,7 +105,7 @@
           <div class="user-card-banner"></div>
           <div class="user-card-body">
             <div class="user-card-avatar-wrapper">
-              <img :src="u.avatarUrl" :alt="u.username" class="user-card-avatar" />
+              <img :src="u.avatarUrl" :alt="u.username" class="user-card-avatar" loading="lazy" referrerpolicy="no-referrer" />
             </div>
             <div class="user-card-header-info">
               <div class="user-card-displayname">
@@ -154,7 +154,7 @@
             >
               <td>
                 <div class="user-td-member">
-                  <img :src="u.avatarUrl" :alt="u.username" class="user-td-avatar" />
+                  <img :src="u.avatarUrl" :alt="u.username" class="user-td-avatar" loading="lazy" referrerpolicy="no-referrer" />
                   <div class="user-td-info">
                     <span class="user-td-name">
                       {{ u.displayName || u.username }}

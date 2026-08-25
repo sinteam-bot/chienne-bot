@@ -7,7 +7,7 @@
           :style="{ background: user.bannerUrl ? `url(${user.bannerUrl}) center/cover` : 'linear-gradient(135deg, #5865F2, #8e44ad)' }"
         ></div>
         <div class="modal-avatar-wrapper">
-          <img :src="user.avatarUrl" :alt="user.username" class="modal-avatar" />
+          <img :src="user.avatarUrl" :alt="user.username" class="modal-avatar" loading="lazy" referrerpolicy="no-referrer" />
           <span :class="['modal-status-dot', user.status || 'offline']"></span>
         </div>
         <button class="modal-close-btn" title="Fermer" @click="$emit('close')">✕</button>

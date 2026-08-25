@@ -53,6 +53,8 @@
             <img
               :src="guild?.iconUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'"
               alt="Guild Icon"
+              loading="lazy"
+              referrerpolicy="no-referrer"
               style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover;"
             />
             <div style="display: flex; flex-direction: column;">
@@ -74,6 +76,8 @@
             <img
               :src="botProfile.avatarUrl"
               alt="Bot Avatar"
+              loading="lazy"
+              referrerpolicy="no-referrer"
               style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover;"
             />
             <div style="display: flex; flex-direction: column;">

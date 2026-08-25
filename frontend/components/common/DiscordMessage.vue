@@ -7,6 +7,9 @@
         :src="message.author?.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'"
         alt="Avatar"
         class="message-avatar"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        crossorigin="anonymous"
         @click="$emit('inspect-user', message.author?.id)"
       />
       <span v-else class="grouped-timestamp">{{ shortTime }}</span>
@@ -39,6 +42,7 @@
             :alt="att.name"
             class="message-attachment-image"
             loading="lazy"
+            referrerpolicy="no-referrer"
             @click="openImage(att.url)"
           />
           <a v-else :href="att.url" target="_blank" rel="noopener noreferrer" class="discord-link">
@@ -62,15 +66,17 @@
           v-for="(react, idx) in message.reactions"
           :key="idx"
           class="reaction-pill"
-          :title="react.emoji?.name"
+          :title="getReactionTitle(react)"
         >
           <img
-            v-if="react.emoji?.id"
-            :src="`https://cdn.discordapp.com/emojis/${react.emoji.id}.png?size=32`"
+            v-if="getReactionUrl(react)"
+            :src="getReactionUrl(react)"
             class="discord-reaction-emoji"
-            :alt="react.emoji.name"
+            :alt="getReactionLabel(react)"
+            loading="lazy"
+            referrerpolicy="no-referrer"
           />
-          <span v-else class="reaction-unicode">{{ react.emoji?.name }}</span>
+          <span v-else class="reaction-unicode">{{ getReactionLabel(react) }}</span>
           <span class="reaction-count">{{ react.count }}</span>
         </div>
       </div>
@@ -79,7 +85,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import DiscordEmbed from './DiscordEmbed.vue';
+import { useDiscordFormatter } from '~/composables/useDiscordFormatter.ts';
 
 const props = defineProps<{
   message: any;
@@ -89,6 +97,8 @@ const props = defineProps<{
 defineEmits<{
   (e: 'inspect-user', userId: string): void;
 }>();
+
+const { formatDiscordContent } = useDiscordFormatter();
 
 const shortTime = computed(() => {
   try {
@@ -132,48 +142,29 @@ function openImage(url: string) {
   window.open(url, '_blank');
 }
 
+function getReactionUrl(react: any): string | null {
+  if (react.url) return react.url;
+  const emojiId = react.id || react.emoji?.id;
+  if (emojiId) {
+    const ext = react.animated || react.emoji?.animated ? 'gif' : 'png';
+    return `https://cdn.discordapp.com/emojis/${emojiId}.${ext}?size=32&quality=lossless`;
+  }
+  return null;
+}
+
+function getReactionLabel(react: any): string {
+  if (typeof react.emoji === 'string') return react.emoji;
+  if (react.emoji?.name) return react.emoji.name;
+  if (react.name) return react.name;
+  return '⭐';
+}
+
+function getReactionTitle(react: any): string {
+  const label = getReactionLabel(react);
+  return `${label} (${react.count})`;
+}
+
 const formattedContent = computed(() => {
-  let content = props.message.content || '';
-  if (!content) return '';
-
-  // Échappement HTML basique
-  content = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  // Blocs de code ```js
-  content = content.replace(/```([a-z]*)\n([\s\S]*?)```/gi, (_match: string, lang: string, code: string) => {
-    return `<pre class="discord-code-block"><span class="code-lang-tag">${lang}</span><code>${code}</code></pre>`;
-  });
-
-  // Code inline `code`
-  content = content.replace(/`([^`]+)`/g, '<code class="discord-inline-code">$1</code>');
-
-  // Gras **text**
-  content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-  // Italique *text* ou _text_
-  content = content.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-
-  // Souligné __text__
-  content = content.replace(/__(.*?)__/g, '<u>$1</u>');
-
-  // Emojis personnalisés Discord <:name:id> ou <a:name:id>
-  content = content.replace(/&lt;(a?):([a-zA-Z0-9_]+):(\d+)&gt;/g, (_match: string, animated: string, name: string, id: string) => {
-    const ext = animated ? 'gif' : 'png';
-    return `<img class="discord-custom-emoji" src="https://cdn.discordapp.com/emojis/${id}.${ext}?size=48&quality=lossless" alt=":${name}:" title=":${name}:" />`;
-  });
-
-  // Mentions <@123456789>
-  content = content.replace(/&lt;@!?(\d+)&gt;/g, '<span class="discord-mention">@Utilisateur</span>');
-
-  // Mentions salons <#123456789>
-  content = content.replace(/&lt;#(\d+)&gt;/g, '<span class="discord-mention">#salon</span>');
-
-  // Sauts de ligne
-  content = content.replace(/\n/g, '<br/>');
-
-  return content;
+  return formatDiscordContent(props.message?.content || '', props.message);
 });
 </script>

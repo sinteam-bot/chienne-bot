@@ -54,11 +54,19 @@ export interface BotProfile {
   customStatus?: string;
 }
 
+export interface EmojiItem {
+  id: string;
+  name: string;
+  animated?: boolean;
+  url?: string;
+}
+
 const guild = ref<GuildInfo | null>(null);
 const activeView = ref<string>('info'); // default view: info
 const activeDiscordChannel = ref<ChannelItem | null>(null);
 const discordChannels = ref<ChannelItem[]>([]);
 const channelCategories = ref<ChannelCategory[]>([]);
+const guildEmojis = ref<EmojiItem[]>([]);
 const botProfile = ref<BotProfile>({
   id: '',
   username: 'Chienne Bot',
@@ -126,16 +134,20 @@ export function useAppState() {
 
   async function fetchGuild() {
     try {
-      const res = await apiFetch<{ success: boolean; data: GuildInfo; bot: BotProfile }>('/api/guild');
+      const res = await apiFetch<{ success: boolean; data: any; bot: BotProfile }>('/api/guild');
       if (res.success && res.data) {
         const g = res.data;
-        const initials = g.name
+        const initials = (g.name || 'CB')
           .split(' ')
-          .map(w => w[0])
+          .map((w: string) => w[0])
           .join('')
           .substring(0, 3)
           .toUpperCase() || 'CB';
         guild.value = { ...g, initials };
+
+        if (Array.isArray(g.emojis)) {
+          guildEmojis.value = g.emojis;
+        }
       }
       if (res.bot) {
         botProfile.value = { ...botProfile.value, ...res.bot };
@@ -273,6 +285,7 @@ export function useAppState() {
     activeDiscordChannel,
     discordChannels: readonly(discordChannels),
     channelCategories,
+    guildEmojis: readonly(guildEmojis),
     botProfile: readonly(botProfile),
     users: readonly(users),
     roles: readonly(roles),

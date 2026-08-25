@@ -1,7 +1,7 @@
 <template>
   <footer class="user-footer">
     <div class="user-avatar-wrapper">
-      <img :src="botProfile.avatarUrl" alt="Bot Avatar" class="user-avatar" />
+      <img :src="botProfile.avatarUrl" alt="Bot Avatar" class="user-avatar" loading="lazy" referrerpolicy="no-referrer" />
       <span :class="['status-indicator', botProfile.status]"></span>
     </div>
     <div class="user-info">

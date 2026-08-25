@@ -908,10 +908,48 @@ html, body {
 .discord-mention {
     background-color: rgba(88, 101, 242, 0.3);
     color: #c9cdfb;
-    padding: 0 4px;
+    padding: 1px 5px;
     border-radius: 3px;
     font-weight: 500;
     cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    display: inline-block;
+    vertical-align: baseline;
+}
+
+.discord-mention:hover {
+    background-color: #5865f2;
+    color: #ffffff;
+}
+
+.discord-mention-role {
+    background-color: rgba(88, 101, 242, 0.2);
+    color: #c9cdfb;
+}
+
+.discord-mention-role:hover {
+    filter: brightness(1.2);
+}
+
+.discord-mention-channel {
+    background-color: rgba(88, 101, 242, 0.15);
+    color: #c9cdfb;
+}
+
+.discord-mention-channel:hover {
+    background-color: rgba(88, 101, 242, 0.35);
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.discord-mention-everyone {
+    background-color: rgba(240, 178, 50, 0.15);
+    color: #f0b232;
+}
+
+.discord-mention-everyone:hover {
+    background-color: rgba(240, 178, 50, 0.3);
+    color: #ffe89e;
 }
 
 .discord-custom-emoji {
@@ -920,6 +958,47 @@ html, body {
     vertical-align: -4px;
     display: inline-block;
     object-fit: contain;
+    margin: 0 1px;
+}
+
+.discord-reaction-emoji {
+    width: 16px;
+    height: 16px;
+    vertical-align: -2px;
+    display: inline-block;
+    object-fit: contain;
+}
+
+.discord-quote {
+    border-left: 4px solid #4e5058;
+    padding: 2px 0 2px 12px;
+    margin: 4px 0;
+    color: #dbdee1;
+}
+
+.discord-quote.multiline {
+    display: block;
+    margin: 6px 0;
+}
+
+.discord-spoiler {
+    background-color: #2b2d31;
+    color: transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 0 4px;
+    user-select: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.discord-spoiler:hover {
+    background-color: #313338;
+}
+
+.discord-spoiler.revealed {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: inherit;
+    user-select: text;
 }
 
 /* Logs View */

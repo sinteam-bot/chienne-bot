@@ -69,7 +69,7 @@
               </td>
               <td>
                 <div class="user-td-member">
-                  <img :src="u.avatarUrl" :alt="u.username" class="user-td-avatar" />
+                  <img :src="u.avatarUrl" :alt="u.username" class="user-td-avatar" loading="lazy" referrerpolicy="no-referrer" />
                   <div class="user-td-info">
                     <span class="user-td-name">{{ u.displayName || u.username }}</span>
                     <span class="user-td-sub">@{{ u.username }}</span>

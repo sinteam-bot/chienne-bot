@@ -2,7 +2,13 @@
   <div class="discord-embed" :style="{ borderLeftColor: embedColor }">
     <!-- Author -->
     <div v-if="embed.author" class="embed-author">
-      <img v-if="embed.author.icon_url || embed.author.iconURL" :src="embed.author.icon_url || embed.author.iconURL" alt="Author Icon" />
+      <img
+        v-if="embed.author.icon_url || embed.author.iconURL"
+        :src="embed.author.icon_url || embed.author.iconURL"
+        alt="Author Icon"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+      />
       <span>{{ embed.author.name }}</span>
     </div>
 
@@ -21,18 +27,29 @@
     <div v-if="embed.fields && embed.fields.length > 0" class="embed-fields-grid">
       <div v-for="(field, index) in embed.fields" :key="index" class="embed-field">
         <div class="embed-field-name">{{ field.name }}</div>
-        <div class="embed-field-value" v-html="formatDiscordText(field.value)"></div>
+        <div class="embed-field-value" v-html="formatDiscordContent(field.value || '')"></div>
       </div>
     </div>
 
     <!-- Image -->
     <div v-if="embed.image" class="embed-image">
-      <img :src="embed.image.url || embed.image.proxy_url" alt="Embed Image" loading="lazy" />
+      <img
+        :src="embed.image.url || embed.image.proxy_url"
+        alt="Embed Image"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+      />
     </div>
 
     <!-- Footer -->
     <div v-if="embed.footer || embed.timestamp" class="embed-footer">
-      <img v-if="embed.footer?.icon_url || embed.footer?.iconURL" :src="embed.footer.icon_url || embed.footer.iconURL" alt="Footer Icon" />
+      <img
+        v-if="embed.footer?.icon_url || embed.footer?.iconURL"
+        :src="embed.footer.icon_url || embed.footer.iconURL"
+        alt="Footer Icon"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+      />
       <span v-if="embed.footer?.text">{{ embed.footer.text }}</span>
       <span v-if="embed.timestamp && embed.footer?.text">•</span>
       <span v-if="embed.timestamp">{{ formatTimestamp(embed.timestamp) }}</span>
@@ -41,9 +58,14 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useDiscordFormatter } from '~/composables/useDiscordFormatter.ts';
+
 const props = defineProps<{
   embed: any;
 }>();
+
+const { formatDiscordContent } = useDiscordFormatter();
 
 const embedColor = computed(() => {
   if (!props.embed) return 'var(--brand)';
@@ -56,21 +78,8 @@ const embedColor = computed(() => {
   return 'var(--brand)';
 });
 
-function formatDiscordText(text: string): string {
-  if (!text) return '';
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/__(.*?)__/g, '<u>$1</u>')
-    .replace(/`([^`]+)`/g, '<code class="discord-inline-code">$1</code>')
-    .replace(/<@!?(\d+)>/g, '<span class="discord-mention">@Utilisateur</span>')
-    .replace(/<#(\d+)>/g, '<span class="discord-mention">#salon</span>')
-    .replace(/<@&(\d+)>/g, '<span class="discord-mention">@rôle</span>')
-    .replace(/\n/g, '<br/>');
-}
-
 const formattedDescription = computed(() => {
-  return formatDiscordText(props.embed?.description || '');
+  return formatDiscordContent(props.embed?.description || '');
 });
 
 function formatTimestamp(iso: string): string {
