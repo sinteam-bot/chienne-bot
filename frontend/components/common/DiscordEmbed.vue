@@ -9,15 +9,13 @@
         loading="lazy"
         referrerpolicy="no-referrer"
       />
-      <span>{{ embed.author.name }}</span>
+      <span v-html="formatDiscordContent(embed.author.name || '')"></span>
     </div>
 
     <!-- Title -->
     <div v-if="embed.title" class="embed-title">
-      <a v-if="embed.url" :href="embed.url" target="_blank" rel="noopener noreferrer" class="discord-link">
-        {{ embed.title }}
-      </a>
-      <span v-else>{{ embed.title }}</span>
+      <a v-if="embed.url" :href="embed.url" target="_blank" rel="noopener noreferrer" class="discord-link" v-html="formatDiscordContent(embed.title)"></a>
+      <span v-else v-html="formatDiscordContent(embed.title)"></span>
     </div>
 
     <!-- Description -->
@@ -26,7 +24,7 @@
     <!-- Fields Grid -->
     <div v-if="embed.fields && embed.fields.length > 0" class="embed-fields-grid">
       <div v-for="(field, index) in embed.fields" :key="index" class="embed-field">
-        <div class="embed-field-name">{{ field.name }}</div>
+        <div class="embed-field-name" v-html="formatDiscordContent(field.name || '')"></div>
         <div class="embed-field-value" v-html="formatDiscordContent(field.value || '')"></div>
       </div>
     </div>
@@ -50,7 +48,7 @@
         loading="lazy"
         referrerpolicy="no-referrer"
       />
-      <span v-if="embed.footer?.text">{{ embed.footer.text }}</span>
+      <span v-if="embed.footer?.text" v-html="formatDiscordContent(embed.footer.text)"></span>
       <span v-if="embed.timestamp && embed.footer?.text">•</span>
       <span v-if="embed.timestamp">{{ formatTimestamp(embed.timestamp) }}</span>
     </div>

@@ -8,6 +8,11 @@ export default defineNuxtConfig({
   // Mode Single Page Application (Statique)
   ssr: false,
 
+  sourcemap: {
+    server: false,
+    client: false
+  },
+
   app: {
     head: {
       title: 'Chienne Bot - Interface Discord',
