@@ -141,8 +141,11 @@
 
         <div class="form-row">
           <div class="col-half">
-            <label class="form-label">ID du Rôle Vérifié</label>
-            <input v-model="config.verified_role_id" type="text" class="discord-input" placeholder="ID rôle" />
+            <label class="form-label">Rôle Membre Vérifié (Attribué après validation)</label>
+            <DiscordRoleSelect
+              v-model="config.verified_role_id"
+              placeholder="Sélectionner le rôle vérifié..."
+            />
           </div>
           <div class="col-half">
             <label class="form-label">Nom du Salon Temporaire</label>
@@ -174,6 +177,7 @@
 <script setup lang="ts">
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
+import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

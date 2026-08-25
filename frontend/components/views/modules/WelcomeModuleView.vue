@@ -78,12 +78,24 @@
 
         <div class="form-row">
           <div class="col-half">
-            <label class="form-label">ID du Salon de Bienvenue</label>
-            <input v-model="config.welcome_channel_id" type="text" class="discord-input" placeholder="ID salon ou null" />
+            <label class="form-label">Salon de Bienvenue (Message Public)</label>
+            <DiscordChannelSelect
+              v-model="config.welcome_channel_id"
+              :allow-null="true"
+              null-label="— Salon Système Discord par défaut —"
+              placeholder="Sélectionner le salon de bienvenue..."
+              :filter-text-only="true"
+            />
           </div>
           <div class="col-half">
-            <label class="form-label">ID du Salon de Présentation</label>
-            <input v-model="config.presentation_channel_id" type="text" class="discord-input" placeholder="ID salon présentation" />
+            <label class="form-label">Salon de Présentation (Mentionné dans l'accueil)</label>
+            <DiscordChannelSelect
+              v-model="config.presentation_channel_id"
+              :allow-null="true"
+              null-label="— Aucun salon de présentation —"
+              placeholder="Sélectionner le salon de présentation..."
+              :filter-text-only="true"
+            />
           </div>
         </div>
 
@@ -122,6 +134,7 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
 import DiscordEmbed from '~/components/common/DiscordEmbed.vue';
+import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

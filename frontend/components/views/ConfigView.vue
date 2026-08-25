@@ -45,12 +45,24 @@
 
               <div class="form-row">
                 <div class="col-half">
-                  <label class="form-label">ID Salon de Bienvenue</label>
-                  <input v-model="config.welcome.welcome_channel_id" type="text" class="discord-input" placeholder="ID salon ou null pour salon système" />
+                  <label class="form-label">Salon de Bienvenue</label>
+                  <DiscordChannelSelect
+                    v-model="config.welcome.welcome_channel_id"
+                    :allow-null="true"
+                    null-label="— Salon Système Discord par défaut —"
+                    placeholder="Sélectionner le salon..."
+                    :filter-text-only="true"
+                  />
                 </div>
                 <div class="col-half">
-                  <label class="form-label">ID Salon de Présentation</label>
-                  <input v-model="config.welcome.presentation_channel_id" type="text" class="discord-input" placeholder="ID salon présentation" />
+                  <label class="form-label">Salon de Présentation</label>
+                  <DiscordChannelSelect
+                    v-model="config.welcome.presentation_channel_id"
+                    :allow-null="true"
+                    null-label="— Aucun salon —"
+                    placeholder="Sélectionner le salon..."
+                    :filter-text-only="true"
+                  />
                 </div>
               </div>
 
@@ -105,8 +117,11 @@
 
               <div class="form-row">
                 <div class="col-half">
-                  <label class="form-label">ID Rôle Vérifié</label>
-                  <input v-model="config.captcha.verified_role_id" type="text" class="discord-input" placeholder="ID rôle à attribuer" />
+                  <label class="form-label">Rôle Membre Vérifié</label>
+                  <DiscordRoleSelect
+                    v-model="config.captcha.verified_role_id"
+                    placeholder="Sélectionner le rôle vérifié..."
+                  />
                 </div>
                 <div class="col-half">
                   <label class="form-label">Nom du salon temporaire</label>
@@ -155,13 +170,22 @@
               <div class="form-divider"></div>
 
               <div>
-                <label class="form-label">ID Salon de Publication</label>
-                <input v-model="config.daily_message.channel_id" type="text" class="discord-input" placeholder="ID salon Discord" />
+                <label class="form-label">Salon de Publication</label>
+                <DiscordChannelSelect
+                  v-model="config.daily_message.channel_id"
+                  placeholder="Sélectionner le salon de publication..."
+                  :filter-text-only="true"
+                />
               </div>
 
               <div>
-                <label class="form-label">ID Rôle à mentionner (optionnel)</label>
-                <input v-model="config.daily_message.role_mention_id" type="text" class="discord-input" placeholder="ID rôle mentionné" />
+                <label class="form-label">Rôle à mentionner (optionnel)</label>
+                <DiscordRoleSelect
+                  v-model="config.daily_message.role_mention_id"
+                  :allow-null="true"
+                  null-label="— Aucune mention de rôle —"
+                  placeholder="Sélectionner un rôle à mentionner..."
+                />
               </div>
 
               <div class="config-actions-bar">
@@ -278,6 +302,8 @@
 <script setup lang="ts">
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
+import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
+import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

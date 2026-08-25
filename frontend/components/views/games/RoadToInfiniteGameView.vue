@@ -114,8 +114,12 @@
         <div class="form-divider"></div>
 
         <div>
-          <label class="form-label">ID du Salon du Compteur</label>
-          <input v-model="config.channel_id" type="text" class="discord-input" placeholder="ID salon" />
+          <label class="form-label">Salon du Jeu (Route vers l'Infini)</label>
+          <DiscordChannelSelect
+            v-model="config.channel_id"
+            placeholder="Sélectionner le salon du compteur..."
+            :filter-text-only="true"
+          />
         </div>
 
         <div class="card-subtitle" style="margin-top: 10px;">Emojis Personnalisés</div>
@@ -169,6 +173,7 @@
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
+import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

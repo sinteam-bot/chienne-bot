@@ -182,13 +182,23 @@
         <div class="form-divider"></div>
 
         <div>
-          <label class="form-label">ID du Salon de Publication</label>
-          <input v-model="config.channel_id" type="text" class="discord-input" placeholder="ID salon Discord (ex: 1337807772024180756)" />
+          <label class="form-label">Salon de Publication du Message du Jour</label>
+          <DiscordChannelSelect
+            v-model="config.channel_id"
+            placeholder="Sélectionner le salon de publication..."
+            :filter-text-only="true"
+          />
         </div>
 
         <div>
-          <label class="form-label">ID du Salon de Prévisualisation (Modération 21h)</label>
-          <input v-model="config.preview_channel_id" type="text" class="discord-input" placeholder="ID salon pré-rendu (ex: 1540433649994829824)" />
+          <label class="form-label">Salon de Prévisualisation (Modération 21h)</label>
+          <DiscordChannelSelect
+            v-model="config.preview_channel_id"
+            placeholder="Sélectionner le salon de pré-rendu..."
+            :allow-null="true"
+            null-label="— Aucun (ou salon de logs système) —"
+            :filter-text-only="true"
+          />
         </div>
 
         <div>
@@ -226,6 +236,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
+import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
