@@ -6,7 +6,7 @@
         :class="['captcha-subtab-btn', { active: activeSubTab === 'stats' }]"
         @click="activeSubTab = 'stats'"
       >
-        📊 Statistiques & Historique
+        📊 Statistiques & Brouillons
       </button>
       <button
         :class="['captcha-subtab-btn', { active: activeSubTab === 'config' }]"
@@ -16,7 +16,7 @@
       </button>
     </div>
 
-    <!-- SOUS-ONGLET 1 : STATS & HISTORIQUE -->
+    <!-- SOUS-ONGLET 1 : STATS & BROUILLONS & HISTORIQUE -->
     <div v-if="activeSubTab === 'stats'" class="daily-scroller">
       <!-- Bannière Stats -->
       <div class="daily-stats-banner">
@@ -27,7 +27,7 @@
             <span class="daily-stat-value" :style="{ color: config?.enabled ? 'var(--green)' : 'var(--red)' }">
               {{ config?.enabled ? 'Activé' : 'Désactivé' }}
             </span>
-            <span class="daily-stat-sub">Pré-rendu 21:00 / Publication 09:00</span>
+            <span class="daily-stat-sub">Pré-rendu 21:00 / Diffusion 09:00</span>
           </div>
         </div>
 
@@ -35,8 +35,10 @@
           <div class="daily-stat-icon">🤖</div>
           <div class="daily-stat-info">
             <span class="daily-stat-label">Modèle IA Utilisé</span>
-            <span class="daily-stat-value">{{ envInfo.openaiModel || 'gpt-4o-mini' }}</span>
-            <span class="daily-stat-sub">OpenAI / OpenRouter</span>
+            <span class="daily-stat-value" style="font-size: 13px; font-family: monospace; word-break: break-all;">
+              {{ currentModel }}
+            </span>
+            <span class="daily-stat-sub">OpenRouter / LLM</span>
           </div>
         </div>
 
@@ -51,38 +53,87 @@
       </div>
 
       <!-- Barre d'outils -->
-      <div class="daily-toolbar">
-        <button class="btn-primary" :disabled="isGenerating" @click="generateDailyMessage">
+      <div class="daily-toolbar" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+        <button class="btn-primary" :disabled="isGenerating || isActionRunning" @click="generateDailyMessage">
           <span v-if="isGenerating">⚡ Génération en cours...</span>
-          <span v-else>✨ Générer un message de test</span>
+          <span v-else>✨ Générer un nouveau brouillon</span>
         </button>
 
-        <button class="action-btn" @click="loadDailyData">
+        <button class="action-btn" :disabled="isActionRunning" @click="loadDailyData">
           🔄 Rafraîchir
         </button>
       </div>
 
-      <!-- Message en attente de publication -->
-      <div v-if="pendingMessage" class="daily-pending-container">
-        <div class="daily-pending-header">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="badge-pending">EN ATTENTE DE PUBLICATION</span>
-            <span class="daily-pending-time">Prévu pour : {{ pendingMessage.scheduledTime || '09:00' }}</span>
+      <!-- Bloc du Brouillon en Attente / Validé -->
+      <div v-if="pendingMessage" class="daily-pending-container" style="margin-bottom: 28px; border: 1px solid var(--border-color); border-radius: 8px; padding: 18px; background-color: var(--bg-secondary);">
+        <div class="daily-pending-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span v-if="pendingMessage.isAccepted" class="badge-pending" style="background-color: var(--green); color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+              ✅ VALIDÉ POUR DIFFUSION (09:00)
+            </span>
+            <span v-else class="badge-pending" style="background-color: #f39c12; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+              ⏳ BROUILLON EN ATTENTE DE VALIDATION
+            </span>
+            <span v-if="pendingMessage.model" class="daily-badge-model" style="font-family: monospace; font-size: 11px;">
+              {{ pendingMessage.model }}
+            </span>
           </div>
 
-          <button class="btn-primary" style="background-color: var(--green);" :disabled="isPublishing" @click="publishPending">
-            {{ isPublishing ? 'Publication...' : '🚀 Publier Immédiatement' }}
-          </button>
+          <!-- Actions sur le brouillon -->
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <button
+              v-if="!pendingMessage.isAccepted"
+              class="btn-primary"
+              style="background-color: var(--green); padding: 6px 14px; font-size: 13px;"
+              :disabled="isActionRunning"
+              @click="acceptPending"
+            >
+              ✅ Accepter le message
+            </button>
+
+            <button
+              class="action-btn"
+              style="padding: 6px 12px; font-size: 13px;"
+              :disabled="isActionRunning"
+              @click="regeneratePending"
+            >
+              🔄 Refuser & Régénérer
+            </button>
+
+            <button
+              class="action-btn"
+              style="color: var(--red); border-color: rgba(231, 76, 60, 0.4); padding: 6px 12px; font-size: 13px;"
+              :disabled="isActionRunning"
+              @click="rejectPending"
+            >
+              ❌ Refuser / Annuler
+            </button>
+
+            <button
+              class="btn-primary"
+              style="background-color: #3498db; padding: 6px 14px; font-size: 13px;"
+              :disabled="isActionRunning"
+              @click="publishPending"
+            >
+              🚀 Publier Immédiatement
+            </button>
+          </div>
         </div>
 
-        <div class="daily-message-preview-box">
-          {{ pendingMessage.content }}
+        <div class="daily-message-preview-box" style="padding: 16px; background-color: var(--bg-tertiary); border-radius: 6px; border-left: 4px solid var(--accent); font-size: 15px; line-height: 1.6; margin-bottom: 10px;">
+          {{ pendingMessage.content || pendingMessage.text }}
+        </div>
+
+        <!-- Détails du prompt généré si disponible -->
+        <div v-if="pendingMessage.creativePrompt || pendingMessage.finalPrompt" style="font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.15); padding: 10px; border-radius: 4px; margin-top: 8px;">
+          <div v-if="pendingMessage.creativePrompt"><strong>Prompt créatif :</strong> {{ pendingMessage.creativePrompt }}</div>
+          <div v-if="pendingMessage.finalInstruction" style="margin-top: 4px;"><strong>Consigne :</strong> {{ pendingMessage.finalInstruction }}</div>
         </div>
       </div>
 
       <!-- Historique des Messages -->
-      <div class="daily-history-header">
-        <h3>Historique des Messages Quotidiens</h3>
+      <div class="daily-history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0;">Historique des Messages Générés & Publiés</h3>
         <span class="daily-history-badge">{{ history.length }} message(s)</span>
       </div>
 
@@ -95,18 +146,15 @@
       </div>
 
       <div v-else class="daily-cards-list">
-        <div v-for="item in history" :key="item.id || item.date" class="daily-history-card">
+        <div v-for="item in history" :key="item.id || item.msgId" class="daily-history-card">
           <div class="daily-history-card-header">
             <div class="daily-card-date">
-              <span>📅 {{ formatDate(item.date || item.createdAt) }}</span>
+              <span>📅 {{ formatDate(item.createdAt || item.date) }}</span>
             </div>
 
             <div class="daily-card-meta">
               <span v-if="item.model" class="daily-badge-model">{{ item.model }}</span>
-              <span v-if="item.tokens" class="daily-badge-tokens">{{ item.tokens }} tokens</span>
-              <span v-if="item.isPublished" class="live-status-pill" style="font-size: 10px;">
-                ✅ Publié
-              </span>
+              <span v-if="item.tokens" class="daily-badge-tokens">{{ item.tokens?.total || item.tokens }} tokens</span>
             </div>
           </div>
 
@@ -135,15 +183,35 @@
 
         <div>
           <label class="form-label">ID du Salon de Publication</label>
-          <input v-model="config.channel_id" type="text" class="discord-input" placeholder="ID salon Discord" />
+          <input v-model="config.channel_id" type="text" class="discord-input" placeholder="ID salon Discord (ex: 1337807772024180756)" />
         </div>
 
         <div>
-          <label class="form-label">ID du Rôle à Mentionner (optionnel)</label>
-          <input v-model="config.role_mention_id" type="text" class="discord-input" placeholder="ID rôle mentionné" />
+          <label class="form-label">ID du Salon de Prévisualisation (Modération 21h)</label>
+          <input v-model="config.preview_channel_id" type="text" class="discord-input" placeholder="ID salon pré-rendu (ex: 1540433649994829824)" />
         </div>
 
-        <div class="config-actions-bar">
+        <div>
+          <label class="form-label">Couleur de l'Embed</label>
+          <input v-model="config.color" type="text" class="discord-input" placeholder="#F2C7CE" />
+        </div>
+
+        <div class="form-divider"></div>
+
+        <h4 style="margin: 0 0 12px 0; color: var(--text-normal);">Configuration IA (LLM / OpenRouter)</h4>
+
+        <div>
+          <label class="form-label">Modèle IA</label>
+          <input
+            v-model="aiConfigModel"
+            type="text"
+            class="discord-input"
+            placeholder="ex: nvidia/nemotron-3-ultra-550b-a55b:free, openai/gpt-4o-mini"
+          />
+          <p class="form-help">Modèle appelé sur OpenRouter pour la génération créative et le message final.</p>
+        </div>
+
+        <div class="config-actions-bar" style="margin-top: 24px;">
           <button class="btn-primary" :disabled="isSaving" @click="saveModuleConfig">
             {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Configuration Daily Message' }}
           </button>
@@ -154,6 +222,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
@@ -163,14 +232,37 @@ const { showToast } = useToast();
 const { discordChannels } = useAppState();
 
 const activeSubTab = ref<'stats' | 'config'>('stats');
-const config = ref<any>({ enabled: true, channel_id: '', role_mention_id: '' });
+const config = ref<any>({
+  enabled: true,
+  channel_id: '',
+  preview_channel_id: '',
+  color: '#F2C7CE',
+  ai_config: {
+    model: 'nvidia/nemotron-3-ultra-550b-a55b:free'
+  }
+});
+
 const history = ref<any[]>([]);
 const pendingMessage = ref<any>(null);
 const envInfo = ref<any>({});
 const isLoading = ref(true);
 const isGenerating = ref(false);
-const isPublishing = ref(false);
+const isActionRunning = ref(false);
 const isSaving = ref(false);
+
+const currentModel = computed(() => {
+  return config.value?.ai_config?.model || envInfo.value?.configuredModel || envInfo.value?.openaiModel || 'nvidia/nemotron-3-ultra-550b-a55b:free';
+});
+
+const aiConfigModel = computed({
+  get() {
+    return config.value?.ai_config?.model || '';
+  },
+  set(val: string) {
+    if (!config.value.ai_config) config.value.ai_config = {};
+    config.value.ai_config.model = val;
+  }
+});
 
 const targetChannelName = computed(() => {
   const channelId = config.value?.channel_id || envInfo.value?.dailyMessageChannelId;
@@ -192,8 +284,8 @@ async function loadDailyData() {
     const res = await apiFetch<{ success: boolean; data?: any }>('/api/daily-messages');
     if (res.success && res.data) {
       history.value = res.data.history || [];
-      pendingMessage.value = res.data.pending || null;
-      envInfo.value = res.data.env || {};
+      pendingMessage.value = res.data.pending || res.data.pendingPublish || null;
+      envInfo.value = res.data.env || res.data.stats || {};
     }
   } catch (err: any) {
     console.error('Erreur chargement daily data:', err);
@@ -206,7 +298,10 @@ async function loadModuleConfig() {
   try {
     const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
     if (res.success && res.data?.daily_message) {
-      config.value = res.data.daily_message;
+      config.value = {
+        ...config.value,
+        ...res.data.daily_message
+      };
     }
   } catch (err) {
     console.error('Erreur chargement config daily:', err);
@@ -225,6 +320,7 @@ async function saveModuleConfig() {
     });
     if (res.success) {
       showToast('Configuration Daily Message enregistrée dans config.yml !', 'success');
+      await loadDailyData();
     }
   } catch (err: any) {
     showToast(`Erreur d'enregistrement: ${err.message}`, 'error');
@@ -235,32 +331,105 @@ async function saveModuleConfig() {
 
 async function generateDailyMessage() {
   isGenerating.value = true;
+  isActionRunning.value = true;
   try {
-    const res = await apiFetch<{ success: boolean }>('/api/daily-messages/generate-test', { method: 'POST' });
+    const res = await apiFetch<{ success: boolean; data?: any; message?: string }>('/api/daily-messages/generate-test', { method: 'POST' });
     if (res.success) {
-      showToast('Nouveau message généré !', 'success');
+      showToast(res.message || 'Nouveau brouillon généré avec succès !', 'success');
+      if (res.data) {
+        pendingMessage.value = {
+          ...res.data,
+          content: res.data.text || res.data.content,
+          isAccepted: false
+        };
+      }
       await loadDailyData();
     }
   } catch (err: any) {
     showToast(`Erreur de génération: ${err.message}`, 'error');
   } finally {
     isGenerating.value = false;
+    isActionRunning.value = false;
+  }
+}
+
+async function acceptPending() {
+  isActionRunning.value = true;
+  try {
+    const res = await apiFetch<{ success: boolean; message?: string }>('/api/daily-messages/accept', {
+      method: 'POST',
+      body: JSON.stringify({ draft: pendingMessage.value })
+    });
+    if (res.success) {
+      showToast(res.message || 'Brouillon validé pour diffusion à 09:00 !', 'success');
+      if (pendingMessage.value) {
+        pendingMessage.value.isAccepted = true;
+      }
+      await loadDailyData();
+    }
+  } catch (err: any) {
+    showToast(`Erreur de validation: ${err.message}`, 'error');
+  } finally {
+    isActionRunning.value = false;
+  }
+}
+
+async function rejectPending() {
+  isActionRunning.value = true;
+  try {
+    const res = await apiFetch<{ success: boolean; message?: string }>('/api/daily-messages/reject', { method: 'POST' });
+    if (res.success) {
+      showToast(res.message || 'Brouillon refusé et supprimé.', 'info');
+      pendingMessage.value = null;
+      await loadDailyData();
+    }
+  } catch (err: any) {
+    showToast(`Erreur de refus: ${err.message}`, 'error');
+  } finally {
+    isActionRunning.value = false;
+  }
+}
+
+async function regeneratePending() {
+  isActionRunning.value = true;
+  try {
+    const res = await apiFetch<{ success: boolean; data?: any; message?: string }>('/api/daily-messages/regenerate', { method: 'POST' });
+    if (res.success) {
+      showToast(res.message || 'Nouveau brouillon régénéré avec succès !', 'success');
+      if (res.data) {
+        pendingMessage.value = {
+          ...res.data,
+          content: res.data.text || res.data.content,
+          isAccepted: false
+        };
+      }
+      await loadDailyData();
+    }
+  } catch (err: any) {
+    showToast(`Erreur de régénération: ${err.message}`, 'error');
+  } finally {
+    isActionRunning.value = false;
   }
 }
 
 async function publishPending() {
-  isPublishing.value = true;
+  isActionRunning.value = true;
   try {
-    const res = await apiFetch<{ success: boolean }>('/api/daily-messages/publish-now', { method: 'POST' });
+    const res = await apiFetch<{ success: boolean; message?: string }>('/api/daily-messages/publish-now', {
+      method: 'POST',
+      body: JSON.stringify({
+        text: pendingMessage.value?.content || pendingMessage.value?.text
+      })
+    });
     if (res.success) {
-      showToast('Message publié sur Discord !', 'success');
+      showToast(res.message || 'Message publié immédiatement sur Discord !', 'success');
       pendingMessage.value = null;
       await loadDailyData();
     }
   } catch (err: any) {
     showToast(`Erreur de publication: ${err.message}`, 'error');
   } finally {
-    isPublishing.value = false;
+    isActionRunning.value = false;
   }
 }
 
@@ -271,7 +440,9 @@ function formatDate(dateStr: string): string {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   } catch {
     return dateStr;

@@ -193,12 +193,32 @@ export function useAppState() {
   async function fetchUsersAndRoles() {
     try {
       const [usersRes, rolesRes] = await Promise.all([
-        apiFetch<{ success: boolean; data: any[] }>('/api/users'),
-        apiFetch<{ success: boolean; data: any[] }>('/api/roles')
+        apiFetch<{ success: boolean; data: any; users?: any[] }>('/api/users'),
+        apiFetch<{ success: boolean; data: any; roles?: any[] }>('/api/roles')
       ]);
 
-      if (usersRes.success) users.value = usersRes.data || [];
-      if (rolesRes.success) roles.value = rolesRes.data || [];
+      if (usersRes.success) {
+        if (Array.isArray(usersRes.data)) {
+          users.value = usersRes.data;
+        } else if (Array.isArray(usersRes.data?.users)) {
+          users.value = usersRes.data.users;
+        } else if (Array.isArray(usersRes.users)) {
+          users.value = usersRes.users;
+        } else {
+          users.value = [];
+        }
+      }
+      if (rolesRes.success) {
+        if (Array.isArray(rolesRes.data)) {
+          roles.value = rolesRes.data;
+        } else if (Array.isArray(rolesRes.data?.roles)) {
+          roles.value = rolesRes.data.roles;
+        } else if (Array.isArray(rolesRes.roles)) {
+          roles.value = rolesRes.roles;
+        } else {
+          roles.value = [];
+        }
+      }
     } catch (e: any) {
       console.warn('Erreur chargement users/roles:', e.message);
     }

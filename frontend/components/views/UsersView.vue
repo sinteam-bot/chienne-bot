@@ -222,10 +222,12 @@ onMounted(async () => {
 });
 
 const visibleRoles = computed(() => {
+  if (!Array.isArray(roles.value)) return [];
   return roles.value.filter(r => r.name !== '@everyone').slice(0, 15);
 });
 
 const filteredUsers = computed(() => {
+  if (!Array.isArray(users.value)) return [];
   const query = searchQuery.value.toLowerCase().trim();
   const bFilter = botFilter.value;
   const role = selectedRole.value;
