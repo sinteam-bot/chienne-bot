@@ -90,7 +90,7 @@
                 </span>
               </td>
               <td style="font-size: 12px; color: var(--text-normal);">
-                {{ formatDate(item.createdAt || item.created_at) }}
+                <DiscordTime :value="item.createdAt || item.created_at" mode="both" />
               </td>
             </tr>
           </tbody>
@@ -103,6 +103,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import DiscordTime from '~/components/common/DiscordTime.vue';
 
 const { apiFetch } = useDiscordApi();
 

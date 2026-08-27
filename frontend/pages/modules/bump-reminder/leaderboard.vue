@@ -51,7 +51,7 @@
                 </span>
               </td>
               <td style="font-size: 13px; color: var(--text-normal);">
-                {{ formatDate(entry.lastBumpAt) }}
+                <DiscordTime :value="entry.lastBumpAt" mode="both" />
               </td>
             </tr>
           </tbody>
@@ -62,7 +62,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, type Ref } from 'vue';
+import { computed, inject, ref, type Ref } from 'vue';
+import { useAppState } from '~/composables/useAppState.ts';
+import DiscordTime from '~/components/common/DiscordTime.vue';
 
 const bumpStatus = inject<Ref<any>>('bumpStatus', ref({}));
 

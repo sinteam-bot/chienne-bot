@@ -69,6 +69,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useDiscordFormatter } from '~/composables/useDiscordFormatter.ts';
+import { useDateFormatter } from '~/composables/useDateFormatter.ts';
 import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 
 const props = defineProps<{
@@ -76,6 +77,7 @@ const props = defineProps<{
 }>();
 
 const { formatDiscordContent } = useDiscordFormatter();
+const { parseDateSafe, formatLocalDate } = useDateFormatter();
 
 const embedColor = computed(() => {
   if (!props.embed) return 'var(--brand)';
@@ -93,16 +95,8 @@ const formattedDescription = computed(() => {
 });
 
 function formatTimestamp(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch {
-    return iso;
-  }
+  const d = parseDateSafe(iso);
+  if (!d) return iso;
+  return formatLocalDate(d, { showSeconds: false });
 }
 </script>

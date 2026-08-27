@@ -366,7 +366,7 @@
 
               <!-- Pied de carte : Date d'arrivée -->
               <div class="discord-card-footer">
-                <span>Arrivé le {{ formatDate(u.joinedAt) }}</span>
+                <span>Arrivé <DiscordTime :value="u.joinedAt" mode="relative" /></span>
                 <span v-if="u.level" class="member-level-badge">Niv. {{ u.level }}</span>
               </div>
             </div>
@@ -493,10 +493,7 @@
 
                 <!-- Colonne Date d'Arrivée -->
                 <td>
-                  <div style="display: flex; flex-direction: column;">
-                    <span style="font-size: 13px; color: var(--text-normal);">{{ formatDate(u.joinedAt) }}</span>
-                    <span style="font-size: 11px; color: var(--text-muted);">{{ getDaysAgo(u.joinedAt) }}</span>
-                  </div>
+                  <DiscordTime :value="u.joinedAt" mode="both" />
                 </td>
               </tr>
             </tbody>
@@ -511,6 +508,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
+import DiscordTime from '~/components/common/DiscordTime.vue';
 
 defineEmits<{
   (e: 'inspect-user', user: any): void;

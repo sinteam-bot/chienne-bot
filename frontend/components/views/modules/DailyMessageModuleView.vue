@@ -448,19 +448,9 @@ async function publishPending() {
   }
 }
 
+const { formatDateWithRelative } = useDateFormatter();
+
 function formatDate(dateStr: string): string {
-  if (!dateStr) return '-';
-  try {
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch {
-    return dateStr;
-  }
+  return formatDateWithRelative(dateStr);
 }
 </script>

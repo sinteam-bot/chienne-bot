@@ -102,8 +102,8 @@
                   <span v-if="!ev.username && !ev.target_id" style="color: var(--text-muted); font-size: 12px;">—</span>
                 </div>
               </td>
-              <td style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">
-                {{ formatDateTime(ev.created_at) }}
+              <td style="font-size: 12px; color: var(--text-normal); white-space: nowrap;">
+                <DiscordTime :value="ev.created_at" mode="both" />
               </td>
               <td style="text-align: center;">
                 <button
@@ -153,6 +153,7 @@
 
 <script setup lang="ts">
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import DiscordTime from '~/components/common/DiscordTime.vue';
 
 const { apiFetch } = useDiscordApi();
 

@@ -69,11 +69,11 @@
           <div class="modal-dates-grid">
             <div class="date-card">
               <span class="date-label">Rejoint le Serveur</span>
-              <span class="date-value">{{ formatDate(user.joinedAt) }}</span>
+              <span class="date-value"><DiscordTime :value="user.joinedAt" mode="both" /></span>
             </div>
             <div class="date-card">
               <span class="date-label">Compte Créé le</span>
-              <span class="date-value">{{ formatDate(user.createdAt) }}</span>
+              <span class="date-value"><DiscordTime :value="user.createdAt" mode="both" /></span>
             </div>
           </div>
         </div>
@@ -92,6 +92,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
+import DiscordTime from '~/components/common/DiscordTime.vue';
 
 const props = defineProps<{
   user: any;

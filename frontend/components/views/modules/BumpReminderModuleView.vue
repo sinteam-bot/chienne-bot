@@ -697,20 +697,10 @@ function resolveChannelName(channelId: string) {
   return found ? found.name : channelId;
 }
 
+const { formatLocalDate, formatDateWithRelative, formatTimeAgo } = useDateFormatter();
+
 function formatDate(dateStr: string) {
-  if (!dateStr) return '—';
-  try {
-    return new Date(dateStr).toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  } catch {
-    return dateStr;
-  }
+  return formatDateWithRelative(dateStr);
 }
 
 async function loadBumpStatus() {

@@ -112,16 +112,10 @@ export function useLogsSSE() {
   }
 
   function addLog(item: any) {
-    let timeStr = item.time || item.timestamp;
-    if (!timeStr) {
-      timeStr = new Date().toLocaleTimeString('fr-FR');
-    } else if (timeStr.includes('T') || timeStr.includes('-')) {
-      try {
-        timeStr = new Date(timeStr).toLocaleTimeString('fr-FR');
-      } catch {
-        // garder timeStr
-      }
-    }
+    const rawTime = item.time || item.timestamp;
+    const { parseDateSafe, formatLocalDate } = useDateFormatter();
+    const d = parseDateSafe(rawTime) || new Date();
+    const timeStr = formatLocalDate(d, { showDate: false, showTime: true, showSeconds: true });
 
     const entry: LogEntry = {
       id: logIdCounter++,

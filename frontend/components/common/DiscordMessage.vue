@@ -100,29 +100,18 @@ defineEmits<{
 }>();
 
 const { formatDiscordContent } = useDiscordFormatter();
+const { parseDateSafe, formatLocalDate, formatTimeAgo, getDateTooltip } = useDateFormatter();
+
+const messageDate = computed(() => parseDateSafe(props.message.createdAt || props.message.createdTimestamp || props.message.timestamp));
 
 const shortTime = computed(() => {
-  try {
-    const d = new Date(props.message.createdAt || props.message.createdTimestamp);
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  } catch {
-    return '';
-  }
+  if (!messageDate.value) return '';
+  return formatLocalDate(messageDate.value, { showDate: false, showTime: true, showSeconds: false });
 });
 
 const fullTime = computed(() => {
-  try {
-    const d = new Date(props.message.createdAt || props.message.createdTimestamp);
-    return d.toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch {
-    return '';
-  }
+  if (!messageDate.value) return '';
+  return getDateTooltip(messageDate.value);
 });
 
 function isImageAttachment(att: any): boolean {

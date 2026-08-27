@@ -59,11 +59,18 @@
         </div>
         <div>
           <span style="color: var(--text-muted); display: block; font-size: 11px; margin-bottom: 2px;">Date du dernier bump</span>
-          <strong style="color: var(--header-primary);">{{ bumpStatus.lastBump?.bumpedAt ? formatDate(bumpStatus.lastBump.bumpedAt) : '—' }}</strong>
+          <strong style="color: var(--header-primary);">
+            <DiscordTime v-if="bumpStatus.lastBump?.bumpedAt" :value="bumpStatus.lastBump.bumpedAt" mode="both" />
+            <span v-else>—</span>
+          </strong>
         </div>
         <div>
           <span style="color: var(--text-muted); display: block; font-size: 11px; margin-bottom: 2px;">Prochain rappel prévu à</span>
-          <strong style="color: var(--header-primary);">{{ nextReminderTime }}</strong>
+          <strong style="color: var(--header-primary);">
+            <span v-if="bumpStatus.isReady" class="module-status-pill verified" style="font-size: 11px; padding: 2px 6px;">🟢 Prêt maintenant</span>
+            <DiscordTime v-else-if="nextReminderTimestamp" :value="nextReminderTimestamp" mode="both" />
+            <span v-else>—</span>
+          </strong>
         </div>
       </div>
     </div>
@@ -74,9 +81,12 @@
 import { ref, computed, inject, type Ref } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
+import { useDateFormatter } from '~/composables/useDateFormatter.ts';
+import DiscordTime from '~/components/common/DiscordTime.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
+const { parseDateSafe } = useDateFormatter();
 
 const bumpStatus = inject<Ref<any>>('bumpStatus', ref({}));
 const loadBumpStatus = inject<() => Promise<void>>('loadBumpStatus', async () => {});
@@ -106,32 +116,12 @@ const progressPercent = computed(() => {
   return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
 });
 
-const nextReminderTime = computed(() => {
-  if (bumpStatus.value.isReady) return 'Maintenant';
-  if (!bumpStatus.value.lastBump?.bumpedAt) return '—';
-  try {
-    const d = new Date(new Date(bumpStatus.value.lastBump.bumpedAt).getTime() + 2 * 3600 * 1000);
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  } catch {
-    return '—';
-  }
+const nextReminderTimestamp = computed(() => {
+  if (!bumpStatus.value.lastBump?.bumpedAt) return null;
+  const d = parseDateSafe(bumpStatus.value.lastBump.bumpedAt);
+  if (!d) return null;
+  return new Date(d.getTime() + 2 * 3600 * 1000);
 });
-
-function formatDate(dateStr: string) {
-  if (!dateStr) return '—';
-  try {
-    return new Date(dateStr).toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  } catch {
-    return dateStr;
-  }
-}
 
 async function handleTestReminder() {
   sendingTest.value = true;

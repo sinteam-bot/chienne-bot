@@ -101,7 +101,7 @@
                 <span class="discord-mention discord-mention-channel">#{{ resolveChannelName(item.channel_id) }}</span>
               </td>
               <td style="font-size: 13px; color: var(--text-normal);">
-                {{ formatDate(item.bumped_at || item.bumpedAt) }}
+                <DiscordTime :value="item.bumped_at || item.bumpedAt" mode="both" />
               </td>
               <td>
                 <span v-if="item.reminder_sent === 1 || item.reminderSent === 1" class="module-status-pill verified">
@@ -134,6 +134,7 @@ import { ref, computed, inject, type Ref } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
+import DiscordTime from '~/components/common/DiscordTime.vue';
 
 const { discordChannels } = useAppState();
 const { apiFetch } = useDiscordApi();

@@ -125,8 +125,8 @@
               </td>
 
               <!-- Date -->
-              <td style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">
-                {{ formatDateTime(item.createdAt || item.timestamp) }}
+              <td style="font-size: 12px; color: var(--text-normal); white-space: nowrap;">
+                <DiscordTime :value="item.createdAt || item.timestamp" mode="both" />
               </td>
 
               <!-- Bouton d'action Voir Messages -->
@@ -175,7 +175,7 @@
           >
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">
               <strong style="color: var(--header-primary);">{{ msg.author_username || msg.author || 'Inconnu' }}</strong>
-              <span style="color: var(--text-muted);">{{ formatDateTime(msg.created_at || msg.timestamp) }}</span>
+              <DiscordTime :value="msg.created_at || msg.timestamp" mode="both" />
             </div>
             <p style="margin: 0; font-size: 13px; color: var(--text-normal); white-space: pre-wrap;">{{ msg.content }}</p>
           </div>
@@ -189,6 +189,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
+import DiscordTime from '~/components/common/DiscordTime.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

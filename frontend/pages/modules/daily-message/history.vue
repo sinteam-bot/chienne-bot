@@ -26,7 +26,7 @@
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 14px;">📅</span>
               <strong style="color: var(--header-primary); font-size: 13px;">
-                {{ formatDate(item.createdAt || item.date) }}
+                <DiscordTime :value="item.createdAt || item.date" mode="both" />
               </strong>
             </div>
 
@@ -52,6 +52,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import DiscordTime from '~/components/common/DiscordTime.vue';
 
 const { apiFetch } = useDiscordApi();
 
