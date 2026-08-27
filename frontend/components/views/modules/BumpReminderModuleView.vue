@@ -1,20 +1,21 @@
 <template>
   <div class="view-panel">
     <!-- Onglets de sous-navigation Module -->
-    <div class="captcha-subtabs" style="padding: 12px 24px 0 24px; background-color: var(--bg-secondary);">
+    <div class="module-subtabs">
       <button
-        :class="['captcha-subtab-btn', { active: activeSubTab === 'countdown' }]"
+        :class="['module-subtab-btn', { active: activeSubTab === 'countdown' }]"
         @click="activeSubTab = 'countdown'"
       >
         🚀 Décompte & Historique
       </button>
       <button
-        :class="['captcha-subtab-btn', { active: activeSubTab === 'config' }]"
+        :class="['module-subtab-btn', { active: activeSubTab === 'config' }]"
         @click="activeSubTab = 'config'"
       >
         ⚙️ Configuration du Module
       </button>
     </div>
+
 
     <!-- SOUS-ONGLET 1 : STATUT & DÉCOMPTE -->
     <div v-if="activeSubTab === 'countdown'" class="captcha-view-scroller">

@@ -1,20 +1,21 @@
 <template>
   <div class="view-panel">
     <!-- Onglets de sous-navigation Module -->
-    <div class="captcha-subtabs" style="padding: 12px 24px 0 24px; background-color: var(--bg-secondary);">
+    <div class="module-subtabs">
       <button
-        :class="['captcha-subtab-btn', { active: activeSubTab === 'stats' }]"
+        :class="['module-subtab-btn', { active: activeSubTab === 'stats' }]"
         @click="activeSubTab = 'stats'"
       >
         📊 Statistiques, Salons & Vérifications
       </button>
       <button
-        :class="['captcha-subtab-btn', { active: activeSubTab === 'config' }]"
+        :class="['module-subtab-btn', { active: activeSubTab === 'config' }]"
         @click="activeSubTab = 'config'"
       >
         ⚙️ Configuration du Module
       </button>
     </div>
+
 
     <!-- SOUS-ONGLET 1 : STATS & LOGS DES SALONS CAPTCHA -->
     <div v-if="activeSubTab === 'stats'" class="captcha-view-scroller">
