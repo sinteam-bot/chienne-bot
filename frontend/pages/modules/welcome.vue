@@ -49,6 +49,21 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 
+definePageMeta({
+  title: 'Message de Bienvenue',
+  icon: '👋',
+  description: 'Accueil personnalisé des nouveaux membres et salons de bienvenue',
+  section: 'modules',
+  order: 4
+});
+
+useSeoMeta({
+  title: 'Message de Bienvenue',
+  description: 'Accueil personnalisé des nouveaux membres, envoi d\'embed Discord dynamique et redirection',
+  ogTitle: 'Message de Bienvenue - Chienne Bot',
+  ogDescription: 'Accueil personnalisé des nouveaux membres, envoi d\'embed Discord dynamique et redirection'
+});
+
 const route = useRoute();
 
 function isTabActive(path: string): boolean {
@@ -57,10 +72,6 @@ function isTabActive(path: string): boolean {
   }
   return route.path.startsWith(path);
 }
-
-useHead({
-  title: 'Message de Bienvenue - Chienne Bot'
-});
 </script>
 
 <style scoped>

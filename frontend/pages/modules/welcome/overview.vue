@@ -56,6 +56,21 @@ import { ref, computed, onMounted } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 
+definePageMeta({
+  title: 'Statistiques & Salons',
+  icon: '📊',
+  description: 'Statut du module de bienvenue et configuration des salons cibles',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Statistiques & Salons - Bienvenue',
+  description: 'Statut du module de bienvenue et configuration des salons cibles',
+  ogTitle: 'Statistiques & Salons - Bienvenue',
+  ogDescription: 'Statut du module de bienvenue et configuration des salons cibles'
+});
+
 const { discordChannels } = useAppState();
 const { apiFetch } = useDiscordApi();
 

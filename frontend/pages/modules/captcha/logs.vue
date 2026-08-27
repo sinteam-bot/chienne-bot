@@ -206,6 +206,21 @@ import DiscordPagination from '~/components/common/DiscordPagination.vue';
 import DiscordUser from '~/components/common/DiscordUser.vue';
 import DiscordChannel from '~/components/common/DiscordChannel.vue';
 
+definePageMeta({
+  title: 'Journal des Vérifications',
+  icon: '📜',
+  description: 'Journal complet des sessions captcha et tentatives de résolution',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Journal des Vérifications - Captcha',
+  description: 'Journal complet des sessions captcha et tentatives de résolution',
+  ogTitle: 'Journal des Vérifications - Captcha',
+  ogDescription: 'Journal complet des sessions captcha et tentatives de résolution'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 

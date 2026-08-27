@@ -49,6 +49,21 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 
+definePageMeta({
+  title: 'Captcha Mathématique',
+  icon: '🔒',
+  description: 'Vérification anti-bot mathématique par salon privé éphémère',
+  section: 'modules',
+  order: 3
+});
+
+useSeoMeta({
+  title: 'Sécurité Captcha Anti-Raid',
+  description: 'Génération de questions mathématiques en français, salons éphémères et attribution de rôle',
+  ogTitle: 'Sécurité Captcha Anti-Raid - Chienne Bot',
+  ogDescription: 'Génération de questions mathématiques en français, salons éphémères et attribution de rôle'
+});
+
 const route = useRoute();
 
 function isTabActive(path: string): boolean {
@@ -57,10 +72,6 @@ function isTabActive(path: string): boolean {
   }
   return route.path.startsWith(path);
 }
-
-useHead({
-  title: 'Sécurité Captcha - Chienne Bot'
-});
 </script>
 
 <style scoped>

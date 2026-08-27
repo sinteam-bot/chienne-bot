@@ -19,6 +19,21 @@ import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordEmbed from '~/components/common/DiscordEmbed.vue';
 
+definePageMeta({
+  title: 'Prévisualisation Discord',
+  icon: '👁️',
+  description: 'Prévisualisation dynamique de l\'embed de bienvenue',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Prévisualisation Discord - Bienvenue',
+  description: 'Prévisualisation dynamique de l\'embed de bienvenue',
+  ogTitle: 'Prévisualisation Discord - Bienvenue',
+  ogDescription: 'Prévisualisation dynamique de l\'embed de bienvenue'
+});
+
 const { guild } = useAppState();
 const { apiFetch } = useDiscordApi();
 

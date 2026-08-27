@@ -63,6 +63,21 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 
+definePageMeta({
+  title: 'Configuration',
+  icon: '⚙️',
+  description: 'Configuration du rôle vérifié, timeout et règles de sécurité',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Configuration - Captcha',
+  description: 'Configuration du rôle vérifié, timeout et règles de sécurité',
+  ogTitle: 'Configuration - Captcha',
+  ogDescription: 'Configuration du rôle vérifié, timeout et règles de sécurité'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 

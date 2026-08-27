@@ -91,11 +91,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, inject } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
 import DiscordUser from '~/components/common/DiscordUser.vue';
+
+definePageMeta({
+  title: 'Classement XP',
+  icon: '🏆',
+  description: 'Classement des membres par points d\'expérience et niveau',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Classement des Membres - Système XP',
+  description: 'Classement des membres par points d\'expérience et niveau',
+  ogTitle: 'Classement des Membres - Système XP',
+  ogDescription: 'Classement des membres par points d\'expérience et niveau'
+});
 
 const { users } = useAppState();
 const { apiFetch } = useDiscordApi();

@@ -42,6 +42,21 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 
+definePageMeta({
+  title: 'Système XP & Level',
+  icon: '⭐',
+  description: 'Progression par niveaux, leaderboard et rôles de récompense',
+  section: 'modules',
+  order: 5
+});
+
+useSeoMeta({
+  title: 'Système XP & Niveaux',
+  description: 'Gain d\'expérience par messages et présence vocale, leaderboard et rôles de paliers',
+  ogTitle: 'Système XP & Niveaux - Chienne Bot',
+  ogDescription: 'Gain d\'expérience par messages et présence vocale, leaderboard et rôles de paliers'
+});
+
 const route = useRoute();
 
 function isTabActive(path: string): boolean {
@@ -50,10 +65,6 @@ function isTabActive(path: string): boolean {
   }
   return route.path.startsWith(path);
 }
-
-useHead({
-  title: 'Système XP & Niveaux - Chienne Bot'
-});
 </script>
 
 <style scoped>

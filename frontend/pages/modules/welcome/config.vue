@@ -77,6 +77,21 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 
+definePageMeta({
+  title: 'Configuration',
+  icon: '⚙️',
+  description: 'Configuration des salons cibles et modèle d\'embed de bienvenue',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Configuration - Bienvenue',
+  description: 'Configuration des salons cibles et modèle d\'embed de bienvenue',
+  ogTitle: 'Configuration - Bienvenue',
+  ogDescription: 'Configuration des salons cibles et modèle d\'embed de bienvenue'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 

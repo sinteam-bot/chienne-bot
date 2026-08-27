@@ -73,6 +73,21 @@ import { ref, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 
+definePageMeta({
+  title: 'Configuration & Paliers',
+  icon: '⚙️',
+  description: 'Configuration du calcul d\'XP (messages/vocal) et des paliers de niveaux',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Configuration & Paliers - Système XP',
+  description: 'Configuration du calcul d\'XP (messages/vocal) et des paliers de niveaux',
+  ogTitle: 'Configuration & Paliers - Système XP',
+  ogDescription: 'Configuration du calcul d\'XP (messages/vocal) et des paliers de niveaux'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 

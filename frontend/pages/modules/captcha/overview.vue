@@ -110,6 +110,21 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordUser from '~/components/common/DiscordUser.vue';
 
+definePageMeta({
+  title: 'Vue d\'ensemble & Stats',
+  icon: '📊',
+  description: 'Statistiques de vérification anti-raid et taux de réussite',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Vue d\'ensemble & Stats - Captcha',
+  description: 'Statistiques de vérification anti-raid et taux de réussite',
+  ogTitle: 'Vue d\'ensemble & Stats - Captcha',
+  ogDescription: 'Statistiques de vérification anti-raid et taux de réussite'
+});
+
 const { apiFetch } = useDiscordApi();
 
 const logs = ref<any[]>([]);

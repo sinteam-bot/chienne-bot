@@ -75,6 +75,21 @@ import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
 import DiscordUser from '~/components/common/DiscordUser.vue';
 
+definePageMeta({
+  title: 'Classement Bumpers',
+  icon: '🏆',
+  description: 'Classement des meilleurs bumpers du serveur',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Classement Bumpers - Rappels de Bump',
+  description: 'Classement des meilleurs bumpers du serveur',
+  ogTitle: 'Classement Bumpers - Rappels de Bump',
+  ogDescription: 'Classement des meilleurs bumpers du serveur'
+});
+
 const bumpStatus = inject<Ref<any>>('bumpStatus', ref({}));
 
 const currentPage = ref(1);

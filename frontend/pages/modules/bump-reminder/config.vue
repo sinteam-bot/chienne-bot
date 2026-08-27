@@ -242,6 +242,21 @@ import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 import DiscordEmbed from '~/components/common/DiscordEmbed.vue';
 
+definePageMeta({
+  title: 'Configuration',
+  icon: '⚙️',
+  description: 'Configuration des salons, rôles et templates de rappel Disboard',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Configuration - Rappels de Bump',
+  description: 'Configuration des salons, rôles et templates de rappel Disboard',
+  ogTitle: 'Configuration - Rappels de Bump',
+  ogDescription: 'Configuration des salons, rôles et templates de rappel Disboard'
+});
+
 const { discordChannels, roles } = useAppState();
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
