@@ -51,8 +51,6 @@
             <tr
               v-for="(u, idx) in paginatedUsers"
               :key="u.id"
-              style="cursor: pointer;"
-              @click="inspectUser(u)"
             >
               <td style="text-align: center;">
                 <strong :style="{ color: ((currentPage - 1) * pageSize + idx) === 0 ? '#f1c40f' : ((currentPage - 1) * pageSize + idx) === 1 ? '#bdc3c7' : ((currentPage - 1) * pageSize + idx) === 2 ? '#e67e22' : 'var(--text-muted)' }">
@@ -60,20 +58,11 @@
                 </strong>
               </td>
               <td>
-                <div class="user-td-member" style="display: flex; align-items: center; gap: 10px;">
-                  <img
-                    :src="getProxiedImageUrl(u.avatarUrl)"
-                    :alt="u.username"
-                    class="user-td-avatar"
-                    loading="lazy"
-                    referrerpolicy="no-referrer"
-                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;"
-                  />
-                  <div class="user-td-info">
-                    <span class="user-td-name" style="font-weight: 600; color: var(--header-primary);">{{ u.displayName || u.username }}</span>
-                    <span class="user-td-sub" style="font-size: 11px; color: var(--text-muted); display: block;">@{{ u.username }}</span>
-                  </div>
-                </div>
+                <DiscordUser
+                  :user="u"
+                  :show-id="true"
+                  :avatar-size="32"
+                />
               </td>
               <td style="text-align: center;">
                 <span class="module-status-pill verified" style="font-size: 12px; font-weight: 700;">
@@ -102,12 +91,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, inject } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
+import DiscordUser from '~/components/common/DiscordUser.vue';
 
-const { users, getProxiedImageUrl } = useAppState();
+const { users } = useAppState();
 const { apiFetch } = useDiscordApi();
 
 const inspectUser = inject<(user: any) => void>('inspectUser', () => {});

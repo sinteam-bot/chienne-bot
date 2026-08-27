@@ -94,13 +94,32 @@
                 </span>
               </td>
               <td>
-                <div style="display: flex; flex-direction: column;">
-                  <span v-if="ev.username" style="color: var(--text-normal); font-weight: 600;">@{{ ev.username }}</span>
-                  <span v-if="ev.target_id" style="font-size: 11px; color: var(--text-muted); font-family: var(--font-code);">
-                    ID: {{ ev.target_id }}
-                  </span>
-                  <span v-if="!ev.username && !ev.target_id" style="color: var(--text-muted); font-size: 12px;">—</span>
+                <div v-if="ev.target_id || ev.username">
+                  <DiscordUser
+                    v-if="isUserEvent(ev)"
+                    :user-id="ev.target_id"
+                    :username="ev.username"
+                    :show-id="true"
+                    :avatar-size="24"
+                  />
+                  <DiscordChannel
+                    v-else-if="isChannelEvent(ev)"
+                    :channel-id="ev.target_id"
+                    :name="ev.username"
+                  />
+                  <DiscordRole
+                    v-else-if="isRoleEvent(ev)"
+                    :role-id="ev.target_id"
+                    :name="ev.username"
+                  />
+                  <div v-else style="display: flex; flex-direction: column;">
+                    <span v-if="ev.username" style="color: var(--text-normal); font-weight: 600;">{{ ev.username }}</span>
+                    <span v-if="ev.target_id" style="font-size: 11px; color: var(--text-muted); font-family: var(--font-code);">
+                      ID: {{ ev.target_id }}
+                    </span>
+                  </div>
                 </div>
+                <span v-else style="color: var(--text-muted); font-size: 12px;">—</span>
               </td>
               <td style="font-size: 12px; color: var(--text-normal); white-space: nowrap;">
                 <DiscordTime :value="ev.created_at" mode="both" />
@@ -165,8 +184,26 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
+import DiscordUser from '~/components/common/DiscordUser.vue';
+import DiscordChannel from '~/components/common/DiscordChannel.vue';
+import DiscordRole from '~/components/common/DiscordRole.vue';
 
 const { apiFetch } = useDiscordApi();
+
+function isUserEvent(ev: any) {
+  const name = ev.event_name || '';
+  return name.includes('MEMBER') || name.includes('USER') || name.includes('PRESENCE') || name.includes('VOICE') || name.includes('MESSAGE') || name.includes('BUMP');
+}
+
+function isChannelEvent(ev: any) {
+  const name = ev.event_name || '';
+  return name.includes('CHANNEL') || name.includes('THREAD');
+}
+
+function isRoleEvent(ev: any) {
+  const name = ev.event_name || '';
+  return name.includes('ROLE');
+}
 
 const events = ref<any[]>([]);
 const totalCount = ref(0);

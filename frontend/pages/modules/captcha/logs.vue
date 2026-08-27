@@ -64,44 +64,36 @@
             >
               <!-- Utilisateur -->
               <td>
-                <div class="user-td-member" style="display: flex; align-items: center; gap: 10px;">
-                  <img
-                    :src="getUserAvatar(item.userId || item.user_id)"
-                    :alt="item.username"
-                    class="user-td-avatar"
-                    loading="lazy"
-                    referrerpolicy="no-referrer"
-                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;"
-                  />
-                  <div class="user-td-info">
-                    <span class="user-td-name" style="font-weight: 600; color: var(--header-primary);">{{ item.username || item.userTag || 'Inconnu' }}</span>
-                    <span class="user-td-sub" style="font-size: 11px; color: var(--text-muted); display: block;">ID: {{ item.userId || item.user_id }}</span>
-                  </div>
-                </div>
+                <DiscordUser
+                  :user-id="item.userId || item.user_id"
+                  :username="item.username || item.userTag"
+                  :show-id="true"
+                  :avatar-size="32"
+                />
               </td>
 
               <!-- Salon Temporaire Dédié -->
               <td>
-                <div style="display: flex; flex-direction: column; gap: 2px;">
-                  <div style="display: flex; align-items: center; gap: 6px;">
-                    <span class="discord-mention discord-mention-channel">
-                      #{{ item.channelName || item.channel_name || 'captcha-inconnu' }}
-                    </span>
-                    <span
-                      v-if="item.isChannelDeleted || item.is_verified || item.status === 'verified' || item.status === 'failed'"
-                      class="badge-channel-status deleted"
-                      title="Salon temporaire supprimé"
-                    >
-                      Archivé
-                    </span>
-                    <span
-                      v-else
-                      class="badge-channel-status active"
-                      title="Salon actif sur Discord"
-                    >
-                      Actif
-                    </span>
-                  </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <DiscordChannel
+                    :channel-id="item.channelId || item.channel_id"
+                    :name="item.channelName || item.channel_name || 'captcha-inconnu'"
+                    :clickable="false"
+                  />
+                  <span
+                    v-if="item.isChannelDeleted || item.is_verified || item.status === 'verified' || item.status === 'failed'"
+                    class="badge-channel-status deleted"
+                    title="Salon temporaire supprimé"
+                  >
+                    Archivé
+                  </span>
+                  <span
+                    v-else
+                    class="badge-channel-status active"
+                    title="Salon actif sur Discord"
+                  >
+                    Actif
+                  </span>
                 </div>
               </td>
 
@@ -188,8 +180,12 @@
             :key="msg.id"
             style="background: var(--bg-tertiary); padding: 10px 14px; border-radius: 8px;"
           >
-            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">
-              <strong style="color: var(--header-primary);">{{ msg.author_username || msg.author || 'Inconnu' }}</strong>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 12px;">
+              <DiscordUser
+                :user-id="msg.author_id || msg.authorId"
+                :username="msg.author_username || msg.author"
+                :avatar-size="20"
+              />
               <DiscordTime :value="msg.created_at || msg.timestamp" mode="both" />
             </div>
             <p style="margin: 0; font-size: 13px; color: var(--text-normal); white-space: pre-wrap;">{{ msg.content }}</p>
@@ -207,10 +203,11 @@ import { useAppState } from '~/composables/useAppState.ts';
 import { useToast } from '~/composables/useToast.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
+import DiscordUser from '~/components/common/DiscordUser.vue';
+import DiscordChannel from '~/components/common/DiscordChannel.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
-const { getUserAvatar } = useAppState();
 
 const logs = ref<any[]>([]);
 const isLoading = ref(true);

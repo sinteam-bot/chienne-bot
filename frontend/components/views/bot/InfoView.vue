@@ -57,10 +57,19 @@
               referrerpolicy="no-referrer"
               style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover;"
             />
-            <div style="display: flex; flex-direction: column;">
-              <h3 style="font-size: 18px; font-weight: 700; color: var(--header-primary);">{{ guild?.name || 'Chienne Bot Serveur' }}</h3>
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <h3 style="font-size: 18px; font-weight: 700; color: var(--header-primary); margin: 0;">{{ guild?.name || 'Chienne Bot Serveur' }}</h3>
               <span style="font-size: 12px; color: var(--text-muted); font-family: var(--font-code);">ID: {{ guild?.id || 'Inconnu' }}</span>
-              <span v-if="guild?.ownerTag" style="font-size: 12px; color: var(--text-muted);">Propriétaire : <strong>{{ guild.ownerTag }}</strong></span>
+              <div v-if="guild?.ownerId || guild?.ownerTag" style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted);">
+                <span>Propriétaire :</span>
+                <DiscordUser
+                  v-if="guild?.ownerId"
+                  :user-id="guild.ownerId"
+                  :username="guild.ownerTag"
+                  :avatar-size="20"
+                />
+                <strong v-else>{{ guild.ownerTag }}</strong>
+              </div>
             </div>
           </div>
         </div>
@@ -238,6 +247,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
+import DiscordUser from '~/components/common/DiscordUser.vue';
 
 export interface ModuleStatusItem {
   key: string;

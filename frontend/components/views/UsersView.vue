@@ -301,59 +301,19 @@
                 </div>
               </div>
 
-              <!-- Rôle le plus élevé (Badge Spécial) -->
-              <div v-if="u.highestRole" class="discord-card-role-highest">
-                <img
-                  v-if="u.highestRole.icon"
-                  :src="getProxiedImageUrl(u.highestRole.icon)"
-                  :alt="u.highestRole.name"
-                  class="role-badge-icon"
-                  loading="lazy"
-                  referrerpolicy="no-referrer"
-                />
-                <span v-else-if="u.highestRole.unicodeEmoji" class="role-badge-emoji">
-                  {{ u.highestRole.unicodeEmoji }}
-                </span>
-                <span
-                  v-else
-                  class="role-badge-dot"
-                  :style="{ backgroundColor: u.highestRole.color || '#99aab5' }"
-                ></span>
-                <span class="role-badge-name" :style="{ color: u.highestRole.color || 'var(--text-normal)' }">
-                  {{ u.highestRole.name }}
-                </span>
+              <!-- Rôle le plus élevé (Badge coloré) -->
+              <div v-if="u.highestRole" class="discord-card-role-highest" style="margin-bottom: 8px;">
+                <DiscordRole :role="u.highestRole" size="small" />
               </div>
 
               <!-- Liste des rôles (triés par ordre hiérarchique décroissant) -->
               <div v-if="getOrderedMemberRoles(u).length > 0" class="discord-card-roles-list">
-                <span
+                <DiscordRole
                   v-for="r in getOrderedMemberRoles(u).slice(0, 4)"
                   :key="r.id"
-                  class="discord-role-pill"
-                  :style="{
-                    borderColor: r.color ? `${r.color}55` : 'rgba(255, 255, 255, 0.08)',
-                    backgroundColor: r.color ? `${r.color}15` : 'var(--bg-tertiary)'
-                  }"
-                  :title="`Rôle: ${r.name}`"
-                >
-                  <img
-                    v-if="r.icon"
-                    :src="getProxiedImageUrl(r.icon)"
-                    :alt="r.name"
-                    class="role-pill-icon"
-                    loading="lazy"
-                    referrerpolicy="no-referrer"
-                  />
-                  <span v-else-if="r.unicodeEmoji" class="role-pill-emoji">{{ r.unicodeEmoji }}</span>
-                  <span
-                    v-else
-                    class="role-pill-dot"
-                    :style="{ backgroundColor: r.color || '#99aab5' }"
-                  ></span>
-                  <span class="role-pill-label" :style="{ color: r.color || 'var(--text-muted)' }">
-                    {{ r.name }}
-                  </span>
-                </span>
+                  :role="r"
+                  size="small"
+                />
 
                 <span
                   v-if="getOrderedMemberRoles(u).length > 4"
@@ -395,92 +355,29 @@
               >
                 <!-- Colonne Membre (Avatar + Pseudo Coloré + Tag) -->
                 <td>
-                  <div class="user-td-member">
-                    <div class="user-td-avatar-wrapper">
-                      <img
-                        :src="getProxiedImageUrl(u.avatarUrl || u.avatar)"
-                        :alt="u.username"
-                        class="user-td-avatar"
-                        loading="lazy"
-                        referrerpolicy="no-referrer"
-                      />
-                      <span
-                        v-if="u.presence"
-                        :class="['presence-indicator-mini', u.presence]"
-                        :title="`Statut: ${u.presence}`"
-                      ></span>
-                    </div>
-                    <div class="user-td-info">
-                      <div class="user-td-name-row">
-                        <span
-                          class="user-td-name"
-                          :style="{ color: getMemberNameColor(u) }"
-                        >
-                          {{ u.displayName || u.username }}
-                        </span>
-                        <span v-if="u.isBot" class="bot-badge-mini">BOT</span>
-                      </div>
-                      <span class="user-td-sub">@{{ u.username }}</span>
-                    </div>
-                  </div>
+                  <DiscordUser
+                    :user="u"
+                    :show-tag="true"
+                    :show-presence="true"
+                    :avatar-size="34"
+                  />
                 </td>
 
                 <!-- Colonne Rôle Principal -->
                 <td>
-                  <div v-if="u.highestRole" class="user-td-role-highest">
-                    <img
-                      v-if="u.highestRole.icon"
-                      :src="getProxiedImageUrl(u.highestRole.icon)"
-                      :alt="u.highestRole.name"
-                      class="role-badge-icon"
-                      loading="lazy"
-                      referrerpolicy="no-referrer"
-                    />
-                    <span v-else-if="u.highestRole.unicodeEmoji" class="role-badge-emoji">
-                      {{ u.highestRole.unicodeEmoji }}
-                    </span>
-                    <span
-                      v-else
-                      class="role-badge-dot"
-                      :style="{ backgroundColor: u.highestRole.color || '#99aab5' }"
-                    ></span>
-                    <span class="role-badge-name" :style="{ color: u.highestRole.color || 'var(--text-normal)' }">
-                      {{ u.highestRole.name }}
-                    </span>
-                  </div>
+                  <DiscordRole v-if="u.highestRole" :role="u.highestRole" />
                   <span v-else style="color: var(--text-muted); font-size: 12px;">—</span>
                 </td>
 
                 <!-- Colonne Rôles Hiérarchisés -->
                 <td>
                   <div class="user-td-roles">
-                    <span
+                    <DiscordRole
                       v-for="r in getOrderedMemberRoles(u).slice(0, 3)"
                       :key="r.id"
-                      class="discord-role-pill"
-                      :style="{
-                        borderColor: r.color ? `${r.color}55` : 'rgba(255, 255, 255, 0.08)',
-                        backgroundColor: r.color ? `${r.color}15` : 'var(--bg-tertiary)'
-                      }"
-                    >
-                      <img
-                        v-if="r.icon"
-                        :src="getProxiedImageUrl(r.icon)"
-                        :alt="r.name"
-                        class="role-pill-icon"
-                        loading="lazy"
-                        referrerpolicy="no-referrer"
-                      />
-                      <span v-else-if="r.unicodeEmoji" class="role-pill-emoji">{{ r.unicodeEmoji }}</span>
-                      <span
-                        v-else
-                        class="role-pill-dot"
-                        :style="{ backgroundColor: r.color || '#99aab5' }"
-                      ></span>
-                      <span class="role-pill-label" :style="{ color: r.color || 'var(--text-muted)' }">
-                        {{ r.name }}
-                      </span>
-                    </span>
+                      :role="r"
+                      size="small"
+                    />
 
                     <span
                       v-if="getOrderedMemberRoles(u).length > 3"
@@ -519,6 +416,8 @@ import { useAppState } from '~/composables/useAppState.ts';
 import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
+import DiscordUser from '~/components/common/DiscordUser.vue';
+import DiscordRole from '~/components/common/DiscordRole.vue';
 
 defineEmits<{
   (e: 'inspect-user', user: any): void;

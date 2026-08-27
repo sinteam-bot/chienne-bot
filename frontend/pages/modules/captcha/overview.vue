@@ -69,8 +69,12 @@
           <tbody>
             <tr v-for="item in recentLogs" :key="item.id || item._id">
               <td>
-                <strong style="color: var(--header-primary);">{{ item.username || item.userTag || 'Membre' }}</strong>
-                <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-code);">ID: {{ item.userId || item.user_id }}</div>
+                <DiscordUser
+                  :user-id="item.userId || item.user_id"
+                  :username="item.username || item.userTag"
+                  :show-id="true"
+                  :avatar-size="28"
+                />
               </td>
               <td>
                 <span style="font-family: var(--font-code); color: var(--header-primary);">{{ item.question }}</span>
@@ -104,6 +108,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordUser from '~/components/common/DiscordUser.vue';
 
 const { apiFetch } = useDiscordApi();
 

@@ -37,20 +37,12 @@
                 </strong>
               </td>
               <td>
-                <div class="user-td-member" style="display: flex; align-items: center; gap: 10px;">
-                  <img
-                    :src="getUserAvatar(entry.userId)"
-                    :alt="entry.username"
-                    class="user-td-avatar"
-                    loading="lazy"
-                    referrerpolicy="no-referrer"
-                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;"
-                  />
-                  <div class="user-td-info">
-                    <span class="user-td-name" style="font-weight: 600; color: var(--header-primary);">{{ entry.username }}</span>
-                    <span class="user-td-sub" style="font-size: 11px; color: var(--text-muted); display: block;">ID: {{ entry.userId }}</span>
-                  </div>
-                </div>
+                <DiscordUser
+                  :user-id="entry.userId"
+                  :username="entry.username"
+                  :show-id="true"
+                  :avatar-size="32"
+                />
               </td>
               <td style="text-align: center;">
                 <span class="module-status-pill verified" style="font-size: 13px; font-weight: 700;">
@@ -81,9 +73,9 @@ import { computed, inject, ref, type Ref } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
+import DiscordUser from '~/components/common/DiscordUser.vue';
 
 const bumpStatus = inject<Ref<any>>('bumpStatus', ref({}));
-const { getUserAvatar } = useAppState();
 
 const currentPage = ref(1);
 const pageSize = ref(10);
