@@ -27,8 +27,8 @@
         <div class="spinner" style="width: 32px; height: 32px;"></div>
       </div>
 
-      <div v-else class="captcha-table-wrapper">
-        <table class="captcha-table">
+      <div v-else class="module-table-wrapper">
+        <table class="module-table">
           <thead>
             <tr>
               <th>Commande</th>

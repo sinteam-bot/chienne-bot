@@ -193,7 +193,7 @@
     </div>
 
     <!-- SOUS-ONGLET 2 : CONFIGURATION DU MODULE -->
-    <div v-else-if="activeSubTab === 'config'" class="captcha-view-scroller" style="max-width: 800px;">
+    <div v-else-if="activeSubTab === 'config'" class="captcha-view-scroller">
       <div class="config-card">
         <div class="form-group-toggle">
           <div class="toggle-info">

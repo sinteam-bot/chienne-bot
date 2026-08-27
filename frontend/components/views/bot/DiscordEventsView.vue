@@ -1,39 +1,39 @@
 <template>
   <div class="view-panel">
-    <div class="daily-scroller">
+    <div class="module-view-scroller">
       <!-- Bannière de Statut des Événements -->
-      <div class="daily-stats-banner">
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">📡</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Total Événements Archivés</span>
-            <span class="daily-stat-value">{{ totalCount }}</span>
-            <span class="daily-stat-sub">Enregistrés en SQLite</span>
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">📡</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Événements Archivés</span>
+            <span class="module-stat-value">{{ totalCount }}</span>
+            <span class="module-stat-sub">Base de données PostgreSQL</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">⚡</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Suivi en Direct</span>
-            <span class="daily-stat-value" style="color: var(--green);">50+ Événements</span>
-            <span class="daily-stat-sub">Gateway Discord.js v14</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">⚡</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Suivi en Direct</span>
+            <span class="module-stat-value" style="color: var(--green);">50+ Événements</span>
+            <span class="module-stat-sub">Gateway Discord.js v14</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🔄</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Auto-Actualisation</span>
-            <span class="daily-stat-value" style="color: #85c1e9;">Toutes les 5s</span>
-            <span class="daily-stat-sub">Synchronisation continue</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🔄</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Auto-Actualisation</span>
+            <span class="module-stat-value" style="color: #85c1e9;">Toutes les 5s</span>
+            <span class="module-stat-sub">Synchronisation temps réel</span>
           </div>
         </div>
       </div>
 
       <!-- Barre d'outils et filtres par catégorie -->
-      <div class="captcha-toolbar" style="flex-wrap: wrap; gap: 8px;">
-        <div class="captcha-filter-chips" style="flex-wrap: wrap;">
+      <div class="module-toolbar">
+        <div class="module-filter-chips">
           <button
             v-for="f in filterCategories"
             :key="f.id"
@@ -44,19 +44,21 @@
           </button>
         </div>
 
-        <div class="search-input-wrapper" style="max-width: 240px; margin-left: auto;">
-          <input
-            v-model="searchQuery"
-            type="text"
-            class="discord-input"
-            placeholder="Rechercher un événement..."
-            @input="debounceSearch"
-          />
-        </div>
+        <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto;">
+          <div class="search-input-wrapper" style="width: 260px;">
+            <input
+              v-model="searchQuery"
+              type="text"
+              class="discord-input"
+              placeholder="Rechercher un événement..."
+              @input="debounceSearch"
+            />
+          </div>
 
-        <button class="action-btn" @click="loadEvents">
-          🔄 Rafraîchir
-        </button>
+          <button class="action-btn" :disabled="isLoading" @click="loadEvents">
+            🔄 Rafraîchir
+          </button>
+        </div>
       </div>
 
       <!-- Tableau des événements Discord -->
@@ -68,15 +70,15 @@
         Aucun événement Discord enregistré pour le moment.
       </div>
 
-      <div v-else class="captcha-table-wrapper">
-        <table class="captcha-table">
+      <div v-else class="module-table-wrapper">
+        <table class="module-table">
           <thead>
             <tr>
-              <th>Type d'Événement</th>
+              <th style="width: 200px;">Type d'Événement</th>
               <th>Résumé de l'Événement</th>
-              <th>Auteur / Cible</th>
-              <th>Date & Heure</th>
-              <th>Payload</th>
+              <th style="width: 180px;">Auteur / Cible</th>
+              <th style="width: 170px;">Date & Heure</th>
+              <th style="width: 90px; text-align: center;">Payload</th>
             </tr>
           </thead>
           <tbody>
@@ -93,23 +95,24 @@
               </td>
               <td>
                 <div style="display: flex; flex-direction: column;">
-                  <span v-if="ev.username" style="color: var(--text-normal);">@{{ ev.username }}</span>
+                  <span v-if="ev.username" style="color: var(--text-normal); font-weight: 600;">@{{ ev.username }}</span>
                   <span v-if="ev.target_id" style="font-size: 11px; color: var(--text-muted); font-family: var(--font-code);">
                     ID: {{ ev.target_id }}
                   </span>
+                  <span v-if="!ev.username && !ev.target_id" style="color: var(--text-muted); font-size: 12px;">—</span>
                 </div>
               </td>
               <td style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">
                 {{ formatDateTime(ev.created_at) }}
               </td>
-              <td>
+              <td style="text-align: center;">
                 <button
                   v-if="ev.data"
-                  class="btn-user-inspect"
-                  style="padding: 3px 8px; font-size: 11px;"
+                  class="action-btn"
+                  style="padding: 4px 10px; font-size: 11px; font-weight: 600;"
                   @click="inspectPayload = ev"
                 >
-                  JSON
+                  🔍 JSON
                 </button>
                 <span v-else style="color: var(--text-muted); font-size: 11px;">-</span>
               </td>
@@ -134,12 +137,12 @@
 
         <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; max-height: 70vh; overflow-y: auto;">
           <div>
-            <strong>Résumé :</strong>
+            <strong style="color: var(--header-primary);">Résumé :</strong>
             <p style="color: var(--text-normal); margin-top: 4px;">{{ inspectPayload.summary }}</p>
           </div>
 
           <div>
-            <strong>Données Brutes (JSON) :</strong>
+            <strong style="color: var(--header-primary);">Données Brutes (JSON) :</strong>
             <pre class="generation-step-content" style="max-height: 350px; overflow-y: auto; margin-top: 6px;">{{ JSON.stringify(inspectPayload.data, null, 2) }}</pre>
           </div>
         </div>

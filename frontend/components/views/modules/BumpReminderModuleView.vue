@@ -18,46 +18,46 @@
 
 
     <!-- SOUS-ONGLET 1 : STATUT & DÉCOMPTE -->
-    <div v-if="activeSubTab === 'countdown'" class="captcha-view-scroller">
+    <div v-if="activeSubTab === 'countdown'" class="module-view-scroller">
       <!-- Bannière Stats & État -->
-      <div class="captcha-stats-banner">
-        <div class="captcha-stat-card">
-          <div class="captcha-stat-icon">⏰</div>
-          <div class="captcha-stat-info">
-            <span class="captcha-stat-label">Statut du Bump</span>
-            <span v-if="bumpStatus.isReady" class="captcha-stat-value" style="color: var(--green); font-weight: 800;">
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">⏰</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Statut du Bump</span>
+            <span v-if="bumpStatus.isReady" class="module-stat-value" style="color: var(--green); font-weight: 800;">
               🚀 PRÊT À BUMPER !
             </span>
-            <span v-else class="captcha-stat-value" style="color: var(--brand-experiment, #5865f2); font-family: var(--font-code);">
+            <span v-else class="module-stat-value" style="color: var(--brand-experiment, #5865f2); font-family: var(--font-code);">
               {{ formattedRemaining }}
             </span>
-            <span class="captcha-stat-sub">
+            <span class="module-stat-sub">
               {{ bumpStatus.isReady ? 'Disponible immédiatement' : 'Temps restant avant rappel' }}
             </span>
           </div>
         </div>
 
-        <div class="captcha-stat-card">
-          <div class="captcha-stat-icon">👤</div>
-          <div class="captcha-stat-info">
-            <span class="captcha-stat-label">Dernier Bumper</span>
-            <span class="captcha-stat-value" style="font-size: 16px; font-weight: 700; color: var(--header-primary);">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">👤</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Dernier Bumper</span>
+            <span class="module-stat-value" style="font-size: 16px; font-weight: 700; color: var(--header-primary);">
               {{ bumpStatus.lastBump?.bumperUsername || 'Aucun' }}
             </span>
-            <span class="captcha-stat-sub">
+            <span class="module-stat-sub">
               {{ bumpStatus.lastBump?.bumpedAt ? formatDate(bumpStatus.lastBump.bumpedAt) : 'En attente du 1er bump' }}
             </span>
           </div>
         </div>
 
-        <div class="captcha-stat-card">
-          <div class="captcha-stat-icon">📢</div>
-          <div class="captcha-stat-info">
-            <span class="captcha-stat-label">Salon de Rappel</span>
-            <span class="captcha-stat-value" style="font-size: 15px; font-weight: 600; color: var(--header-primary);">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">📢</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Salon de Rappel</span>
+            <span class="module-stat-value" style="font-size: 15px; font-weight: 600; color: var(--header-primary);">
               #{{ targetChannelName }}
             </span>
-            <span class="captcha-stat-sub">
+            <span class="module-stat-sub">
               {{ targetRoleName }}
             </span>
           </div>
@@ -128,8 +128,8 @@
           Aucun bump enregistré pour l'instant dans la base de données.
         </div>
 
-        <div v-else class="captcha-table-wrapper">
-          <table class="captcha-table">
+        <div v-else class="module-table-wrapper">
+          <table class="module-table">
             <thead>
               <tr>
                 <th style="width: 10%;">ID</th>
