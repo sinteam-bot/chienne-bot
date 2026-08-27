@@ -234,12 +234,24 @@
           </div>
         </div>
 
-        <!-- Personnalisation de l'Embed Discord -->
+        <!-- Personnalisation du Message / Embed Discord -->
         <div class="config-card">
-          <div class="card-subtitle">🎨 Personnalisation du Message & de l'Embed Discord</div>
+          <div class="card-subtitle">💬 Format & Personnalisation du Message de Rappel</div>
           <p class="config-desc">
-            Personnalisez le texte hors embed, le titre, la description, la couleur, l'image et le pied de page du rappel.
+            Choisissez entre un message texte simple et direct (recommandé) ou un embed Discord riche.
           </p>
+
+          <!-- Type de message : Simple ou Embed -->
+          <div class="config-item" style="margin-bottom: 20px;">
+            <div class="config-label-group">
+              <label class="config-label">Utiliser un Embed Discord</label>
+              <span class="config-hint">Si désactivé, le bot enverra un message texte simple et fluide.</span>
+            </div>
+            <label class="discord-switch">
+              <input v-model="configForm.use_embed" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
 
           <!-- Variables dynamiques disponibles -->
           <div style="background: var(--bg-tertiary); padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--card-border);">
@@ -247,107 +259,128 @@
               💡 Variables dynamiques disponibles :
             </span>
             <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-              <span class="badge-variable" title="Délai en heures">{hours}</span>
-              <span class="badge-variable" title="Mention du rôle ou @here">{role}</span>
+              <span class="badge-variable" title="Mention du rôle configuré ou @here">{role}</span>
+              <span class="badge-variable" title="Nom du serveur">{server}</span>
               <span class="badge-variable" title="Mention du dernier bumper">{user}</span>
               <span class="badge-variable" title="Pseudo du dernier bumper">{username}</span>
+              <span class="badge-variable" title="Délai en heures">{hours}</span>
               <span class="badge-variable" title="Commande cliquable Disboard">{command}</span>
               <span class="badge-variable" title="Salon du bump">{channel}</span>
-              <span class="badge-variable" title="Nom du serveur Discord">{server}</span>
             </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Message texte brut (au-dessus de l'embed)</label>
-            <input
-              v-model="configForm.messages.content"
-              type="text"
-              class="discord-input"
-              placeholder="🔔 {role}"
-            />
-          </div>
-
-          <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Titre de l'embed</label>
-            <input
-              v-model="configForm.messages.title"
-              type="text"
-              class="discord-input"
-              placeholder="⏰ C'est l'heure du Bump !"
-            />
-          </div>
-
-          <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Description / Message de l'embed</label>
+          <!-- 1. CAS MESSAGE SIMPLE -->
+          <div v-if="!configForm.use_embed" class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Message de rappel (Texte simple)</label>
             <textarea
-              v-model="configForm.messages.description"
+              v-model="configForm.message"
               class="discord-input"
-              rows="4"
-              placeholder="{hours} heures se sont écoulées depuis le dernier bump !\n\nTapez {command} pour faire monter le serveur sur Disboard 🚀"
+              rows="3"
+              placeholder="{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})"
             ></textarea>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-            <div class="form-group">
-              <label class="form-label">Couleur de l'Embed</label>
-              <div style="display: flex; align-items: center; gap: 10px;">
+          <!-- 2. CAS EMBED RICHE -->
+          <div v-else>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">Message texte brut (au-dessus de l'embed)</label>
+              <input
+                v-model="configForm.messages.content"
+                type="text"
+                class="discord-input"
+                placeholder="{role}"
+              />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">Titre de l'embed</label>
+              <input
+                v-model="configForm.messages.title"
+                type="text"
+                class="discord-input"
+                placeholder="⏰ C'est l'heure du Bump !"
+              />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">Description de l'embed</label>
+              <textarea
+                v-model="configForm.messages.description"
+                class="discord-input"
+                rows="4"
+                placeholder="{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})"
+              ></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div class="form-group">
+                <label class="form-label">Couleur de l'Embed</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input
+                    v-model="configForm.messages.color"
+                    type="color"
+                    style="width: 40px; height: 36px; border: none; border-radius: 4px; cursor: pointer; background: transparent;"
+                  />
+                  <input
+                    v-model="configForm.messages.color"
+                    type="text"
+                    class="discord-input"
+                    style="width: 120px; font-family: var(--font-code);"
+                    placeholder="#f2c7ce"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Pied de page (Footer)</label>
                 <input
-                  v-model="configForm.messages.color"
-                  type="color"
-                  style="width: 40px; height: 36px; border: none; border-radius: 4px; cursor: pointer; background: transparent;"
-                />
-                <input
-                  v-model="configForm.messages.color"
+                  v-model="configForm.messages.footer"
                   type="text"
                   class="discord-input"
-                  style="width: 120px; font-family: var(--font-code);"
-                  placeholder="#f2c7ce"
+                  placeholder="Disboard Auto-Reminder"
                 />
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Pied de page (Footer)</label>
-              <input
-                v-model="configForm.messages.footer"
-                type="text"
-                class="discord-input"
-                placeholder="Disboard Auto-Reminder"
-              />
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div class="form-group">
+                <label class="form-label">URL Vignette (Thumbnail)</label>
+                <input
+                  v-model="configForm.messages.thumbnail"
+                  type="text"
+                  class="discord-input"
+                  placeholder="https://... (optionnel)"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">URL Image Bannière</label>
+                <input
+                  v-model="configForm.messages.image"
+                  type="text"
+                  class="discord-input"
+                  placeholder="https://... (optionnel)"
+                />
+              </div>
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-            <div class="form-group">
-              <label class="form-label">URL Vignette (Thumbnail)</label>
-              <input
-                v-model="configForm.messages.thumbnail"
-                type="text"
-                class="discord-input"
-                placeholder="https://... (optionnel)"
-              />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">URL Image Bannière</label>
-              <input
-                v-model="configForm.messages.image"
-                type="text"
-                class="discord-input"
-                placeholder="https://... (optionnel)"
-              />
-            </div>
-          </div>
-
-          <!-- Aperçu Live Embed Discord -->
+          <!-- Aperçu Live Discord -->
           <div style="margin-top: 20px;">
             <label class="form-label" style="margin-bottom: 8px; display: block;">👁️ Aperçu Live du Rappel</label>
             <div style="background: var(--bg-tertiary); padding: 14px; border-radius: 8px;">
-              <div v-if="liveContentPreview" style="font-size: 13px; color: var(--text-normal); margin-bottom: 8px;">
-                {{ liveContentPreview }}
+              <!-- Aperçu mode simple -->
+              <div v-if="!configForm.use_embed" style="font-size: 14px; color: var(--text-normal); line-height: 1.5;">
+                {{ liveSimplePreview }}
               </div>
 
-              <DiscordEmbed :embed="liveEmbedPreview" />
+              <!-- Aperçu mode embed -->
+              <div v-else>
+                <div v-if="liveContentPreview" style="font-size: 13px; color: var(--text-normal); margin-bottom: 8px;">
+                  {{ liveContentPreview }}
+                </div>
+                <DiscordEmbed :embed="liveEmbedPreview" />
+              </div>
             </div>
           </div>
 
@@ -405,10 +438,12 @@ const configForm = ref<any>({
   role_id: '',
   reminder_cooldown_hours: 2,
   mention_here: true,
+  use_embed: false,
+  message: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})",
   messages: {
-    content: '🔔 {role}',
+    content: '{role}',
     title: "⏰ C'est l'heure du Bump !",
-    description: "{hours} heures se sont écoulées depuis le dernier bump !\n\nTapez {command} pour faire monter le serveur sur Disboard 🚀",
+    description: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})",
     color: "#f2c7ce",
     thumbnail: '',
     image: '',
@@ -448,7 +483,7 @@ const targetChannelName = computed(() => {
 
 const targetRoleName = computed(() => {
   const rId = configForm.value.role_id;
-  if (!rId) return '@here';
+  if (!rId) return '@Bump';
   const found = roles.value.find(r => r.id === rId);
   return found ? `@${found.name}` : `@${rId}`;
 });
@@ -468,19 +503,25 @@ function formatTemplate(text: string) {
   if (!text) return '';
   const hours = configForm.value.reminder_cooldown_hours || 2;
   const roleStr = targetRoleName.value;
-  const bumper = bumpStatus.value.lastBump?.bumperUsername || 'ObsyBumper';
+  const bumper = bumpStatus.value.lastBump?.bumperUsername || 'SuperBumper';
   const chName = targetChannelName.value;
   return text
     .replace(/{hours}/gi, String(hours))
     .replace(/{role}/gi, roleStr)
     .replace(/{mention}/gi, roleStr)
     .replace(/{user}/gi, `@${bumper}`)
+    .replace(/{last_user}/gi, `@${bumper}`)
     .replace(/{username}/gi, bumper)
     .replace(/{bumper}/gi, `@${bumper}`)
     .replace(/{command}/gi, '/bump')
     .replace(/{channel}/gi, `#${chName}`)
     .replace(/{server}/gi, 'Obsydian');
 }
+
+const liveSimplePreview = computed(() => {
+  const msg = configForm.value.message || "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})";
+  return formatTemplate(msg);
+});
 
 const liveContentPreview = computed(() => {
   const raw = configForm.value.messages?.content;
@@ -492,7 +533,7 @@ const liveContentPreview = computed(() => {
 
 const liveEmbedPreview = computed(() => {
   const defTitle = "⏰ C'est l'heure du Bump !";
-  const defDesc = "{hours} heures se sont écoulées depuis le dernier bump !\n\nTapez {command} pour faire monter le serveur sur Disboard 🚀";
+  const defDesc = "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})";
 
   const t = configForm.value.messages?.title || defTitle;
   const d = configForm.value.messages?.description || defDesc;

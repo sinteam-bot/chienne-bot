@@ -326,7 +326,10 @@ bump_reminder:
   role_id: "" # Rôle à ping (ex: "123456789012345678"). Si vide, @here sera mentionné
   mention_here: true # Mentionner @here en fallback si role_id est vide
   reminder_cooldown_hours: 2 # Délai en heures entre deux bumps (2h pour Disboard)
-
+  use_embed: false # Envoyer sous forme de message simple (false) ou d'embed Discord (true)
+  # Message simple par défaut (Variables: {role}, {server}, {user}, {last_user}, {username}, {command}, {channel}, {hours})
+  message: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})"
+  # Options supplémentaires si use_embed est activé (optionnel)
   # Personnalisation des messages et de l'embed Discord
   # Variables disponibles :
   #   - {hours}    : Nombre d'heures de cooldown (ex: 2)
@@ -337,11 +340,10 @@ bump_reminder:
   #   - {channel}  : Salon où le bump a eu lieu
   #   - {server}   : Nom du serveur Discord
   messages:
-    content: "🔔 {role}" # Message texte envoyé au-dessus de l'embed
+    content: "{role}"
     title: "⏰ C'est l'heure du Bump !"
-    description: "{hours} heures se sont écoulées depuis le dernier bump !\n\nTapez {command} pour faire monter le serveur sur Disboard 🚀"
+    description: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})"
     color: "#f2c7ce"
+    footer: "Disboard Auto-Reminder"
     thumbnail: null # URL d'une vignette (optionnel)
     image: null # URL d'une bannière (optionnel)
-    footer: "Disboard Auto-Reminder"
-
