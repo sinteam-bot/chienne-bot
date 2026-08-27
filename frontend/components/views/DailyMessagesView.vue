@@ -16,8 +16,8 @@
           <div class="daily-stat-icon">🤖</div>
           <div class="daily-stat-info">
             <span class="daily-stat-label">Modèle IA Utilisé</span>
-            <span class="daily-stat-value">{{ envInfo.openaiModel || 'gpt-4o-mini' }}</span>
-            <span class="daily-stat-sub">OpenAI / OpenRouter</span>
+            <span class="daily-stat-value">{{ envInfo.openrouterModel || 'Inconnu' }}</span>
+            <span class="daily-stat-sub">OpenRouter</span>
           </div>
         </div>
 

@@ -152,7 +152,7 @@
           <div v-if="activeTab === 'daily'" class="config-tab-panel">
             <div class="config-header">
               <h3>🌅 Pensée du Jour & Génération IA</h3>
-              <p class="config-desc">Configuration des modèles OpenAI / OpenRouter et du salon de publication.</p>
+              <p class="config-desc">Configuration des modèles OpenRouter et du salon de publication.</p>
             </div>
 
             <div class="config-card">

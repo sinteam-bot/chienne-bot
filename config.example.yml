@@ -42,17 +42,12 @@ scheduler:
       enabled: true
       cron: "0 11 * * *"
 
-# OpenAI API Configuration
-openai:
-  api_key: "votre_cle_openai_ici"
-  default_model: "gpt-4o-mini"
-  max_tokens: 500
-  temperature: 0.7
-
 # OpenRouter API Configuration
 openrouter:
   api_key: "votre_cle_openrouter_ici"
   default_model: "openai/gpt-oss-20b:free"
+  max_tokens: 500
+  temperature: 0.7
 
 # ==============================================================================
 # CONFIGURATION DISCORD & COMMANDES
