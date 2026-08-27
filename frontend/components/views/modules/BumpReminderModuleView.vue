@@ -182,7 +182,7 @@
               <label class="config-label">Activer le module Bump Reminder</label>
               <span class="config-hint">Surveille le bot Disboard et déclenche automatiquement un rappel après 2h.</span>
             </div>
-            <label class="discord-switch">
+            <label class="switch">
               <input v-model="configForm.enabled" type="checkbox" />
               <span class="slider"></span>
             </label>
@@ -228,7 +228,7 @@
               <label class="config-label">Mention @here en fallback</label>
               <span class="config-hint">Si aucun rôle n'est spécifié, mentionner @here lors du rappel.</span>
             </div>
-            <label class="discord-switch">
+            <label class="switch">
               <input v-model="configForm.mention_here" type="checkbox" />
               <span class="slider"></span>
             </label>
@@ -248,7 +248,7 @@
               <label class="config-label">Utiliser un Embed Discord</label>
               <span class="config-hint">Si désactivé, le bot enverra un message texte simple et fluide.</span>
             </div>
-            <label class="discord-switch">
+            <label class="switch">
               <input v-model="configForm.use_embed" type="checkbox" />
               <span class="slider"></span>
             </label>
