@@ -88,7 +88,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in filteredHistory" :key="item.id">
+            <tr v-for="item in paginatedHistory" :key="item.id">
               <td style="font-family: var(--font-code); color: var(--text-muted);">#{{ item.id }}</td>
               <td>
                 <div style="display: flex; align-items: center; gap: 6px;">
@@ -125,16 +125,25 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Discord -->
+      <DiscordPagination
+        v-model="currentPage"
+        v-model:page-size="pageSize"
+        :total-items="filteredHistory.length"
+        :page-size-options="[10, 15, 25, 50, 100]"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject, type Ref } from 'vue';
+import { ref, computed, watch, inject, type Ref } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 const { discordChannels } = useAppState();
 const { apiFetch } = useDiscordApi();
@@ -202,6 +211,18 @@ const filteredHistory = computed(() => {
   }
 
   return list;
+});
+
+const currentPage = ref(1);
+const pageSize = ref(15);
+
+const paginatedHistory = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredHistory.value.slice(start, start + pageSize.value);
+});
+
+watch([searchQuery, statusFilter, hideTests], () => {
+  currentPage.value = 1;
 });
 
 function resolveChannelName(channelId: string) {

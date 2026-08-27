@@ -120,6 +120,15 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Discord -->
+      <DiscordPagination
+        v-model="currentPage"
+        v-model:page-size="pageSize"
+        :total-items="totalCount"
+        :page-size-options="[15, 25, 50, 100]"
+        @change="onPaginationChange"
+      />
     </div>
 
     <!-- Modale d'inspection du JSON de l'événement -->
@@ -152,8 +161,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 const { apiFetch } = useDiscordApi();
 
@@ -162,7 +173,8 @@ const totalCount = ref(0);
 const selectedCategory = ref('ALL');
 const searchQuery = ref('');
 const isLoading = ref(true);
-const page = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(25);
 const inspectPayload = ref<any>(null);
 
 let pollTimer: any = null;
@@ -181,7 +193,7 @@ const filterCategories = [
 
 onMounted(() => {
   loadEvents();
-  pollTimer = setInterval(loadEventsSilent, 5000);
+  pollTimer = setInterval(loadEventsSilent, 8000);
 });
 
 onUnmounted(() => {
@@ -191,8 +203,13 @@ onUnmounted(() => {
 function debounceSearch() {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
+    currentPage.value = 1;
     loadEvents();
   }, 300);
+}
+
+function onPaginationChange() {
+  loadEvents();
 }
 
 async function loadEvents() {
@@ -213,8 +230,9 @@ async function fetchEventsData() {
     }
 
     const searchParam = searchQuery.value ? `&search=${encodeURIComponent(searchQuery.value)}` : '';
+    const offset = (currentPage.value - 1) * pageSize.value;
     const res = await apiFetch<{ success: boolean; data?: { total: number; events: any[] } }>(
-      `/api/events/archive?limit=100&offset=${page.value * 100}${categoryParam}${searchParam}`
+      `/api/events/archive?limit=${pageSize.value}&offset=${offset}${categoryParam}${searchParam}`
     );
 
     if (res.success && res.data) {

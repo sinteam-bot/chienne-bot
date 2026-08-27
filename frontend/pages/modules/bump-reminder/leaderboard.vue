@@ -30,18 +30,25 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(entry, index) in leaderboard" :key="entry.userId">
-              <td style="text-align: center; font-size: 16px;">
-                <span v-if="index === 0">🥇</span>
-                <span v-else-if="index === 1">🥈</span>
-                <span v-else-if="index === 2">🥉</span>
-                <span v-else style="font-family: var(--font-code); color: var(--text-muted); font-size: 13px;">#{{ index + 1 }}</span>
+            <tr v-for="(entry, idx) in paginatedLeaderboard" :key="entry.userId">
+              <td style="text-align: center;">
+                <strong :style="{ color: ((currentPage - 1) * pageSize + idx) === 0 ? '#f1c40f' : ((currentPage - 1) * pageSize + idx) === 1 ? '#bdc3c7' : ((currentPage - 1) * pageSize + idx) === 2 ? '#e67e22' : 'var(--text-muted)' }">
+                  {{ ((currentPage - 1) * pageSize + idx) === 0 ? '🥇 #1' : ((currentPage - 1) * pageSize + idx) === 1 ? '🥈 #2' : ((currentPage - 1) * pageSize + idx) === 2 ? '🥉 #3' : `#${(currentPage - 1) * pageSize + idx + 1}` }}
+                </strong>
               </td>
               <td>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div>
-                    <strong style="color: var(--header-primary);">{{ entry.username }}</strong>
-                    <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-code);">ID: {{ entry.userId }}</div>
+                <div class="user-td-member" style="display: flex; align-items: center; gap: 10px;">
+                  <img
+                    :src="getUserAvatar(entry.userId)"
+                    :alt="entry.username"
+                    class="user-td-avatar"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;"
+                  />
+                  <div class="user-td-info">
+                    <span class="user-td-name" style="font-weight: 600; color: var(--header-primary);">{{ entry.username }}</span>
+                    <span class="user-td-sub" style="font-size: 11px; color: var(--text-muted); display: block;">ID: {{ entry.userId }}</span>
                   </div>
                 </div>
               </td>
@@ -57,6 +64,14 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Discord -->
+      <DiscordPagination
+        v-model="currentPage"
+        v-model:page-size="pageSize"
+        :total-items="leaderboard.length"
+        :page-size-options="[5, 10, 20, 50]"
+      />
     </div>
   </div>
 </template>
@@ -65,8 +80,12 @@
 import { computed, inject, ref, type Ref } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 const bumpStatus = inject<Ref<any>>('bumpStatus', ref({}));
+
+const currentPage = ref(1);
+const pageSize = ref(10);
 
 interface LeaderboardEntry {
   userId: string;
@@ -108,6 +127,11 @@ const leaderboard = computed<LeaderboardEntry[]>(() => {
   }
 
   return Array.from(map.values()).sort((a, b) => b.count - a.count);
+});
+
+const paginatedLeaderboard = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return leaderboard.value.slice(start, start + pageSize.value);
 });
 
 function formatDate(dateStr: string) {

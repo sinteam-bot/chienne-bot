@@ -57,25 +57,35 @@
           </thead>
           <tbody>
             <tr
-              v-for="item in filteredLogs"
-              :key="item.id || item._id"
+              v-for="item in paginatedLogs"
+              :key="item.id || item.token"
               class="captcha-row-clickable"
               @click="openChannelHistory(item)"
             >
               <!-- Utilisateur -->
               <td>
-                <div style="display: flex; flex-direction: column;">
-                  <strong style="color: var(--header-primary);">{{ item.username || item.userTag || 'Membre' }}</strong>
-                  <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-code);">ID: {{ item.userId || item.user_id }}</span>
+                <div class="user-td-member" style="display: flex; align-items: center; gap: 10px;">
+                  <img
+                    :src="getUserAvatar(item.userId || item.user_id)"
+                    :alt="item.username"
+                    class="user-td-avatar"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;"
+                  />
+                  <div class="user-td-info">
+                    <span class="user-td-name" style="font-weight: 600; color: var(--header-primary);">{{ item.username || item.userTag || 'Inconnu' }}</span>
+                    <span class="user-td-sub" style="font-size: 11px; color: var(--text-muted); display: block;">ID: {{ item.userId || item.user_id }}</span>
+                  </div>
                 </div>
               </td>
 
-              <!-- Salon Discord -->
+              <!-- Salon Temporaire Dédié -->
               <td>
-                <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
                   <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="font-weight: 600; color: #5865F2; font-family: var(--font-code);">
-                      #{{ item.channelName || item.channel_name || ('captcha-' + (item.username || item.userId || 'user').toLowerCase()) }}
+                    <span class="discord-mention discord-mention-channel">
+                      #{{ item.channelName || item.channel_name || 'captcha-inconnu' }}
                     </span>
                     <span
                       v-if="item.isChannelDeleted || item.is_verified || item.status === 'verified' || item.status === 'failed'"
@@ -92,9 +102,6 @@
                       Actif
                     </span>
                   </div>
-                  <span v-if="item.channelId || item.channel_id" style="font-size: 10px; color: var(--text-muted); font-family: var(--font-code);">
-                    ID: {{ item.channelId || item.channel_id }}
-                  </span>
                 </div>
               </td>
 
@@ -143,6 +150,14 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Discord -->
+      <DiscordPagination
+        v-model="currentPage"
+        v-model:page-size="pageSize"
+        :total-items="filteredLogs.length"
+        :page-size-options="[10, 15, 25, 50, 100]"
+      />
     </div>
 
     <!-- Modale d'historique de salon -->
@@ -186,10 +201,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
@@ -198,6 +214,8 @@ const logs = ref<any[]>([]);
 const isLoading = ref(true);
 const statusFilter = ref<'all' | 'verified' | 'pending' | 'failed'>('all');
 const searchQuery = ref('');
+const currentPage = ref(1);
+const pageSize = ref(15);
 
 const selectedChannelModal = ref<any>(null);
 const modalMessages = ref<any[]>([]);
@@ -228,6 +246,15 @@ const filteredLogs = computed(() => {
   }
 
   return list;
+});
+
+const paginatedLogs = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredLogs.value.slice(start, start + pageSize.value);
+});
+
+watch([searchQuery, statusFilter], () => {
+  currentPage.value = 1;
 });
 
 function getStatusClass(status: string) {

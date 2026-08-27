@@ -18,7 +18,7 @@
 
       <div v-else style="display: flex; flex-direction: column; gap: 14px;">
         <div
-          v-for="item in history"
+          v-for="item in paginatedHistory"
           :key="item.id || item.msgId"
           style="background: var(--bg-tertiary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-subtle);"
         >
@@ -44,20 +44,36 @@
             {{ item.content || item.message }}
           </div>
         </div>
+
+        <!-- Pagination Discord -->
+        <DiscordPagination
+          v-model="currentPage"
+          v-model:page-size="pageSize"
+          :total-items="history.length"
+          :page-size-options="[5, 10, 20, 50]"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 const { apiFetch } = useDiscordApi();
 
 const history = ref<any[]>([]);
 const isLoading = ref(true);
+const currentPage = ref(1);
+const pageSize = ref(10);
+
+const paginatedHistory = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return history.value.slice(start, start + pageSize.value);
+});
 
 function formatDate(dateStr: string) {
   if (!dateStr) return '—';

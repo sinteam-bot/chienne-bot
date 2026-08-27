@@ -49,14 +49,14 @@
           </thead>
           <tbody>
             <tr
-              v-for="(u, idx) in rankedUsers"
+              v-for="(u, idx) in paginatedUsers"
               :key="u.id"
               style="cursor: pointer;"
               @click="inspectUser(u)"
             >
               <td style="text-align: center;">
-                <strong :style="{ color: idx === 0 ? '#f1c40f' : idx === 1 ? '#bdc3c7' : idx === 2 ? '#e67e22' : 'var(--text-muted)' }">
-                  {{ idx === 0 ? '🥇 #1' : idx === 1 ? '🥈 #2' : idx === 2 ? '🥉 #3' : `#${idx + 1}` }}
+                <strong :style="{ color: ((currentPage - 1) * pageSize + idx) === 0 ? '#f1c40f' : ((currentPage - 1) * pageSize + idx) === 1 ? '#bdc3c7' : ((currentPage - 1) * pageSize + idx) === 2 ? '#e67e22' : 'var(--text-muted)' }">
+                  {{ ((currentPage - 1) * pageSize + idx) === 0 ? '🥇 #1' : ((currentPage - 1) * pageSize + idx) === 1 ? '🥈 #2' : ((currentPage - 1) * pageSize + idx) === 2 ? '🥉 #3' : `#${(currentPage - 1) * pageSize + idx + 1}` }}
                 </strong>
               </td>
               <td>
@@ -89,6 +89,14 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Discord -->
+      <DiscordPagination
+        v-model="currentPage"
+        v-model:page-size="pageSize"
+        :total-items="rankedUsers.length"
+        :page-size-options="[10, 15, 25, 50, 100]"
+      />
     </div>
   </div>
 </template>
@@ -97,6 +105,7 @@
 import { ref, computed, onMounted, inject } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 const { users, getProxiedImageUrl } = useAppState();
 const { apiFetch } = useDiscordApi();
@@ -107,10 +116,18 @@ const config = ref<any>({
   enabled: true
 });
 
+const currentPage = ref(1);
+const pageSize = ref(15);
+
 const rankedUsers = computed(() => {
   return [...users.value]
     .filter(u => !u.isBot && ((u.xp && u.xp > 0) || (u.level && u.level > 1)))
     .sort((a, b) => (b.xp || 0) - (a.xp || 0));
+});
+
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return rankedUsers.value.slice(start, start + pageSize.value);
 });
 
 async function loadConfig() {

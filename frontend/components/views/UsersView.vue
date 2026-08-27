@@ -251,7 +251,7 @@
         <!-- ================================================================= -->
         <div v-else-if="viewMode === 'grid'" class="users-grid">
           <div
-            v-for="u in filteredUsers"
+            v-for="u in paginatedUsers"
             :key="u.id"
             class="discord-user-card"
             @click="$emit('inspect-user', u)"
@@ -295,8 +295,8 @@
                   <span v-if="u.isBot" class="bot-badge">BOT</span>
                 </div>
 
-                <div class="discord-card-tag">
-                  @{{ u.username }}
+                <div class="discord-card-username-row">
+                  <span>@{{ u.username }}</span>
                   <span v-if="u.discriminator && u.discriminator !== '0'" style="opacity: 0.6;">#{{ u.discriminator }}</span>
                 </div>
               </div>
@@ -388,7 +388,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="u in filteredUsers"
+                v-for="u in paginatedUsers"
                 :key="u.id"
                 class="user-table-row"
                 @click="$emit('inspect-user', u)"
@@ -406,27 +406,28 @@
                       />
                       <span
                         v-if="u.presence"
-                        :class="['presence-dot-mini', u.presence]"
+                        :class="['presence-indicator-mini', u.presence]"
+                        :title="`Statut: ${u.presence}`"
                       ></span>
                     </div>
                     <div class="user-td-info">
                       <div class="user-td-name-row">
                         <span
-                          class="user-td-displayname"
+                          class="user-td-name"
                           :style="{ color: getMemberNameColor(u) }"
                         >
                           {{ u.displayName || u.username }}
                         </span>
-                        <span v-if="u.isBot" class="bot-badge">BOT</span>
+                        <span v-if="u.isBot" class="bot-badge-mini">BOT</span>
                       </div>
-                      <span class="user-td-tag">@{{ u.username }}</span>
+                      <span class="user-td-sub">@{{ u.username }}</span>
                     </div>
                   </div>
                 </td>
 
                 <!-- Colonne Rôle Principal -->
                 <td>
-                  <div v-if="u.highestRole" class="user-td-role-pill">
+                  <div v-if="u.highestRole" class="user-td-role-highest">
                     <img
                       v-if="u.highestRole.icon"
                       :src="getProxiedImageUrl(u.highestRole.icon)"
@@ -484,7 +485,7 @@
                     <span
                       v-if="getOrderedMemberRoles(u).length > 3"
                       class="discord-role-pill more-roles-pill"
-                      :title="`+${getOrderedMemberRoles(u).length - 3} rôles`"
+                      :title="`+${getOrderedMemberRoles(u).length - 3} autres rôles`"
                     >
                       +{{ getOrderedMemberRoles(u).length - 3 }}
                     </span>
@@ -499,16 +500,25 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Pagination Discord pour la liste des membres -->
+        <DiscordPagination
+          v-model="currentPage"
+          v-model:page-size="pageSize"
+          :total-items="filteredUsers.length"
+          :page-size-options="[12, 24, 48, 96]"
+        />
       </div>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 defineEmits<{
   (e: 'inspect-user', user: any): void;
@@ -523,6 +533,8 @@ const botFilter = ref<'all' | 'human' | 'bot'>('all');
 const sortBy = ref<'joined-desc' | 'joined-asc' | 'name-asc' | 'name-desc' | 'role-desc' | 'xp-desc'>('joined-desc');
 const selectedRoleIds = ref<Set<string>>(new Set());
 const isLoading = ref(false);
+const currentPage = ref(1);
+const pageSize = ref(24);
 
 onMounted(async () => {
   if (users.value.length === 0 || roles.value.length === 0) {
@@ -699,6 +711,15 @@ const filteredUsers = computed(() => {
   });
 
   return list;
+});
+
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredUsers.value.slice(start, start + pageSize.value);
+});
+
+watch([searchQuery, roleSearchQuery, botFilter, sortBy, () => selectedRoleIds.value.size], () => {
+  currentPage.value = 1;
 });
 
 function formatDate(dateStr: string): string {
