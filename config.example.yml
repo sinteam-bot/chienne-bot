@@ -518,3 +518,59 @@ automod:
 
   log_channel_id: null
   dm_on_action: true
+
+# ==============================================================================
+# CONFIGURATION DES TICKETS DE SUPPORT (Phase 3)
+# ==============================================================================
+# Système de tickets avec bouton persistant, modal de création,
+# claim/unclaim/close par le staff, transcripts HTML en BDD.
+#
+# Activer via le dashboard /features ou features.tickets.enabled = true
+tickets:
+  enabled: false
+  allowed_roles: [] # Rôles autorisés à gérer les tickets (vide = perm Discord)
+
+  panel:
+    channel_id: null            # Salon où le panel est posté (ex: #support)
+    title: "📩 Support"
+    description: "Clique sur le bouton ci-dessous pour ouvrir un ticket. Notre staff te répondra dès que possible."
+    color: "#5865F2"
+    button_label: "Ouvrir un ticket"
+    button_emoji: "📩"
+    image: null
+
+  categories:
+    - id: support
+      label: "Support"
+      emoji: "❓"
+      description: "Question ou problème général"
+      staff_roles: []
+    - id: report
+      label: "Signalement"
+      emoji: "🚨"
+      description: "Signaler un membre ou un message"
+      staff_roles: []
+    - id: partner
+      label: "Partenariat"
+      emoji: "🤝"
+      description: "Proposition de partenariat"
+      staff_roles: []
+
+  use_threads: false   # true = threads privés (limités 90j), false = salons dédiés
+
+  settings:
+    max_open_per_user: 3
+    auto_close_after_days: 7
+    transcript_channel_id: null  # Salon où poster les transcripts
+    ping_staff_on_open: true
+    staff_role_to_ping: null     # ID du rôle staff à mentionner
+    log_channel_id: null
+    close_message: "🔒 Ce ticket a été fermé par {closer}."
+    reopen_on_message: false
+    allow_user_close: false
+    confirmation_before_close: true
+
+  modal_fields:
+    - { id: subject,     label: "Sujet",        style: "short",    required: true,  min_length: 3,   max_length: 100 }
+    - { id: description, label: "Description",  style: "paragraph", required: true,  min_length: 20,  max_length: 1500 }
+
