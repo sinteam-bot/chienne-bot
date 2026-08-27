@@ -244,44 +244,44 @@ welcome:
         value: "N'oublie pas de te présenter pour que la communauté apprenne à te connaître !"
         inline: false
 
-  # Configuration du système XP
-  xp:
-    enabled: false
-    # XP par message
-    message_xp:
-      min: 15
-      max: 25
-      cooldown: 10 # Cooldown en secondes entre deux gains d'XP
+# Configuration du système XP
+xp:
+  enabled: false
+  # XP par message
+  message_xp:
+    min: 15
+    max: 25
+    cooldown: 10 # Cooldown en secondes entre deux gains d'XP
 
-    # XP vocal
-    voice_xp:
-      per_minute: 2 # XP par minute en vocal
-      check_interval: 5 # Vérifier toutes les X minutes
-      min_duration: 1 # Minimum de minutes pour gagner de l'XP
+  # XP vocal
+  voice_xp:
+    per_minute: 2 # XP par minute en vocal
+    check_interval: 5 # Vérifier toutes les X minutes
+    min_duration: 1 # Minimum de minutes pour gagner de l'XP
 
-    # Formule de calcul de niveau
-    level:
-      base_xp: 100 # XP requis pour le niveau 1
-      multiplier: 1.5 # Multiplicateur par niveau
+  # Formule de calcul de niveau
+  level:
+    base_xp: 100 # XP requis pour le niveau 1
+    multiplier: 1.5 # Multiplicateur par niveau
 
-    # Bonus
-    bonus:
-      daily_first_message: 50 # Bonus pour le premier message du jour
-      streak_multiplier: 1.1 # +10% XP par jour consécutif (max 7 jours)
-      event_multiplier: 2 # Double XP pendant les événements
+  # Bonus
+  bonus:
+    daily_first_message: 50 # Bonus pour le premier message du jour
+    streak_multiplier: 1.1 # +10% XP par jour consécutif (max 7 jours)
+    event_multiplier: 2 # Double XP pendant les événements
 
-    # Limites anti-spam
-    limits:
-      max_xp_per_day: 5000 # Maximum d'XP par jour
-      max_messages_per_minute: 5 # Ignorer après X messages par minute
+  # Limites anti-spam
+  limits:
+    max_xp_per_day: 5000 # Maximum d'XP par jour
+    max_messages_per_minute: 5 # Ignorer après X messages par minute
 
-    # Récompenses de niveau (à personnaliser selon vos rôles)
-    level_roles:
-      5: "Membre Actif"
-      10: "Membre Dévoué"
-      20: "Vétéran"
-      30: "Légende"
-      50: "Dieu du serveur"
+  # Récompenses de niveau (à personnaliser selon vos rôles)
+  level_roles:
+    5: "Membre Actif"
+    10: "Membre Dévoué"
+    20: "Vétéran"
+    30: "Légende"
+    50: "Dieu du serveur"
 
 # ==============================================================================
 # CONFIGURATION DU JEU DU COMPTEUR (ROUTE DE L'INFINI)
