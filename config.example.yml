@@ -284,12 +284,14 @@ xp:
 counter:
   enabled: true
   channel_id: "votre_salon_compteur_id"
+  max_errors: 1 # Nombre d'erreurs autorisées avant réinitialisation du compteur (défaut: 1)
   emojis:
     obsybon_id: "1524104068514189422"
     obsydemon_id: "1488145689916473544"
   messages:
     double_post_message: "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>"
-    ranking_header: "**<@{userId}> a ruiné la Route de l'Infini en envoyant un nombre incorrect !** \n\n 🏆 **Classement de la Route de l'Infini**\n"
+    warning_message: "⚠️ <@{userId}> s'est trompé(e) ! (**{errorsCount}/{maxErrors} erreurs** tolérées). Le nombre attendu reste **{expectedNumber}**."
+    ranking_header: "**<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !** \n\n 🏆 **Classement de la Route de l'Infini**\n"
     ranking_footer: "\n\nLe compteur a été réinitialisé, le prochain nombre est 1."
     no_participation: "Aucune participation enregistrée pour cette session."
     embed_title: "❌ Perdu !"
@@ -302,6 +304,7 @@ countdown:
   enabled: true
   channel_id: "votre_salon_countdown_id"
   start_number: 900
+  max_errors: 1 # Nombre d'erreurs autorisées avant réinitialisation du compte à rebours (défaut: 1)
   trap_chance: 0.15 # ~15% de chance d'activer un piège
   emojis:
     obsybon_id: "1524104068514189422"
@@ -310,8 +313,9 @@ countdown:
     start_message: "**Allez la chienne commence :** {number}"
     double_post_message: "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>"
     trap_dodge_message: "**J’ai cru que j’allais vous avoir <:Obsydemoncouverture:{emojiObsydemon}>**"
-    trap_failed_message: "<@{userId}>**, Je t’ai eu ** <:Obsydemoncouverture:{emojiObsydemon}>"
+    trap_failed_message: "<@{userId}>**, Je t’ai eu !** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**."
     finish_message: "**Je suis émue, vous ne vous êtes pas trompés mais ce n’est pas fini <:Obsydemoncouverture:{emojiObsydemon}>**"
+    warning_message: "⚠️ <@{userId}> s'est trompé(e) ! (**{errorsCount}/{maxErrors} erreurs** tolérées). Le prochain nombre attendu est **{expectedNumber}**."
     error_message: "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre ** <:Obsydemoncouverture:{emojiObsydemon}>"
     no_participation: "Aucune participation enregistrée."
     embed_title: "🏆 **Classement de la partie**"

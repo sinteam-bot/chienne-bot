@@ -33,20 +33,24 @@
         </div>
 
         <div class="daily-stat-card">
+          <div class="daily-stat-icon">⚠️</div>
+          <div class="daily-stat-info">
+            <span class="daily-stat-label">Erreurs / Tolérance</span>
+            <span class="daily-stat-value" :style="{ color: (gameState.error_count || 0) > 0 ? 'var(--yellow)' : 'var(--green)' }">
+              {{ gameState.error_count || 0 }} / {{ config.max_errors || 1 }}
+            </span>
+            <span class="daily-stat-sub">
+              {{ Math.max(0, (config.max_errors || 1) - (gameState.error_count || 0)) }} restante(s) avant réinitialisation
+            </span>
+          </div>
+        </div>
+
+        <div class="daily-stat-card">
           <div class="daily-stat-icon">📢</div>
           <div class="daily-stat-info">
             <span class="daily-stat-label">Salon Dédié</span>
             <span class="daily-stat-value">#{{ channelName }}</span>
             <span class="daily-stat-sub">ID: {{ config.channel_id || 'Non défini' }}</span>
-          </div>
-        </div>
-
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🏆</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Joueurs Actifs</span>
-            <span class="daily-stat-value">{{ scores.length }}</span>
-            <span class="daily-stat-sub">Scores de la session</span>
           </div>
         </div>
       </div>
@@ -71,9 +75,9 @@
         <table class="users-table">
           <thead>
             <tr>
-              <th>Rang</th>
+              <th style="width: 70px;">Rang</th>
               <th>Joueur</th>
-              <th>Points Validés</th>
+              <th style="width: 140px;">Points Validés</th>
             </tr>
           </thead>
           <tbody>
@@ -114,13 +118,22 @@
 
         <div class="form-divider"></div>
 
-        <div>
-          <label class="form-label">Salon du Jeu (Route vers l'Infini)</label>
-          <DiscordChannelSelect
-            v-model="config.channel_id"
-            placeholder="Sélectionner le salon du compteur..."
-            :filter-text-only="true"
-          />
+        <div class="form-row">
+          <div class="col-half">
+            <label class="form-label">Salon du Jeu (Route vers l'Infini)</label>
+            <DiscordChannelSelect
+              v-model="config.channel_id"
+              placeholder="Sélectionner le salon du compteur..."
+              :filter-text-only="true"
+            />
+          </div>
+          <div class="col-half">
+            <label class="form-label">Erreurs Max avant Reset</label>
+            <input v-model.number="config.max_errors" type="number" min="1" max="100" class="discord-input" />
+            <span class="form-help" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">
+              Nombre de fautes autorisées avant remise à 0 du compteur (défaut : 1).
+            </span>
+          </div>
         </div>
 
         <div class="card-subtitle" style="margin-top: 10px;">Emojis Personnalisés</div>
@@ -142,7 +155,12 @@
         </div>
 
         <div>
-          <label class="form-label">En-tête Message Défaite / Ruine</label>
+          <label class="form-label">Message d'Avertissement d'Erreur ({userId}, {errorsCount}, {maxErrors}, {expectedNumber})</label>
+          <input v-model="config.messages.warning_message" type="text" class="discord-input" placeholder="⚠️ <@{userId}> s'est trompé(e) ! ({errorsCount}/{maxErrors} erreurs)..." />
+        </div>
+
+        <div>
+          <label class="form-label">En-tête Message Défaite / Reset ({maxErrors})</label>
           <textarea v-model="config.messages.ranking_header" class="discord-textarea" rows="2"></textarea>
         </div>
 
@@ -181,14 +199,16 @@ const { showToast } = useToast();
 const { discordChannels } = useAppState();
 
 const activeSubTab = ref<'stats' | 'config'>('stats');
-const gameState = ref<any>({ current_number: 0 });
+const gameState = ref<any>({ current_number: 0, error_count: 0 });
 const scores = ref<any[]>([]);
 const config = ref<any>({
   enabled: true,
   channel_id: '1533492692825276598',
+  max_errors: 1,
   emojis: { obsybon_id: '1524104068514189422', obsydemon_id: '1488145689916473544' },
   messages: {
     double_post_message: '',
+    warning_message: '',
     ranking_header: '',
     ranking_footer: '',
     no_participation: '',

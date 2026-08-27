@@ -33,6 +33,19 @@
         </div>
 
         <div class="daily-stat-card">
+          <div class="daily-stat-icon">⚠️</div>
+          <div class="daily-stat-info">
+            <span class="daily-stat-label">Erreurs / Tolérance</span>
+            <span class="daily-stat-value" :style="{ color: (gameState.error_count || 0) > 0 ? 'var(--yellow)' : 'var(--green)' }">
+              {{ gameState.error_count || 0 }} / {{ config.max_errors || 1 }}
+            </span>
+            <span class="daily-stat-sub">
+              {{ Math.max(0, (config.max_errors || 1) - (gameState.error_count || 0)) }} restante(s) avant réinitialisation
+            </span>
+          </div>
+        </div>
+
+        <div class="daily-stat-card">
           <div class="daily-stat-icon">🪤</div>
           <div class="daily-stat-info">
             <span class="daily-stat-label">Statut Piège Bot</span>
@@ -88,9 +101,9 @@
         <table class="users-table">
           <thead>
             <tr>
-              <th>Rang</th>
+              <th style="width: 70px;">Rang</th>
               <th>Joueur</th>
-              <th>Points Validés</th>
+              <th style="width: 140px;">Points Validés</th>
             </tr>
           </thead>
           <tbody>
@@ -151,6 +164,13 @@
             <label class="form-label">Probabilité de Piège (0.15 = 15%)</label>
             <input v-model.number="config.trap_chance" type="number" step="0.05" min="0" max="1" class="discord-input" />
           </div>
+          <div class="col-half">
+            <label class="form-label">Erreurs Max avant Reset</label>
+            <input v-model.number="config.max_errors" type="number" min="1" max="100" class="discord-input" />
+            <span class="form-help" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">
+              Nombre de fautes tolérées avant remise à zéro (défaut : 1).
+            </span>
+          </div>
         </div>
 
         <div class="card-subtitle" style="margin-top: 10px;">Messages Personnalisés</div>
@@ -165,8 +185,13 @@
         </div>
 
         <div>
-          <label class="form-label">Message Tombé dans le Piège ({userId})</label>
+          <label class="form-label">Message Tombé dans le Piège ({userId}, {errorsCount}, {maxErrors}, {expectedNumber})</label>
           <input v-model="config.messages.trap_failed_message" type="text" class="discord-input" />
+        </div>
+
+        <div>
+          <label class="form-label">Message d'Avertissement d'Erreur ({userId}, {errorsCount}, {maxErrors}, {expectedNumber})</label>
+          <input v-model="config.messages.warning_message" type="text" class="discord-input" placeholder="⚠️ <@{userId}> s'est trompé(e) ! ({errorsCount}/{maxErrors} erreurs)..." />
         </div>
 
         <div>
@@ -200,12 +225,13 @@ const { showToast } = useToast();
 const { discordChannels } = useAppState();
 
 const activeSubTab = ref<'stats' | 'config'>('stats');
-const gameState = ref<any>({ current_number: 900, is_trap_active: 0 });
+const gameState = ref<any>({ current_number: 900, is_trap_active: 0, error_count: 0 });
 const scores = ref<any[]>([]);
 const config = ref<any>({
   enabled: true,
   channel_id: '1533492760697503805',
   start_number: 900,
+  max_errors: 1,
   trap_chance: 0.15,
   emojis: { obsybon_id: '1524104068514189422', obsydemon_id: '1488145689916473544' },
   messages: {
@@ -214,6 +240,7 @@ const config = ref<any>({
     trap_dodge_message: '',
     trap_failed_message: '',
     finish_message: '',
+    warning_message: '',
     error_message: '',
     no_participation: '',
     embed_title: '🏆 **Classement de la partie**',
