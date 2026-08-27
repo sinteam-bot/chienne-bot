@@ -92,7 +92,7 @@ export function useAppState() {
     { id: 'logs', name: 'Logs Console', icon: '📜', routePath: '/logs', section: 'bot', topic: 'Console en direct via Server-Sent Events (SSE)' },
     { id: 'users', name: 'Membres & Rôles', icon: '👥', routePath: '/users', section: 'bot', topic: 'Annuaire des utilisateurs, rôles et modale d\'inspection' },
     { id: 'templates', name: 'Moteur de Templates', icon: '🎨', routePath: '/templates', section: 'bot', topic: 'Moteur de templating Discord universel avec prévisualisation en direct (Embeds, Boucles, Conditions, Filtres)' },
-    { id: 'general-config', name: 'Config Générale', icon: '⚙️', routePath: '/general-config', section: 'bot', topic: 'Configuration générale du bot (Tokens, Auth Web, Scheduler)' }
+    { id: 'config', name: 'Configuration Système', icon: '⚙️', routePath: '/config/general', section: 'bot', topic: 'Configuration générale du bot (Tokens, Auth Web, Scheduler, OpenRouter)' }
   ];
 
   const MODULE_SECTION_ITEMS: ChannelItem[] = [

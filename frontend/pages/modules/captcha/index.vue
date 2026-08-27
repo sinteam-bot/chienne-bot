@@ -5,5 +5,5 @@
 <script setup lang="ts">
 import { navigateTo } from '#imports';
 
-await navigateTo('/modules/bump-reminder/countdown', { replace: true });
+await navigateTo('/modules/captcha/overview', { replace: true });
 </script>

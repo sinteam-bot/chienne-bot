@@ -1,46 +1,53 @@
 <template>
   <div class="view-panel">
     <div class="module-view-scroller">
-      <!-- En-tête du module Daily Message -->
-      <div class="module-header" style="margin-bottom: 20px;">
+      <!-- En-tête de la configuration technique -->
+      <div class="config-header" style="margin-bottom: 20px;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
           <div>
             <h2 style="font-size: 22px; font-weight: 700; color: var(--header-primary); margin: 0 0 6px 0; display: flex; align-items: center; gap: 10px;">
-              <span>🌅</span> Pensée du Jour & Messages IA
+              <span>⚙️</span> Configuration Système & Infrastructure
             </h2>
-            <p class="module-desc" style="margin: 0; color: var(--text-muted); font-size: 13px;">
-              Génération automatique de messages quotidiens par IA (OpenRouter), pré-rendu à 21h et diffusion planifiée à 09h.
+            <p class="config-desc" style="margin: 0;">
+              Paramètres généraux du bot, planificateur de tâches crons, sécurité API/Web et résilience des modèles IA dans <code>config.yml</code>.
             </p>
           </div>
         </div>
 
-        <!-- Sous-navigation des onglets du module -->
+        <!-- Barre de sous-navigation d'onglets (Sous-pages Nuxt) -->
         <div class="module-tab-nav" style="margin-top: 16px; display: flex; gap: 8px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px; flex-wrap: wrap;">
           <NuxtLink
-            to="/modules/daily-message/preview"
+            to="/config/general"
             class="module-tab-btn"
-            :class="{ active: isTabActive('/modules/daily-message/preview') }"
+            :class="{ active: isTabActive('/config/general') }"
           >
-            <span>👁️</span> Aperçu & Brouillon
+            <span>🤖</span> Général & Discord
           </NuxtLink>
           <NuxtLink
-            to="/modules/daily-message/history"
+            to="/config/scheduler"
             class="module-tab-btn"
-            :class="{ active: isTabActive('/modules/daily-message/history') }"
+            :class="{ active: isTabActive('/config/scheduler') }"
           >
-            <span>📜</span> Historique des Pensées
+            <span>⏰</span> Planificateur / Crons
           </NuxtLink>
           <NuxtLink
-            to="/modules/daily-message/config"
+            to="/config/web"
             class="module-tab-btn"
-            :class="{ active: isTabActive('/modules/daily-message/config') }"
+            :class="{ active: isTabActive('/config/web') }"
           >
-            <span>⚙️</span> Configuration & IA
+            <span>🛡️</span> Sécurité API & Web
+          </NuxtLink>
+          <NuxtLink
+            to="/config/openrouter"
+            class="module-tab-btn"
+            :class="{ active: isTabActive('/config/openrouter') }"
+          >
+            <span>🤖</span> OpenRouter & Résilience Polly
           </NuxtLink>
         </div>
       </div>
 
-      <!-- Sous-page injectée -->
+      <!-- Contenu de la sous-page active -->
       <NuxtPage />
     </div>
   </div>
@@ -52,14 +59,14 @@ import { useRoute } from 'vue-router';
 const route = useRoute();
 
 function isTabActive(path: string): boolean {
-  if (path === '/modules/daily-message/preview' && (route.path === '/modules/daily-message' || route.path === '/modules/daily-message/')) {
+  if (path === '/config/general' && (route.path === '/config' || route.path === '/config/')) {
     return true;
   }
   return route.path.startsWith(path);
 }
 
 useHead({
-  title: 'Pensée du Jour IA - Chienne Bot'
+  title: 'Configuration Système - Chienne Bot'
 });
 </script>
 

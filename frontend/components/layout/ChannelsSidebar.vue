@@ -65,11 +65,19 @@ function isItemActive(item: ChannelItem): boolean {
   if (item.id === 'archives' && currentPath.startsWith('/archives')) {
     return true;
   }
+  if (item.routePath.startsWith('/config') && currentPath.startsWith('/config')) {
+    return true;
+  }
+  if (item.routePath.startsWith('/modules/') && currentPath.startsWith(item.routePath)) {
+    return true;
+  }
+  if (item.routePath.startsWith('/games/') && currentPath.startsWith(item.routePath)) {
+    return true;
+  }
   return currentPath === item.routePath;
 }
 
 function goTo(path: string) {
-  navigateTo(path.replace('/', '').replace('modules/', 'module-').replace('games/', 'game-') || 'info');
   router.push(path);
 }
 </script>
