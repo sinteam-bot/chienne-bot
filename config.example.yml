@@ -446,10 +446,43 @@ features:
     allowed_roles: []
 
 # ==============================================================================
-# CONFIGURATION DE LA MODÉRATION AUTOMATIQUE (Phase 1)
+# CONFIGURATION DE LA BIENVENUE AVANCÉE (Phase 6)
 # ==============================================================================
-# Activer cette feature via le dashboard : http://localhost:3000/features
-# ou directement ici : features.automod.enabled = true
+# Envoie une carte SVG générée à l'arrivée de chaque nouveau membre
+# (template `welcome`), optionnellement aussi à son départ (`leave`).
+# Le même moteur `CardRendererService` est utilisé par level-up et
+# giveaway (voir feature_cards dans la doc).
+#
+# Activer via le dashboard /features ou features.welcome.enabled = true
+welcome:
+  enabled: false
+  channel_id: "votre_salon_accueil"
+  welcome_color: "#f2c7ce"
+  AUTO_ROLES: []
+  welcome_message:
+    enabled: true
+    title: "🎉 Bienvenue sur {server} !"
+    description: "Bienvenue {user} !\n\nNous sommes ravis de t'accueillir parmi nous ! 🎊"
+    color: "#f2c7ce"
+    footer: "Membre #{memberCount}"
+    thumbnail: "user"
+    image: null
+  dm_message:
+    enabled: true
+    title: "👋 Bienvenue !"
+    description: "Salut {username} !\n\nBienvenue sur **{server}** !"
+    color: "#f2c7ce"
+  card:
+    template: welcome            # welcome | join | leave
+  milestones:
+    enabled: false
+    channel_id: null
+    thresholds: [1, 10, 50, 100, 500, 1000, 5000]
+    template: "🎯 Le serveur passe à {count} membres !"
+  leave:
+    enabled: false               # envoie aussi une carte au départ
+    template: leave
+
 #
 # Note : le bloc `automod:` au top-level est conservé pour la rétrocompatibilité.
 # Le bloc `features.automod:` ci-dessus a la priorité.
