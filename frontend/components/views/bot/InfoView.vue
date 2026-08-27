@@ -35,7 +35,7 @@
           <div class="module-stat-info">
             <span class="module-stat-label">Uptime Serveur</span>
             <span class="module-stat-value">{{ stats.uptimeFormatted || 'En ligne' }}</span>
-            <span class="module-stat-sub">Node.js {{ stats.nodeVersion || 'v20+' }}</span>
+            <span class="module-stat-sub">Node.js {{ stats.nodeVersion || '' }}</span>
           </div>
         </div>
       </div>
@@ -227,28 +227,6 @@
               </tr>
             </tbody>
           </table>
-        </div>
-      </div>
-
-      <!-- Raccourcis Rapides -->
-      <div class="config-card" style="margin-top: 10px;">
-        <div class="card-subtitle">Accès Rapide aux Fonctionnalités</div>
-        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-          <button class="action-btn" @click="navigateTo('logs')">
-            📜 Consulter les logs en direct
-          </button>
-          <button class="action-btn" @click="navigateTo('users')">
-            👥 Gérer les membres & rôles
-          </button>
-          <button class="action-btn" @click="navigateTo('module-daily-message')">
-            🌅 Voir la pensée du jour IA
-          </button>
-          <button class="action-btn" @click="navigateTo('general-config')">
-            ⚙️ Modifier la configuration
-          </button>
-          <button class="action-btn" @click="refreshAllData">
-            🔄 Rafraîchir toutes les données
-          </button>
         </div>
       </div>
     </div>
