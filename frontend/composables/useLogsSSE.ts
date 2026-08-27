@@ -6,6 +6,11 @@ export interface LogEntry {
   time: string;
   level: string;
   module?: string;
+  caller?: {
+    file?: string;
+    path?: string;
+    method?: string;
+  };
   message: string;
 }
 
@@ -123,6 +128,7 @@ export function useLogsSSE() {
       time: timeStr,
       level: (item.level || 'INFO').toUpperCase(),
       module: item.module || item.category || 'SYSTEM',
+      caller: item.caller || (item.file ? { file: item.file } : undefined),
       message: item.message || (typeof item === 'string' ? item : JSON.stringify(item))
     };
 
@@ -144,7 +150,7 @@ export function useLogsSSE() {
 
   function exportLogs() {
     const text = logs.value
-      .map(l => `[${l.time}] [${l.level}] [${l.module || 'SYSTEM'}] ${l.message}`)
+      .map(l => `[${l.time}] [${l.level}] [${l.module || 'SYSTEM'}]${l.caller?.file ? ` [${l.caller.file}]` : ''} ${l.message}`)
       .join('\n');
 
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });

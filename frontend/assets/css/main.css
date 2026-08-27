@@ -1175,6 +1175,23 @@ html, body {
 .log-module-badge.badge-mod-config { color: #81ecec; border-color: rgba(129, 236, 236, 0.3); background-color: rgba(129, 236, 236, 0.08); }
 .log-module-badge.badge-mod-system { color: #b2bec3; border-color: rgba(178, 190, 195, 0.3); background-color: rgba(178, 190, 195, 0.08); }
 
+.log-caller-badge {
+    font-family: var(--font-code);
+    font-size: 10px;
+    color: var(--text-muted);
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 5px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.log-caller-badge:hover {
+    color: var(--header-primary);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
 .badge-info { background-color: rgba(52, 152, 219, 0.2); color: #5dade2; }
 .badge-warn { background-color: rgba(241, 196, 15, 0.2); color: #f4d03f; }
 .badge-error { background-color: rgba(231, 76, 60, 0.2); color: #e74c3c; }

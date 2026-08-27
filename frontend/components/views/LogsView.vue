@@ -85,6 +85,11 @@
             <span>{{ getModuleLabel(entry.module) }}</span>
           </span>
 
+          <!-- Badge Fichier / Ligne Appelant (Winston Localization) -->
+          <span v-if="entry.caller?.file" class="log-caller-badge" :title="`Fichier source : ${entry.caller.path || entry.caller.file}`">
+            📁 {{ entry.caller.file }}
+          </span>
+
           <!-- Message -->
           <span class="log-msg">{{ entry.message }}</span>
         </div>
