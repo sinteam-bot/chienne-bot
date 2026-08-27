@@ -296,6 +296,19 @@ xp:
     20: "Vétéran"
     30: "Légende"
     50: "Dieu du serveur"
+  # Si false, les rôles sont retirés quand le niveau n'est plus atteint
+  level_roles_cumulable: true
+
+  # Annonce de level-up (Phase 2)
+  level_up:
+    enabled: true
+    channel_id: null          # null = salon courant, ou ID de salon dédié
+    template: "🎉 Bravo {user} ! Tu passes au **niveau {level}** !"
+    color: "#f2c7ce"
+    ping_user: true            # mentionne l'utilisateur dans l'annonce
+    show_rank: true            # affiche le rang dans le leaderboard
+    show_total_xp: true        # affiche le total d'XP
+    dm_user: false             # envoie aussi un DM à l'utilisateur
 
 # ==============================================================================
 # CONFIGURATION DU JEU DU COMPTEUR (ROUTE DE L'INFINI)
