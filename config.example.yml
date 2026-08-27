@@ -370,3 +370,64 @@ bump_reminder:
     footer: "Disboard Auto-Reminder"
     thumbnail: null # URL d'une vignette (optionnel)
     image: null # URL d'une bannière (optionnel)
+
+# ==============================================================================
+# CONFIGURATION DES FEATURES (Phase 0+) — Registre central
+# ==============================================================================
+# Cette section surcharge les blocs legacy ci-dessus. Priorité :
+#   1. Table `feature_flags` (gérée via le dashboard /api/features)
+#   2. Bloc `features.*` ci-dessous
+#   3. Bloc legacy (`xp:`, `welcome:`...) au top-level
+#   4. Defaults définis dans le code
+#
+# Utilisez `node scripts/migrate-config-to-features.js --apply` pour
+# recopier la config legacy dans la table feature_flags.
+features:
+  # Système d'XP & niveaux
+  xp:
+    enabled: false
+    allowed_roles: []
+  # Message de bienvenue + auto-rôles
+  welcome:
+    enabled: false
+    allowed_roles: []
+  # Message du jour (IA)
+  daily_message:
+    enabled: false
+    allowed_roles: []
+  # Compteur (Route de l'Infini)
+  counter:
+    enabled: false
+    allowed_roles: []
+  # Countdown
+  countdown:
+    enabled: false
+    allowed_roles: []
+  # Rappel de bump
+  bump_reminder:
+    enabled: false
+    allowed_roles: []
+  # Captcha
+  captcha:
+    enabled: false
+    allowed_roles: []
+  # Modération automatique (Phase 1 — à venir)
+  automod:
+    enabled: false
+    allowed_roles: []
+  # Tickets (Phase 3 — à venir)
+  tickets:
+    enabled: false
+    allowed_roles: []
+  # Logs (Phase 4 — à venir)
+  logs:
+    enabled: false
+    allowed_roles: []
+  # Giveaways (Phase 5 — à venir)
+  giveaways:
+    enabled: false
+    allowed_roles: []
+  # Sondages (Phase 5 — à venir)
+  polls:
+    enabled: false
+    allowed_roles: []
