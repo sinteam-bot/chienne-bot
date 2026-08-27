@@ -2257,4 +2257,29 @@ input:checked + .slider:before {
     border-color: rgba(242, 63, 67, 0.3);
 }
 
+/* ========================================================================== */
+/* GRILLES DE CARTES D'INFORMATIONS ET CONFIGURATION                          */
+/* ========================================================================== */
+.info-grid,
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+    margin-top: 14px;
+    margin-bottom: 14px;
+}
 
+.info-grid .config-card,
+.config-grid .config-card {
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .info-grid,
+    .config-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
