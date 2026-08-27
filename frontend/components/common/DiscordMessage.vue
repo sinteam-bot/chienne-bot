@@ -4,7 +4,7 @@
     <div class="message-avatar-col">
       <img
         v-if="!isGrouped"
-        :src="message.author?.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'"
+        :src="getProxiedImageUrl(message.author?.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')"
         alt="Avatar"
         class="message-avatar"
         loading="lazy"
@@ -38,7 +38,7 @@
         <div v-for="att in message.attachments" :key="att.id" style="margin-top: 6px;">
           <img
             v-if="isImageAttachment(att)"
-            :src="att.url"
+            :src="getProxiedImageUrl(att.url)"
             :alt="att.name"
             class="message-attachment-image"
             loading="lazy"
@@ -70,7 +70,7 @@
         >
           <img
             v-if="getReactionUrl(react)"
-            :src="getReactionUrl(react)"
+            :src="getProxiedImageUrl(getReactionUrl(react))"
             class="discord-reaction-emoji"
             :alt="getReactionLabel(react)"
             loading="lazy"
@@ -88,6 +88,7 @@
 import { computed } from 'vue';
 import DiscordEmbed from './DiscordEmbed.vue';
 import { useDiscordFormatter } from '~/composables/useDiscordFormatter.ts';
+import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 
 const props = defineProps<{
   message: any;
@@ -125,8 +126,10 @@ const fullTime = computed(() => {
 });
 
 function isImageAttachment(att: any): boolean {
+  if (!att) return false;
   if (att.contentType && att.contentType.startsWith('image/')) return true;
-  if (att.name && /\.(png|jpe?g|gif|webp)$/i.test(att.name)) return true;
+  const name = att.name || att.url || '';
+  if (/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(name)) return true;
   return false;
 }
 
@@ -143,11 +146,11 @@ function openImage(url: string) {
 }
 
 function getReactionUrl(react: any): string | null {
-  if (react.url) return react.url;
+  if (react.url) return getProxiedImageUrl(react.url);
   const emojiId = react.id || react.emoji?.id;
   if (emojiId) {
     const ext = react.animated || react.emoji?.animated ? 'gif' : 'png';
-    return `https://cdn.discordapp.com/emojis/${emojiId}.${ext}?size=32&quality=lossless`;
+    return getProxiedImageUrl(`https://cdn.discordapp.com/emojis/${emojiId}.${ext}?size=32&quality=lossless`);
   }
   return null;
 }

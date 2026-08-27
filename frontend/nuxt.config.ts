@@ -25,7 +25,7 @@ export default defineNuxtConfig({
         { name: 'description', content: 'Interface Web Discord pour Chienne Bot' }
       ],
       link: [
-        { rel: 'icon', type: 'image/png', href: 'https://cdn.discordapp.com/embed/avatars/0.png' },
+        { rel: 'icon', type: 'image/png', href: '/api/proxy/image?url=https%3A%2F%2Fcdn.discordapp.com%2Fembed%2Favatars%2F0.png' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {

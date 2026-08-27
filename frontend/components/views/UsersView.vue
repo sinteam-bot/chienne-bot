@@ -128,7 +128,7 @@
               <!-- Icône ou Emoji du Rôle -->
               <img
                 v-if="role.icon"
-                :src="role.icon"
+                :src="getProxiedImageUrl(role.icon)"
                 :alt="role.name"
                 class="role-icon-img"
                 loading="lazy"
@@ -267,11 +267,11 @@
             <!-- Corps de la carte -->
             <div class="discord-card-body">
               <!-- Wrapper Avatar + Statut -->
-              <div class="discord-card-avatar-wrapper">
+              <div class="card-avatar-wrapper">
                 <img
-                  :src="u.avatarUrl || u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'"
+                  :src="getProxiedImageUrl(u.avatarUrl || u.avatar)"
                   :alt="u.username"
-                  class="discord-card-avatar"
+                  class="discord-avatar-large"
                   loading="lazy"
                   referrerpolicy="no-referrer"
                 />
@@ -302,10 +302,10 @@
               </div>
 
               <!-- Rôle le plus élevé (Badge Spécial) -->
-              <div v-if="u.highestRole && u.highestRole.name !== '@everyone'" class="highest-role-badge">
+              <div v-if="u.highestRole" class="discord-card-role-highest">
                 <img
                   v-if="u.highestRole.icon"
-                  :src="u.highestRole.icon"
+                  :src="getProxiedImageUrl(u.highestRole.icon)"
                   :alt="u.highestRole.name"
                   class="role-badge-icon"
                   loading="lazy"
@@ -338,7 +338,7 @@
                 >
                   <img
                     v-if="r.icon"
-                    :src="r.icon"
+                    :src="getProxiedImageUrl(r.icon)"
                     :alt="r.name"
                     class="role-pill-icon"
                     loading="lazy"
@@ -398,7 +398,7 @@
                   <div class="user-td-member">
                     <div class="user-td-avatar-wrapper">
                       <img
-                        :src="u.avatarUrl || u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'"
+                        :src="getProxiedImageUrl(u.avatarUrl || u.avatar)"
                         :alt="u.username"
                         class="user-td-avatar"
                         loading="lazy"
@@ -426,10 +426,10 @@
 
                 <!-- Colonne Rôle Principal -->
                 <td>
-                  <div v-if="u.highestRole && u.highestRole.name !== '@everyone'" class="table-highest-role">
+                  <div v-if="u.highestRole" class="user-td-role-pill">
                     <img
                       v-if="u.highestRole.icon"
-                      :src="u.highestRole.icon"
+                      :src="getProxiedImageUrl(u.highestRole.icon)"
                       :alt="u.highestRole.name"
                       class="role-badge-icon"
                       loading="lazy"
@@ -464,7 +464,7 @@
                     >
                       <img
                         v-if="r.icon"
-                        :src="r.icon"
+                        :src="getProxiedImageUrl(r.icon)"
                         :alt="r.name"
                         class="role-pill-icon"
                         loading="lazy"
@@ -510,6 +510,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
+import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 
 defineEmits<{
   (e: 'inspect-user', user: any): void;

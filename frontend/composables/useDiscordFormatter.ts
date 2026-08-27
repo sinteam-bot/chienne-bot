@@ -1,4 +1,5 @@
 import { useAppState } from './useAppState.ts';
+import { getProxiedImageUrl } from './useDiscordImageProxy.ts';
 
 export function useDiscordFormatter() {
   const { users, roles, discordChannels, guildEmojis } = useAppState();
@@ -53,9 +54,10 @@ export function useDiscordFormatter() {
       /(?:&lt;|<)(a?):([a-zA-Z0-9_]+):(\d+)(?:&gt;|>)/g,
       (_match, animated, name, id) => {
         const ext = animated ? 'gif' : 'png';
-        const url = `https://cdn.discordapp.com/emojis/${id}.${ext}?size=48&quality=lossless`;
+        const rawUrl = `https://cdn.discordapp.com/emojis/${id}.${ext}?size=48&quality=lossless`;
+        const proxiedUrl = getProxiedImageUrl(rawUrl);
         return pushToken(
-          `<img class="discord-custom-emoji" src="${url}" alt=":${name}:" title=":${name}:" referrerpolicy="no-referrer" loading="lazy" />`
+          `<img class="discord-custom-emoji" src="${proxiedUrl}" alt=":${name}:" title=":${name}:" referrerpolicy="no-referrer" loading="lazy" />`
         );
       }
     );
@@ -69,9 +71,10 @@ export function useDiscordFormatter() {
         );
         if (found) {
           const ext = found.animated ? 'gif' : 'png';
-          const url = found.url || `https://cdn.discordapp.com/emojis/${found.id}.${ext}?size=48&quality=lossless`;
+          const rawUrl = found.url || `https://cdn.discordapp.com/emojis/${found.id}.${ext}?size=48&quality=lossless`;
+          const proxiedUrl = getProxiedImageUrl(rawUrl);
           return pushToken(
-            `<img class="discord-custom-emoji" src="${url}" alt=":${found.name}:" title=":${found.name}:" referrerpolicy="no-referrer" loading="lazy" />`
+            `<img class="discord-custom-emoji" src="${proxiedUrl}" alt=":${found.name}:" title=":${found.name}:" referrerpolicy="no-referrer" loading="lazy" />`
           );
         }
       }

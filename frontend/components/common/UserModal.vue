@@ -8,7 +8,7 @@
         ></div>
         <div class="modal-avatar-wrapper">
           <img
-            :src="user.avatarUrl || user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'"
+            :src="getProxiedImageUrl(user.avatarUrl || user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png')"
             :alt="user.username"
             class="modal-avatar"
             loading="lazy"
@@ -44,7 +44,7 @@
             >
               <img
                 v-if="role.icon"
-                :src="role.icon"
+                :src="getProxiedImageUrl(role.icon)"
                 :alt="role.name"
                 class="role-pill-icon"
                 loading="lazy"
@@ -63,28 +63,25 @@
           </div>
         </div>
 
-        <!-- Section Statistiques & Dates -->
+        <!-- Section Dates (Arrivée & Création) -->
         <div class="modal-section">
-          <h4>Informations sur le Membre</h4>
-          <div class="modal-dates-list">
-            <div v-if="user.joinedAt" class="date-row">
-              Rejoint le : <strong>{{ formatDate(user.joinedAt) }}</strong>
+          <h4>Dates Clés</h4>
+          <div class="modal-dates-grid">
+            <div class="date-card">
+              <span class="date-label">Rejoint le Serveur</span>
+              <span class="date-value">{{ formatDate(user.joinedAt) }}</span>
             </div>
-            <div v-if="user.createdAt" class="date-row">
-              Compte créé le : <strong>{{ formatDate(user.createdAt) }}</strong>
+            <div class="date-card">
+              <span class="date-label">Compte Créé le</span>
+              <span class="date-value">{{ formatDate(user.createdAt) }}</span>
             </div>
-            <div v-if="user.isBot !== undefined" class="date-row">
-              Type : <strong>{{ user.isBot ? 'Robot / Application Discord' : 'Utilisateur Humain' }}</strong>
-            </div>
-            <div v-if="user.level || user.xp" class="date-row">
-              Progression XP : <strong>Niveau {{ user.level || 1 }} ({{ user.xp || 0 }} XP)</strong>
-            </div>
-            <div v-if="user.messagesCount" class="date-row">
-              Messages envoyés : <strong>{{ user.messagesCount }}</strong>
-            </div>
-            <div v-if="user.voiceMinutes" class="date-row">
-              Temps en vocal : <strong>{{ Math.floor(user.voiceMinutes / 60) }}h {{ user.voiceMinutes % 60 }}min</strong>
-            </div>
+          </div>
+        </div>
+
+        <!-- Section Permissions -->
+        <div v-if="user.isAdmin" class="modal-section">
+          <div class="admin-badge-banner">
+            🛡️ Cet utilisateur possède les permissions d'Administrateur
           </div>
         </div>
       </div>
@@ -94,6 +91,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 
 const props = defineProps<{
   user: any;
@@ -128,7 +126,7 @@ const nameColor = computed(() => {
 
 const bannerStyle = computed(() => {
   if (props.user?.bannerUrl) {
-    return `url(${props.user.bannerUrl}) center/cover no-repeat`;
+    return `url(${getProxiedImageUrl(props.user.bannerUrl)}) center/cover no-repeat`;
   }
   const col = nameColor.value;
   if (col && col !== 'var(--header-primary)') {

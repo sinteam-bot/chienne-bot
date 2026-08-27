@@ -51,7 +51,7 @@
 
           <div style="display: flex; align-items: center; gap: 16px;">
             <img
-              :src="guild?.iconUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'"
+              :src="getProxiedImageUrl(guild?.iconUrl)"
               alt="Guild Icon"
               loading="lazy"
               referrerpolicy="no-referrer"
@@ -74,7 +74,7 @@
 
           <div style="display: flex; align-items: center; gap: 16px;">
             <img
-              :src="botProfile.avatarUrl"
+              :src="getProxiedImageUrl(botProfile.avatarUrl)"
               alt="Bot Avatar"
               loading="lazy"
               referrerpolicy="no-referrer"
@@ -259,6 +259,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 
 export interface ModuleStatusItem {
   key: string;

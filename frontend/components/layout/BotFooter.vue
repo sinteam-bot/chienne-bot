@@ -1,7 +1,7 @@
 <template>
   <footer class="user-footer">
     <div class="user-avatar-wrapper">
-      <img :src="botProfile.avatarUrl" alt="Bot Avatar" class="user-avatar" loading="lazy" referrerpolicy="no-referrer" />
+      <img :src="getProxiedImageUrl(botProfile.avatarUrl)" alt="Bot Avatar" class="user-avatar" loading="lazy" referrerpolicy="no-referrer" />
       <span :class="['status-indicator', botProfile.status]"></span>
     </div>
     <div class="user-info">
@@ -29,6 +29,7 @@
 <script setup lang="ts">
 import { useAppState } from '~/composables/useAppState.ts';
 import { useAuth } from '~/composables/useAuth.ts';
+import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 
 const { botProfile, refreshAll } = useAppState();
 const { openAuthModal } = useAuth();

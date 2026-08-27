@@ -70,7 +70,7 @@
               </td>
               <td>
                 <div class="user-td-member">
-                  <img :src="u.avatarUrl" :alt="u.username" class="user-td-avatar" loading="lazy" referrerpolicy="no-referrer" />
+                  <img :src="getProxiedImageUrl(u.avatarUrl)" :alt="u.username" class="user-td-avatar" loading="lazy" referrerpolicy="no-referrer" />
                   <div class="user-td-info">
                     <span class="user-td-name">{{ u.displayName || u.username }}</span>
                     <span class="user-td-sub">@{{ u.username }}</span>
@@ -83,9 +83,9 @@
                 </span>
               </td>
               <td>
-                <strong style="color: var(--header-primary); font-family: var(--font-code);">
-                  {{ u.xp || 0 }} XP
-                </strong>
+                <span style="font-weight: 600; color: var(--green);">
+                  {{ (u.xp || 0).toLocaleString('fr-FR') }} XP
+                </span>
               </td>
             </tr>
           </tbody>
@@ -98,8 +98,8 @@
       <div class="config-card">
         <div class="form-group-toggle">
           <div class="toggle-info">
-            <span class="form-label">Activer le Système XP & Niveaux</span>
-            <p class="form-help">Permet aux membres de gagner de l'expérience en discutant et en vocal.</p>
+            <span class="form-label" style="font-size: 16px;">⚡ Activation du Module d'XP & Niveaux</span>
+            <p class="form-help">Permet aux membres de gagner de l'expérience en discutant dans les salons textuels et en vocal.</p>
           </div>
           <label class="switch">
             <input v-model="config.enabled" type="checkbox" />
@@ -107,21 +107,33 @@
           </label>
         </div>
 
-        <div class="form-divider"></div>
-
-        <div class="card-subtitle">XP par Message</div>
+        <div class="card-subtitle" style="margin-top: 18px;">Gains d'XP par Message Textuel</div>
         <div class="form-row">
-          <div class="col-third">
-            <label class="form-label">XP Min</label>
+          <div class="col-half">
+            <label class="form-label">XP Minimum par message</label>
             <input v-model.number="config.message_xp.min" type="number" class="discord-input" />
           </div>
-          <div class="col-third">
-            <label class="form-label">XP Max</label>
+          <div class="col-half">
+            <label class="form-label">XP Maximum par message</label>
             <input v-model.number="config.message_xp.max" type="number" class="discord-input" />
           </div>
-          <div class="col-third">
-            <label class="form-label">Cooldown (secondes)</label>
+        </div>
+        <div class="form-row">
+          <div class="col-half">
+            <label class="form-label">Délai de rechargement / Cooldown (secondes)</label>
             <input v-model.number="config.message_xp.cooldown" type="number" class="discord-input" />
+          </div>
+        </div>
+
+        <div class="card-subtitle" style="margin-top: 10px;">Gains d'XP Vocal</div>
+        <div class="form-row">
+          <div class="col-half">
+            <label class="form-label">XP par Minute en salon vocal</label>
+            <input v-model.number="config.voice_xp.per_minute" type="number" class="discord-input" />
+          </div>
+          <div class="col-half">
+            <label class="form-label">Intervalle de vérification (secondes)</label>
+            <input v-model.number="config.voice_xp.check_interval" type="number" class="discord-input" />
           </div>
         </div>
 
@@ -151,6 +163,7 @@
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
+import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

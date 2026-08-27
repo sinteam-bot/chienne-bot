@@ -4,7 +4,7 @@
     <div v-if="embed.author" class="embed-author">
       <img
         v-if="embed.author.icon_url || embed.author.iconURL"
-        :src="embed.author.icon_url || embed.author.iconURL"
+        :src="getProxiedImageUrl(embed.author.icon_url || embed.author.iconURL)"
         alt="Author Icon"
         loading="lazy"
         referrerpolicy="no-referrer"
@@ -21,6 +21,17 @@
     <!-- Description -->
     <div v-if="embed.description" class="embed-desc" v-html="formattedDescription"></div>
 
+    <!-- Thumbnail -->
+    <div v-if="embed.thumbnail" class="embed-thumbnail" style="float: right; margin-left: 12px;">
+      <img
+        :src="getProxiedImageUrl(embed.thumbnail.url || embed.thumbnail.proxy_url)"
+        alt="Thumbnail"
+        style="max-width: 80px; max-height: 80px; border-radius: 4px;"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+      />
+    </div>
+
     <!-- Fields Grid -->
     <div v-if="embed.fields && embed.fields.length > 0" class="embed-fields-grid">
       <div v-for="(field, index) in embed.fields" :key="index" class="embed-field">
@@ -32,7 +43,7 @@
     <!-- Image -->
     <div v-if="embed.image" class="embed-image">
       <img
-        :src="embed.image.url || embed.image.proxy_url"
+        :src="getProxiedImageUrl(embed.image.url || embed.image.proxy_url)"
         alt="Embed Image"
         loading="lazy"
         referrerpolicy="no-referrer"
@@ -43,7 +54,7 @@
     <div v-if="embed.footer || embed.timestamp" class="embed-footer">
       <img
         v-if="embed.footer?.icon_url || embed.footer?.iconURL"
-        :src="embed.footer.icon_url || embed.footer.iconURL"
+        :src="getProxiedImageUrl(embed.footer.icon_url || embed.footer.iconURL)"
         alt="Footer Icon"
         loading="lazy"
         referrerpolicy="no-referrer"
@@ -58,6 +69,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useDiscordFormatter } from '~/composables/useDiscordFormatter.ts';
+import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 
 const props = defineProps<{
   embed: any;
