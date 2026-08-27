@@ -236,10 +236,36 @@
 
         <!-- Personnalisation de l'Embed Discord -->
         <div class="config-card">
-          <div class="card-subtitle">🎨 Personnalisation de l'Embed Discord</div>
+          <div class="card-subtitle">🎨 Personnalisation du Message & de l'Embed Discord</div>
           <p class="config-desc">
-            Personnalisez le titre, le texte et la couleur de l'embed envoyé aux membres.
+            Personnalisez le texte hors embed, le titre, la description, la couleur, l'image et le pied de page du rappel.
           </p>
+
+          <!-- Variables dynamiques disponibles -->
+          <div style="background: var(--bg-tertiary); padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--card-border);">
+            <span style="font-size: 12px; font-weight: 700; color: var(--header-primary); display: block; margin-bottom: 6px;">
+              💡 Variables dynamiques disponibles :
+            </span>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <span class="badge-variable" title="Délai en heures">{hours}</span>
+              <span class="badge-variable" title="Mention du rôle ou @here">{role}</span>
+              <span class="badge-variable" title="Mention du dernier bumper">{user}</span>
+              <span class="badge-variable" title="Pseudo du dernier bumper">{username}</span>
+              <span class="badge-variable" title="Commande cliquable Disboard">{command}</span>
+              <span class="badge-variable" title="Salon du bump">{channel}</span>
+              <span class="badge-variable" title="Nom du serveur Discord">{server}</span>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Message texte brut (au-dessus de l'embed)</label>
+            <input
+              v-model="configForm.messages.content"
+              type="text"
+              class="discord-input"
+              placeholder="🔔 {role}"
+            />
+          </div>
 
           <div class="form-group" style="margin-bottom: 16px;">
             <label class="form-label">Titre de l'embed</label>
@@ -252,29 +278,63 @@
           </div>
 
           <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Description / Message</label>
+            <label class="form-label">Description / Message de l'embed</label>
             <textarea
               v-model="configForm.messages.description"
               class="discord-input"
               rows="4"
-              placeholder="Tapez </bump:947088344167366698> pour faire monter le serveur sur Disboard 🚀"
+              placeholder="{hours} heures se sont écoulées depuis le dernier bump !\n\nTapez {command} pour faire monter le serveur sur Disboard 🚀"
             ></textarea>
           </div>
 
-          <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Couleur de l'Embed</label>
-            <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="form-group">
+              <label class="form-label">Couleur de l'Embed</label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input
+                  v-model="configForm.messages.color"
+                  type="color"
+                  style="width: 40px; height: 36px; border: none; border-radius: 4px; cursor: pointer; background: transparent;"
+                />
+                <input
+                  v-model="configForm.messages.color"
+                  type="text"
+                  class="discord-input"
+                  style="width: 120px; font-family: var(--font-code);"
+                  placeholder="#f2c7ce"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Pied de page (Footer)</label>
               <input
-                v-model="configForm.messages.color"
-                type="color"
-                style="width: 40px; height: 36px; border: none; border-radius: 4px; cursor: pointer; background: transparent;"
-              />
-              <input
-                v-model="configForm.messages.color"
+                v-model="configForm.messages.footer"
                 type="text"
                 class="discord-input"
-                style="width: 120px; font-family: var(--font-code);"
-                placeholder="#f2c7ce"
+                placeholder="Disboard Auto-Reminder"
+              />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="form-group">
+              <label class="form-label">URL Vignette (Thumbnail)</label>
+              <input
+                v-model="configForm.messages.thumbnail"
+                type="text"
+                class="discord-input"
+                placeholder="https://... (optionnel)"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">URL Image Bannière</label>
+              <input
+                v-model="configForm.messages.image"
+                type="text"
+                class="discord-input"
+                placeholder="https://... (optionnel)"
               />
             </div>
           </div>
@@ -283,10 +343,8 @@
           <div style="margin-top: 20px;">
             <label class="form-label" style="margin-bottom: 8px; display: block;">👁️ Aperçu Live du Rappel</label>
             <div style="background: var(--bg-tertiary); padding: 14px; border-radius: 8px;">
-              <div style="font-size: 13px; color: var(--text-normal); margin-bottom: 8px;">
-                🔔 <span class="discord-mention" :style="{ backgroundColor: configForm.role_id ? 'rgba(88, 101, 242, 0.2)' : 'rgba(250, 166, 26, 0.15)', color: configForm.role_id ? '#c9cdfb' : '#faa61a' }">
-                  {{ configForm.role_id ? targetRoleName : '@here' }}
-                </span>
+              <div v-if="liveContentPreview" style="font-size: 13px; color: var(--text-normal); margin-bottom: 8px;">
+                {{ liveContentPreview }}
               </div>
 
               <DiscordEmbed :embed="liveEmbedPreview" />
@@ -348,9 +406,13 @@ const configForm = ref<any>({
   reminder_cooldown_hours: 2,
   mention_here: true,
   messages: {
+    content: '🔔 {role}',
     title: "⏰ C'est l'heure du Bump !",
-    description: "2 heures se sont écoulées depuis le dernier bump !\n\nTapez </bump:947088344167366698> pour faire monter le serveur sur Disboard 🚀",
-    color: "#f2c7ce"
+    description: "{hours} heures se sont écoulées depuis le dernier bump !\n\nTapez {command} pour faire monter le serveur sur Disboard 🚀",
+    color: "#f2c7ce",
+    thumbnail: '',
+    image: '',
+    footer: 'Disboard Auto-Reminder'
   }
 });
 
@@ -402,11 +464,47 @@ const nextReminderTime = computed(() => {
   }
 });
 
+function formatTemplate(text: string) {
+  if (!text) return '';
+  const hours = configForm.value.reminder_cooldown_hours || 2;
+  const roleStr = targetRoleName.value;
+  const bumper = bumpStatus.value.lastBump?.bumperUsername || 'ObsyBumper';
+  const chName = targetChannelName.value;
+  return text
+    .replace(/{hours}/gi, String(hours))
+    .replace(/{role}/gi, roleStr)
+    .replace(/{mention}/gi, roleStr)
+    .replace(/{user}/gi, `@${bumper}`)
+    .replace(/{username}/gi, bumper)
+    .replace(/{bumper}/gi, `@${bumper}`)
+    .replace(/{command}/gi, '/bump')
+    .replace(/{channel}/gi, `#${chName}`)
+    .replace(/{server}/gi, 'Obsydian');
+}
+
+const liveContentPreview = computed(() => {
+  const raw = configForm.value.messages?.content;
+  if (raw === undefined || raw === null || raw.trim() === '') {
+    return '';
+  }
+  return formatTemplate(raw);
+});
+
 const liveEmbedPreview = computed(() => {
+  const defTitle = "⏰ C'est l'heure du Bump !";
+  const defDesc = "{hours} heures se sont écoulées depuis le dernier bump !\n\nTapez {command} pour faire monter le serveur sur Disboard 🚀";
+
+  const t = configForm.value.messages?.title || defTitle;
+  const d = configForm.value.messages?.description || defDesc;
+  const f = configForm.value.messages?.footer;
+
   return {
-    title: configForm.value.messages?.title || "⏰ C'est l'heure du Bump !",
-    description: configForm.value.messages?.description || "2 heures se sont écoulées depuis le dernier bump !\n\nTapez </bump:947088344167366698> pour faire monter le serveur sur Disboard 🚀",
+    title: formatTemplate(t),
+    description: formatTemplate(d),
     color: configForm.value.messages?.color || '#f2c7ce',
+    thumbnail: configForm.value.messages?.thumbnail || undefined,
+    image: configForm.value.messages?.image || undefined,
+    footer: f ? { text: formatTemplate(f) } : undefined,
     timestamp: new Date().toISOString()
   };
 });
@@ -520,3 +618,23 @@ onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval);
 });
 </script>
+
+<style scoped>
+.badge-variable {
+  display: inline-block;
+  padding: 3px 8px;
+  background: var(--bg-modifier-hover, rgba(255, 255, 255, 0.07));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  font-family: var(--font-code, monospace);
+  font-size: 11px;
+  color: var(--brand-experiment, #5865f2);
+  user-select: all;
+  cursor: copy;
+  transition: all 0.2s ease;
+}
+.badge-variable:hover {
+  background: var(--brand-experiment, #5865f2);
+  color: #fff;
+}
+</style>

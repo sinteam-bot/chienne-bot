@@ -316,3 +316,32 @@ countdown:
     no_participation: "Aucune participation enregistrée."
     embed_title: "🏆 **Classement de la partie**"
     embed_color: "#F2C7CE"
+
+# ==============================================================================
+# CONFIGURATION DES RAPPELS DE BUMP DISBOARD
+# ==============================================================================
+bump_reminder:
+  enabled: true # Activer ou désactiver le rappel de bump automatique
+  channel_id: "" # Salon où envoyer les rappels (laisser vide "" pour utiliser le salon du bump)
+  role_id: "" # Rôle à ping (ex: "123456789012345678"). Si vide, @here sera mentionné
+  mention_here: true # Mentionner @here en fallback si role_id est vide
+  reminder_cooldown_hours: 2 # Délai en heures entre deux bumps (2h pour Disboard)
+
+  # Personnalisation des messages et de l'embed Discord
+  # Variables disponibles :
+  #   - {hours}    : Nombre d'heures de cooldown (ex: 2)
+  #   - {role}     : Mention du rôle configuré ou @here
+  #   - {user}     : Mention du dernier membre ayant bumpé (<@id>)
+  #   - {username} : Pseudo du dernier membre ayant bumpé
+  #   - {command}  : Raccourci Discord vers la commande </bump:947088344167366698>
+  #   - {channel}  : Salon où le bump a eu lieu
+  #   - {server}   : Nom du serveur Discord
+  messages:
+    content: "🔔 {role}" # Message texte envoyé au-dessus de l'embed
+    title: "⏰ C'est l'heure du Bump !"
+    description: "{hours} heures se sont écoulées depuis le dernier bump !\n\nTapez {command} pour faire monter le serveur sur Disboard 🚀"
+    color: "#f2c7ce"
+    thumbnail: null # URL d'une vignette (optionnel)
+    image: null # URL d'une bannière (optionnel)
+    footer: "Disboard Auto-Reminder"
+
