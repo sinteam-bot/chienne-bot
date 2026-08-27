@@ -18,45 +18,45 @@
 
 
     <!-- SOUS-ONGLET 1 : STATS & CLASSEMENT -->
-    <div v-if="activeSubTab === 'stats'" class="daily-scroller">
+    <div v-if="activeSubTab === 'stats'" class="module-view-scroller">
       <!-- Bannière Stats -->
-      <div class="daily-stats-banner">
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🔢</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Nombre Courant</span>
-            <span class="daily-stat-value" style="color: var(--green); font-size: 24px;">
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🔢</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Nombre Courant</span>
+            <span class="module-stat-value" style="color: var(--green); font-size: 24px;">
               {{ gameState.current_number || 0 }}
             </span>
-            <span class="daily-stat-sub">Prochain nombre attendu : {{ (gameState.current_number || 0) + 1 }}</span>
+            <span class="module-stat-sub">Prochain nombre attendu : {{ (gameState.current_number || 0) + 1 }}</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">⚠️</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Erreurs / Tolérance</span>
-            <span class="daily-stat-value" :style="{ color: (gameState.error_count || 0) > 0 ? 'var(--yellow)' : 'var(--green)' }">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">⚠️</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Erreurs / Tolérance</span>
+            <span class="module-stat-value" :style="{ color: (gameState.error_count || 0) > 0 ? 'var(--yellow)' : 'var(--green)' }">
               {{ gameState.error_count || 0 }} / {{ config.max_errors || 1 }}
             </span>
-            <span class="daily-stat-sub">
+            <span class="module-stat-sub">
               {{ Math.max(0, (config.max_errors || 1) - (gameState.error_count || 0)) }} restante(s) avant réinitialisation
             </span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">📢</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Salon Dédié</span>
-            <span class="daily-stat-value">#{{ channelName }}</span>
-            <span class="daily-stat-sub">ID: {{ config.channel_id || 'Non défini' }}</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">📢</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Salon Dédié</span>
+            <span class="module-stat-value">#{{ channelName }}</span>
+            <span class="module-stat-sub">ID: {{ config.channel_id || 'Non défini' }}</span>
           </div>
         </div>
       </div>
 
       <!-- Tableau du Classement de la Session -->
-      <div class="daily-history-header">
+      <div class="module-history-header">
         <h3>Classement des Joueurs (Session en cours)</h3>
         <button class="action-btn" @click="loadGameData">
           🔄 Rafraîchir
@@ -71,8 +71,8 @@
         Aucune participation enregistrée pour la session en cours.
       </div>
 
-      <div v-else class="users-table-wrapper">
-        <table class="users-table">
+      <div v-else class="module-table-wrapper">
+        <table class="module-table">
           <thead>
             <tr>
               <th style="width: 70px;">Rang</th>
@@ -103,7 +103,7 @@
     </div>
 
     <!-- SOUS-ONGLET 2 : CONFIGURATION DU JEU -->
-    <div v-else-if="activeSubTab === 'config'">
+    <div v-else-if="activeSubTab === 'config'" class="module-view-scroller">
       <div class="config-card">
         <div class="form-group-toggle">
           <div class="toggle-info">

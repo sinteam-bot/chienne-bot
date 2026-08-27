@@ -376,8 +376,8 @@
         <!-- ================================================================= -->
         <!-- 📋 VUE TABLEAU : LISTE TABULAIRE COMPLÈTE                         -->
         <!-- ================================================================= -->
-        <div v-else class="users-table-wrapper">
-          <table class="users-table">
+        <div v-else class="users-table-wrapper module-table-wrapper">
+          <table class="users-table module-table">
             <thead>
               <tr>
                 <th style="width: 32%;">Membre</th>

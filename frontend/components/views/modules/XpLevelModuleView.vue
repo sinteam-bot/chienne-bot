@@ -18,32 +18,32 @@
 
 
     <!-- SOUS-ONGLET 1 : STATS & LEADERBOARD -->
-    <div v-if="activeSubTab === 'stats'" class="daily-scroller">
+    <div v-if="activeSubTab === 'stats'" class="module-view-scroller">
       <!-- Bannière Stats -->
-      <div class="daily-stats-banner">
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">⭐</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Statut du Système XP</span>
-            <span class="daily-stat-value" :style="{ color: config?.enabled ? 'var(--green)' : 'var(--text-muted)' }">
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">⭐</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Statut du Système XP</span>
+            <span class="module-stat-value" :style="{ color: config?.enabled ? 'var(--green)' : 'var(--text-muted)' }">
               {{ config?.enabled ? 'Activé' : 'Désactivé' }}
             </span>
-            <span class="daily-stat-sub">Gain XP Messages & Vocal</span>
+            <span class="module-stat-sub">Gain XP Messages & Vocal</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🏆</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Membres Classés</span>
-            <span class="daily-stat-value">{{ rankedUsers.length }}</span>
-            <span class="daily-stat-sub">Membres avec XP actif</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🏆</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Membres Classés</span>
+            <span class="module-stat-value">{{ rankedUsers.length }}</span>
+            <span class="module-stat-sub">Membres avec XP actif</span>
           </div>
         </div>
       </div>
 
       <!-- Tableau du Classement XP -->
-      <div class="daily-history-header">
+      <div class="module-history-header">
         <h3>Classement des Niveaux du Serveur</h3>
       </div>
 
@@ -51,14 +51,14 @@
         <div class="spinner" style="width: 32px; height: 32px;"></div>
       </div>
 
-      <div v-else class="users-table-wrapper">
-        <table class="users-table">
+      <div v-else class="module-table-wrapper">
+        <table class="module-table">
           <thead>
             <tr>
-              <th>Rang</th>
+              <th style="width: 80px;">Rang</th>
               <th>Membre</th>
-              <th>Niveau</th>
-              <th>XP Total</th>
+              <th style="width: 120px;">Niveau</th>
+              <th style="width: 140px;">XP Total</th>
             </tr>
           </thead>
           <tbody>
@@ -94,7 +94,7 @@
     </div>
 
     <!-- SOUS-ONGLET 2 : CONFIGURATION DU MODULE -->
-    <div v-else-if="activeSubTab === 'config'" class="daily-scroller">
+    <div v-else-if="activeSubTab === 'config'" class="module-view-scroller">
       <div class="config-card">
         <div class="form-group-toggle">
           <div class="toggle-info">

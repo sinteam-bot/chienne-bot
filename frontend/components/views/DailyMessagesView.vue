@@ -1,38 +1,38 @@
 <template>
   <div class="view-panel">
-    <div class="daily-scroller">
+    <div class="module-view-scroller">
       <!-- Bannière de Statistiques -->
-      <div class="daily-stats-banner">
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🌅</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Statut du Module</span>
-            <span class="daily-stat-value" style="color: var(--green);">Actif</span>
-            <span class="daily-stat-sub">Pré-rendu 21:00 / Publie 09:00</span>
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🌅</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Statut du Module</span>
+            <span class="module-stat-value" style="color: var(--green);">Actif</span>
+            <span class="module-stat-sub">Pré-rendu 21:00 / Publie 09:00</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🤖</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Modèle IA Utilisé</span>
-            <span class="daily-stat-value">{{ envInfo.openrouterModel || 'Inconnu' }}</span>
-            <span class="daily-stat-sub">OpenRouter</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🤖</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Modèle IA Utilisé</span>
+            <span class="module-stat-value">{{ envInfo.openrouterModel || 'Inconnu' }}</span>
+            <span class="module-stat-sub">OpenRouter</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">📢</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Salon Cible</span>
-            <span class="daily-stat-value">#{{ targetChannelName }}</span>
-            <span class="daily-stat-sub">ID: {{ envInfo.dailyMessageChannelId || 'Non configuré' }}</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">📢</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Salon Cible</span>
+            <span class="module-stat-value">#{{ targetChannelName }}</span>
+            <span class="module-stat-sub">ID: {{ envInfo.dailyMessageChannelId || 'Non configuré' }}</span>
           </div>
         </div>
       </div>
 
       <!-- Barre d'outils -->
-      <div class="daily-toolbar">
+      <div class="module-toolbar">
         <button
           class="btn-primary"
           :disabled="isGenerating"
@@ -71,7 +71,7 @@
       </div>
 
       <!-- En-tête Historique -->
-      <div class="daily-history-header">
+      <div class="module-history-header">
         <h3>Historique des Messages Quotidiens</h3>
         <span class="daily-history-badge">{{ history.length }} message(s)</span>
       </div>

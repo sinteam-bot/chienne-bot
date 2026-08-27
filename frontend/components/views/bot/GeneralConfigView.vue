@@ -1,6 +1,6 @@
 <template>
   <div class="view-panel">
-    <div class="daily-scroller">
+    <div class="module-view-scroller">
       <div class="config-header">
         <h3>⚙️ Configuration Générale du Bot</h3>
         <p class="config-desc">Gérez les paramètres d'infrastructure, de sécurité Web/API et le planificateur de tâches dans <code>config.yml</code>.</p>

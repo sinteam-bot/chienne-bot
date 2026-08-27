@@ -1,41 +1,41 @@
 <template>
   <div class="view-panel">
-    <div class="daily-scroller">
+    <div class="module-view-scroller">
       <!-- Bannière de Statut Principal -->
-      <div class="daily-stats-banner">
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🤖</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">État du Bot</span>
-            <span class="daily-stat-value" style="color: var(--green);">En Ligne & Opérationnel</span>
-            <span class="daily-stat-sub">Ping Discord: {{ stats.ping || 18 }} ms</span>
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🤖</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">État du Bot</span>
+            <span class="module-stat-value" style="color: var(--green);">En Ligne & Opérationnel</span>
+            <span class="module-stat-sub">Ping Discord: {{ stats.ping || 18 }} ms</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">👥</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Membres du Serveur</span>
-            <span class="daily-stat-value">{{ guild?.memberCount || users.length || 0 }}</span>
-            <span class="daily-stat-sub">{{ roles.length }} rôles configurés</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">👥</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Membres du Serveur</span>
+            <span class="module-stat-value">{{ guild?.memberCount || users.length || 0 }}</span>
+            <span class="module-stat-sub">{{ roles.length }} rôles configurés</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">💬</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Salons Discord</span>
-            <span class="daily-stat-value">{{ discordChannels.length }}</span>
-            <span class="daily-stat-sub">Salons textuels & vocaux</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">💬</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Salons Discord</span>
+            <span class="module-stat-value">{{ discordChannels.length }}</span>
+            <span class="module-stat-sub">{{ discordChannels.length }} salons détectés</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">⏱️</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Uptime Serveur</span>
-            <span class="daily-stat-value">{{ stats.uptimeFormatted || 'En ligne' }}</span>
-            <span class="daily-stat-sub">Node.js {{ stats.nodeVersion || 'v20+' }}</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">⏱️</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Uptime Serveur</span>
+            <span class="module-stat-value">{{ stats.uptimeFormatted || 'En ligne' }}</span>
+            <span class="module-stat-sub">Node.js {{ stats.nodeVersion || 'v20+' }}</span>
           </div>
         </div>
       </div>
@@ -108,10 +108,10 @@
           </div>
 
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span class="captcha-status-pill verified" style="font-size: 12px;">
+            <span class="module-status-pill verified" style="font-size: 12px;">
               🟢 {{ activeModulesCount }} Actif{{ activeModulesCount > 1 ? 's' : '' }}
             </span>
-            <span class="captcha-status-pill failed" style="font-size: 12px;">
+            <span class="module-status-pill failed" style="font-size: 12px;">
               🔴 {{ inactiveModulesCount }} Inactif{{ inactiveModulesCount > 1 ? 's' : '' }}
             </span>
             <button class="action-btn" :disabled="loadingModules" @click="fetchModulesStatus" title="Rafraîchir les statuts">
@@ -199,10 +199,10 @@
                   </span>
                 </td>
                 <td>
-                  <span v-if="mod.enabled" class="captcha-status-pill verified">
+                  <span v-if="mod.enabled" class="module-status-pill verified">
                     🟢 Activé
                   </span>
-                  <span v-else class="captcha-status-pill failed">
+                  <span v-else class="module-status-pill failed">
                     🔴 Désactivé
                   </span>
                 </td>

@@ -18,43 +18,43 @@
 
 
     <!-- SOUS-ONGLET 1 : STATS & BROUILLONS & HISTORIQUE -->
-    <div v-if="activeSubTab === 'stats'" class="daily-scroller">
+    <div v-if="activeSubTab === 'stats'" class="module-view-scroller">
       <!-- Bannière Stats -->
-      <div class="daily-stats-banner">
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🌅</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Statut du Module</span>
-            <span class="daily-stat-value" :style="{ color: config?.enabled ? 'var(--green)' : 'var(--red)' }">
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🌅</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Statut du Module</span>
+            <span class="module-stat-value" :style="{ color: config?.enabled ? 'var(--green)' : 'var(--red)' }">
               {{ config?.enabled ? 'Activé' : 'Désactivé' }}
             </span>
-            <span class="daily-stat-sub">Pré-rendu 21:00 / Diffusion 09:00</span>
+            <span class="module-stat-sub">Pré-rendu 21:00 / Diffusion 09:00</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🤖</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Modèle IA Utilisé</span>
-            <span class="daily-stat-value" style="font-size: 13px; font-family: monospace; word-break: break-all;">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🤖</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Modèle IA Utilisé</span>
+            <span class="module-stat-value" style="font-size: 13px; font-family: monospace; word-break: break-all;">
               {{ currentModel }}
             </span>
-            <span class="daily-stat-sub">OpenRouter / LLM</span>
+            <span class="module-stat-sub">OpenRouter / LLM</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">📢</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Salon Cible</span>
-            <span class="daily-stat-value">#{{ targetChannelName }}</span>
-            <span class="daily-stat-sub">ID: {{ config?.channel_id || 'Non défini' }}</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">📢</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Salon Cible</span>
+            <span class="module-stat-value">#{{ targetChannelName }}</span>
+            <span class="module-stat-sub">ID: {{ config?.channel_id || 'Non défini' }}</span>
           </div>
         </div>
       </div>
 
       <!-- Barre d'outils -->
-      <div class="daily-toolbar" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+      <div class="module-toolbar" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
         <button class="btn-primary" :disabled="isGenerating || isActionRunning" @click="generateDailyMessage">
           <span v-if="isGenerating">⚡ Génération en cours...</span>
           <span v-else>✨ Générer un nouveau brouillon</span>
@@ -133,8 +133,8 @@
       </div>
 
       <!-- Historique des Messages -->
-      <div class="daily-history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0;">Historique des Messages Générés & Publiés</h3>
+      <div class="module-history-header">
+        <h3>Historique des Messages Générés & Publiés</h3>
         <span class="daily-history-badge">{{ history.length }} message(s)</span>
       </div>
 
@@ -167,7 +167,7 @@
     </div>
 
     <!-- SOUS-ONGLET 2 : CONFIGURATION DU MODULE -->
-    <div v-else-if="activeSubTab === 'config'" class="daily-scroller">
+    <div v-else-if="activeSubTab === 'config'" class="module-view-scroller">
       <div class="config-card">
         <div class="form-group-toggle">
           <div class="toggle-info">

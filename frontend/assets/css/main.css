@@ -2176,6 +2176,28 @@ input:checked + .slider:before {
     border-bottom: none;
 }
 
+.module-header,
+.module-history-header,
+.daily-history-header,
+.captcha-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.module-header h3,
+.module-history-header h3,
+.daily-history-header h3,
+.captcha-history-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--header-primary);
+}
+
+.module-status-pill,
 .captcha-status-pill {
     display: inline-flex;
     align-items: center;
@@ -2187,6 +2209,8 @@ input:checked + .slider:before {
     text-transform: capitalize;
 }
 
+.module-status-pill.verified,
+.module-status-pill.success,
 .captcha-status-pill.verified,
 .captcha-status-pill.success {
     background-color: rgba(35, 165, 90, 0.15);
@@ -2194,18 +2218,21 @@ input:checked + .slider:before {
     border: 1px solid rgba(35, 165, 90, 0.3);
 }
 
+.module-status-pill.failed,
 .captcha-status-pill.failed {
     background-color: rgba(242, 63, 67, 0.15);
     color: var(--red, #f23f43);
     border: 1px solid rgba(242, 63, 67, 0.3);
 }
 
+.module-status-pill.expired,
 .captcha-status-pill.expired {
     background-color: rgba(240, 178, 50, 0.15);
     color: var(--yellow, #f0b232);
     border: 1px solid rgba(240, 178, 50, 0.3);
 }
 
+.module-status-pill.pending,
 .captcha-status-pill.pending {
     background-color: rgba(88, 101, 242, 0.15);
     color: var(--brand, #5865f2);

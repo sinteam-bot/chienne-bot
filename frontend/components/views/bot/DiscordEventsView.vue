@@ -84,7 +84,7 @@
           <tbody>
             <tr v-for="ev in events" :key="ev.id">
               <td>
-                <span :class="['captcha-status-pill', getEventBadgeClass(ev.event_name)]" style="font-family: var(--font-code);">
+                <span :class="['module-status-pill', getEventBadgeClass(ev.event_name)]" style="font-family: var(--font-code);">
                   {{ ev.event_name }}
                 </span>
               </td>
@@ -127,7 +127,7 @@
       <div class="user-modal-card" style="max-width: 650px;" @click.stop>
         <div class="user-modal-header" style="background-color: var(--bg-tertiary); padding: 16px;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="captcha-status-pill" :class="getEventBadgeClass(inspectPayload.event_name)">
+            <span class="module-status-pill" :class="getEventBadgeClass(inspectPayload.event_name)">
               {{ inspectPayload.event_name }}
             </span>
             <h3 style="font-size: 16px; font-weight: 600; color: var(--header-primary);">Payload de l'Événement</h3>

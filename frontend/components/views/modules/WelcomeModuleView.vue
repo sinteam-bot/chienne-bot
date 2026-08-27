@@ -18,41 +18,41 @@
 
 
     <!-- SOUS-ONGLET 1 : APERÇU LIVE & STATS -->
-    <div v-if="activeSubTab === 'preview'" class="daily-scroller">
+    <div v-if="activeSubTab === 'preview'" class="module-view-scroller">
       <!-- Bannière Stats -->
-      <div class="daily-stats-banner">
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">👋</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Statut du Module</span>
-            <span class="daily-stat-value" :style="{ color: config?.enabled ? 'var(--green)' : 'var(--red)' }">
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">👋</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Statut du Module</span>
+            <span class="module-stat-value" :style="{ color: config?.enabled ? 'var(--green)' : 'var(--red)' }">
               {{ config?.enabled ? 'Activé' : 'Désactivé' }}
             </span>
-            <span class="daily-stat-sub">Message d'accueil automatique</span>
+            <span class="module-stat-sub">Message d'accueil automatique</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">📢</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Salon d'Accueil</span>
-            <span class="daily-stat-value">#{{ welcomeChannelName }}</span>
-            <span class="daily-stat-sub">ID: {{ config?.welcome_channel_id || 'Salon Système' }}</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">📢</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Salon d'Accueil</span>
+            <span class="module-stat-value">#{{ welcomeChannelName }}</span>
+            <span class="module-stat-sub">ID: {{ config?.welcome_channel_id || 'Salon Système' }}</span>
           </div>
         </div>
 
-        <div class="daily-stat-card">
-          <div class="daily-stat-icon">🏷️</div>
-          <div class="daily-stat-info">
-            <span class="daily-stat-label">Salon Présentation</span>
-            <span class="daily-stat-value">#{{ presentationChannelName }}</span>
-            <span class="daily-stat-sub">ID: {{ config?.presentation_channel_id || 'Non défini' }}</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🏷️</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Salon Présentation</span>
+            <span class="module-stat-value">#{{ presentationChannelName }}</span>
+            <span class="module-stat-sub">ID: {{ config?.presentation_channel_id || 'Non défini' }}</span>
           </div>
         </div>
       </div>
 
       <!-- Prévisualisation Directe de l'Embed de Bienvenue -->
-      <div class="daily-history-header">
+      <div class="module-history-header">
         <h3>Aperçu en Temps Réel du Message de Bienvenue</h3>
       </div>
 
@@ -62,7 +62,7 @@
     </div>
 
     <!-- SOUS-ONGLET 2 : CONFIGURATION DU MODULE -->
-    <div v-else-if="activeSubTab === 'config'" class="daily-scroller">
+    <div v-else-if="activeSubTab === 'config'" class="module-view-scroller">
       <div class="config-card">
         <div class="form-group-toggle">
           <div class="toggle-info">

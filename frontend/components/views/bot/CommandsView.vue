@@ -1,6 +1,6 @@
 <template>
   <div class="view-panel">
-    <div class="daily-scroller">
+    <div class="module-view-scroller">
       <!-- En-tête et activation globale -->
       <div class="config-card">
         <div class="form-group-toggle">
@@ -16,7 +16,7 @@
       </div>
 
       <!-- Liste des Commandes -->
-      <div class="daily-history-header">
+      <div class="module-history-header">
         <h3>Commandes Enregistrées ({{ commands.length }})</h3>
         <button class="action-btn" @click="loadCommands">
           🔄 Rafraîchir
@@ -55,13 +55,13 @@
                 </span>
               </td>
               <td>
-                <span v-if="cmd.adminOnly" class="captcha-status-pill failed">
+                <span v-if="cmd.adminOnly" class="module-status-pill failed">
                   🛡️ Admin Uniquement
                 </span>
-                <span v-else-if="cmd.allowedChannels && cmd.allowedChannels.length > 0" class="captcha-status-pill pending">
+                <span v-else-if="cmd.allowedChannels && cmd.allowedChannels.length > 0" class="module-status-pill pending">
                   Salon Restreint ({{ cmd.allowedChannels.length }})
                 </span>
-                <span v-else class="captcha-status-pill verified">
+                <span v-else class="module-status-pill verified">
                   ✅ Tous les membres
                 </span>
               </td>

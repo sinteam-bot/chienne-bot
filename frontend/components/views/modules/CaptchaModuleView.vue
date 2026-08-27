@@ -18,40 +18,40 @@
 
 
     <!-- SOUS-ONGLET 1 : STATS & LOGS DES SALONS CAPTCHA -->
-    <div v-if="activeSubTab === 'stats'" class="captcha-view-scroller">
+    <div v-if="activeSubTab === 'stats'" class="module-view-scroller">
       <!-- Bannière Stats -->
-      <div class="captcha-stats-banner">
-        <div class="captcha-stat-card">
-          <div class="captcha-stat-icon">🔒</div>
-          <div class="captcha-stat-info">
-            <span class="captcha-stat-label">Total Captchas</span>
-            <span class="captcha-stat-value">{{ logs.length }}</span>
-            <span class="captcha-stat-sub">Vérifications générées</span>
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🔒</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Total Captchas</span>
+            <span class="module-stat-value">{{ logs.length }}</span>
+            <span class="module-stat-sub">Vérifications générées</span>
           </div>
         </div>
 
-        <div class="captcha-stat-card">
-          <div class="captcha-stat-icon">✅</div>
-          <div class="captcha-stat-info">
-            <span class="captcha-stat-label">Taux de Succès</span>
-            <span class="captcha-stat-value" style="color: var(--green);">{{ successRate }}%</span>
-            <span class="captcha-stat-sub">{{ verifiedCount }} validé(s)</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">✅</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Taux de Succès</span>
+            <span class="module-stat-value" style="color: var(--green);">{{ successRate }}%</span>
+            <span class="module-stat-sub">{{ verifiedCount }} validé(s)</span>
           </div>
         </div>
 
-        <div class="captcha-stat-card">
-          <div class="captcha-stat-icon">❌</div>
-          <div class="captcha-stat-info">
-            <span class="captcha-stat-label">Échecs & Expirés</span>
-            <span class="captcha-stat-value" style="color: var(--red);">{{ failedCount }}</span>
-            <span class="captcha-stat-sub">Tentatives bloquées</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">❌</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Échecs & Expirés</span>
+            <span class="module-stat-value" style="color: var(--red);">{{ failedCount }}</span>
+            <span class="module-stat-sub">Tentatives bloquées</span>
           </div>
         </div>
       </div>
 
       <!-- Barre d'outils -->
-      <div class="captcha-toolbar">
-        <div class="captcha-filter-chips">
+      <div class="module-toolbar">
+        <div class="module-filter-chips">
           <button :class="['filter-chip', { active: statusFilter === 'all' }]" @click="statusFilter = 'all'">
             Tous ({{ logs.length }})
           </button>
@@ -89,8 +89,8 @@
         Aucun enregistrement trouvé.
       </div>
 
-      <div v-else class="captcha-table-wrapper">
-        <table class="captcha-table">
+      <div v-else class="module-table-wrapper">
+        <table class="module-table">
           <thead>
             <tr>
               <th>Utilisateur</th>
@@ -166,7 +166,7 @@
 
               <!-- Statut -->
               <td>
-                <span :class="['captcha-status-pill', getStatusClass(item.status)]">
+                <span :class="['module-status-pill', getStatusClass(item.status)]">
                   {{ getStatusLabel(item.status) }}
                 </span>
               </td>
@@ -193,7 +193,7 @@
     </div>
 
     <!-- SOUS-ONGLET 2 : CONFIGURATION DU MODULE -->
-    <div v-else-if="activeSubTab === 'config'" class="captcha-view-scroller">
+    <div v-else-if="activeSubTab === 'config'" class="module-view-scroller">
       <div class="config-card">
         <div class="form-group-toggle">
           <div class="toggle-info">
@@ -253,7 +253,7 @@
                 <h3 style="font-size: 16px; font-weight: 700; color: var(--header-primary); margin: 0;">
                   {{ selectedSession.channelName || ('captcha-' + (selectedSession.username || selectedSession.userId).toLowerCase()) }}
                 </h3>
-                <span :class="['captcha-status-pill', getStatusClass(selectedSession.status)]" style="font-size: 11px; padding: 2px 8px;">
+                <span :class="['module-status-pill', getStatusClass(selectedSession.status)]" style="font-size: 11px; padding: 2px 8px;">
                   {{ getStatusLabel(selectedSession.status) }}
                 </span>
               </div>

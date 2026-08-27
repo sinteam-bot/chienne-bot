@@ -153,10 +153,10 @@
                   {{ formatDate(item.bumped_at || item.bumpedAt) }}
                 </td>
                 <td>
-                  <span v-if="item.reminder_sent === 1 || item.reminderSent === 1" class="captcha-status-pill verified">
+                  <span v-if="item.reminder_sent === 1 || item.reminderSent === 1" class="module-status-pill verified">
                     🟢 Rappel Envoyé
                   </span>
-                  <span v-else class="captcha-status-pill pending">
+                  <span v-else class="module-status-pill pending">
                     ⏳ En Attente
                   </span>
                 </td>
@@ -168,7 +168,7 @@
     </div>
 
     <!-- SOUS-ONGLET 2 : CONFIGURATION DU MODULE -->
-    <div v-else-if="activeSubTab === 'config'" class="captcha-view-scroller">
+    <div v-else-if="activeSubTab === 'config'" class="module-view-scroller">
       <div class="config-grid">
         <!-- Paramètres Principaux -->
         <div class="config-card">

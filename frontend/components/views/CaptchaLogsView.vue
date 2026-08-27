@@ -1,39 +1,39 @@
 <template>
   <div class="view-panel">
-    <div class="captcha-view-scroller">
+    <div class="module-view-scroller">
       <!-- Bannière de Statistiques -->
-      <div class="captcha-stats-banner">
-        <div class="captcha-stat-card">
-          <div class="captcha-stat-icon">🔒</div>
-          <div class="captcha-stat-info">
-            <span class="captcha-stat-label">Total Captchas</span>
-            <span class="captcha-stat-value">{{ logs.length }}</span>
-            <span class="captcha-stat-sub">Vérifications générées</span>
+      <div class="module-stats-banner">
+        <div class="module-stat-card">
+          <div class="module-stat-icon">🔒</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Total Captchas</span>
+            <span class="module-stat-value">{{ logs.length }}</span>
+            <span class="module-stat-sub">Vérifications générées</span>
           </div>
         </div>
 
-        <div class="captcha-stat-card">
-          <div class="captcha-stat-icon">✅</div>
-          <div class="captcha-stat-info">
-            <span class="captcha-stat-label">Taux de Succès</span>
-            <span class="captcha-stat-value" style="color: var(--green);">{{ successRate }}%</span>
-            <span class="captcha-stat-sub">{{ verifiedCount }} validé(s)</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">✅</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Taux de Succès</span>
+            <span class="module-stat-value" style="color: var(--green);">{{ successRate }}%</span>
+            <span class="module-stat-sub">{{ verifiedCount }} validé(s)</span>
           </div>
         </div>
 
-        <div class="captcha-stat-card">
-          <div class="captcha-stat-icon">❌</div>
-          <div class="captcha-stat-info">
-            <span class="captcha-stat-label">Échecs & Expirés</span>
-            <span class="captcha-stat-value" style="color: var(--red);">{{ failedCount }}</span>
-            <span class="captcha-stat-sub">Tentatives bloquées</span>
+        <div class="module-stat-card">
+          <div class="module-stat-icon">❌</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Échecs & Expirés</span>
+            <span class="module-stat-value" style="color: var(--red);">{{ failedCount }}</span>
+            <span class="module-stat-sub">Tentatives bloquées</span>
           </div>
         </div>
       </div>
 
       <!-- Barre d'outils et filtres -->
-      <div class="captcha-toolbar">
-        <div class="captcha-filter-chips">
+      <div class="module-toolbar">
+        <div class="module-filter-chips">
           <button
             :class="['filter-chip', { active: statusFilter === 'all' }]"
             @click="statusFilter = 'all'"
@@ -89,8 +89,8 @@
         Aucun log de captcha correspondant aux critères.
       </div>
 
-      <div v-else class="captcha-table-wrapper">
-        <table class="captcha-table">
+      <div v-else class="module-table-wrapper">
+        <table class="module-table">
           <thead>
             <tr>
               <th>Utilisateur</th>
@@ -119,7 +119,7 @@
                 </span>
               </td>
               <td>
-                <span :class="['captcha-status-pill', getStatusClass(item.status)]">
+                <span :class="['module-status-pill', getStatusClass(item.status)]">
                   {{ getStatusLabel(item.status) }}
                 </span>
               </td>
