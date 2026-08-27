@@ -574,3 +574,63 @@ tickets:
     - { id: subject,     label: "Sujet",        style: "short",    required: true,  min_length: 3,   max_length: 100 }
     - { id: description, label: "Description",  style: "paragraph", required: true,  min_length: 20,  max_length: 1500 }
 
+# ==============================================================================
+# CONFIGURATION DES LOGS & STATISTIQUES (Phase 4)
+# ==============================================================================
+# Logs paramétrables par type d'event, avec dashboard /logs
+# (KPIs + live feed WebSocket sur /ws/logs).
+#
+# Activer via le dashboard /features ou features.logs.enabled = true
+logs:
+  enabled: false
+  allowed_roles: []
+
+  # Canaux Discord où poster les embeds (null = BDD uniquement)
+  channels:
+    moderation: null    # bannissements
+    messages: null      # delete / edit / bulk delete
+    members: null       # join / leave / update / ban
+    voice: null         # voice_state_update
+    roles: null         # role create/update/delete
+    channels_log: null  # channel create/update/delete
+    server: null        # guild_update + emoji create/delete
+
+  # Activer / désactiver chaque event individuellement
+  events:
+    message_delete: true
+    message_edit: true
+    message_bulk_delete: true
+    member_join: true
+    member_leave: true
+    member_update: true
+    member_ban_add: true
+    member_ban_remove: true
+    role_create: true
+    role_update: true
+    role_delete: true
+    channel_create: true
+    channel_update: true
+    channel_delete: true
+    voice_state_update: true
+    guild_update: true
+    emoji_create: true
+    emoji_delete: true
+
+  format: embed
+  color: "#2F3136"
+
+  # Salons / utilisateurs à ignorer (utile pour les salons de logs internes)
+  ignored_channels: []
+  ignored_users: []
+
+  # Domaines dont les URLs ne seront PAS masquées par le Sanitizer
+  whitelist_domains:
+    - discord.com
+    - discord.gg
+    - github.com
+
+  settings:
+    max_content_length: 1024
+    truncate_attachments: true
+    live_feed_emit: true
+
