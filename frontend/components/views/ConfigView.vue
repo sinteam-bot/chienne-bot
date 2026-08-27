@@ -188,6 +188,14 @@
                 />
               </div>
 
+              <div>
+                <label class="form-label">Modèle IA Utilisé</label>
+                <OpenRouterModelSelect
+                  v-model="config.daily_message.ai_config.model"
+                  placeholder="Sélectionner un modèle OpenRouter..."
+                />
+              </div>
+
               <div class="config-actions-bar">
                 <button class="btn-primary" :disabled="isSaving" @click="saveModule('daily_message', config.daily_message)">
                   {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Pensée du Jour' }}
@@ -196,7 +204,17 @@
             </div>
           </div>
 
-          <!-- 4. Onglet Protection Web & API -->
+          <!-- 4. Onglet OpenRouter & IA (Résilience & Polly) -->
+          <div v-if="activeTab === 'openrouter'" class="config-tab-panel">
+            <div class="config-header">
+              <h3>🤖 OpenRouter, IA & Résilience Polly</h3>
+              <p class="config-desc">Gestion des modèles d'intelligence artificielle, politique de réessais (Polly) et déclassement automatique.</p>
+            </div>
+
+            <OpenRouterFallbackManager />
+          </div>
+
+          <!-- 5. Onglet Protection Web & API -->
           <div v-if="activeTab === 'web'" class="config-tab-panel">
             <div class="config-header">
               <h3>🛡️ Protection Web & Authentification API</h3>
@@ -304,6 +322,8 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
+import OpenRouterModelSelect from '~/components/common/OpenRouterModelSelect.vue';
+import OpenRouterFallbackManager from '~/components/common/OpenRouterFallbackManager.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
@@ -312,6 +332,7 @@ const tabs = [
   { id: 'welcome', label: 'Bienvenue & Accueil', icon: '👋' },
   { id: 'captcha', label: 'Captcha & Sécurité', icon: '🔒' },
   { id: 'daily', label: 'Pensée du Jour IA', icon: '🌅' },
+  { id: 'openrouter', label: 'OpenRouter & Résilience', icon: '🤖' },
   { id: 'web', label: 'Protection Web & API', icon: '🛡️' },
   { id: 'scheduler', label: 'Planificateur / Crons', icon: '⏰' }
 ];

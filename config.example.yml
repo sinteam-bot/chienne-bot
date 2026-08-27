@@ -48,6 +48,25 @@ openrouter:
   default_model: "openai/gpt-oss-20b:free"
   max_tokens: 500
   temperature: 0.7
+  # Liste ordonnée de déclassement / fallback si le modèle principal échoue
+  fallback_models:
+    - "openai/gpt-oss-20b:free"
+    - "meta-llama/llama-3.3-70b-instruct:free"
+    - "google/gemini-2.0-flash-exp:free"
+    - "mistralai/mistral-7b-instruct:free"
+    - "qwen/qwen-2.5-72b-instruct:free"
+    - "deepseek/deepseek-chat:free"
+    - "nvidia/nemotron-3-ultra-550b-a55b:free"
+  # Politique de retry avancée style Polly (.NET)
+  retry_policy:
+    enabled: true
+    max_retries: 3           # Nombre de tentatives par modèle avant bascule sur le modèle de secours
+    initial_delay_ms: 1000   # Délai initial en millisecondes
+    backoff_factor: 2.0      # Facteur multiplicateur exponentiel
+    max_delay_ms: 8000       # Délai maximal d'attente
+    jitter: true             # Gigue aléatoire pour éviter les tempêtes de requêtes
+    timeout_ms: 25000        # Timeout strict par requête
+    retryable_statuses: [408, 429, 500, 502, 503, 504]
 
 # ==============================================================================
 # CONFIGURATION DISCORD & COMMANDES

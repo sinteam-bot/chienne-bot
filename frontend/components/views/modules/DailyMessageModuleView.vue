@@ -212,12 +212,10 @@
         <h4 style="margin: 0 0 12px 0; color: var(--text-normal);">Configuration IA (LLM / OpenRouter)</h4>
 
         <div>
-          <label class="form-label">Modèle IA</label>
-          <input
+          <label class="form-label">Modèle IA Principal</label>
+          <OpenRouterModelSelect
             v-model="aiConfigModel"
-            type="text"
-            class="discord-input"
-            placeholder="ex: nvidia/nemotron-3-ultra-550b-a55b:free, openai/gpt-4o-mini"
+            placeholder="Sélectionner le modèle IA OpenRouter..."
           />
           <p class="form-help">Modèle appelé sur OpenRouter pour la génération créative et le message final.</p>
         </div>
@@ -228,6 +226,9 @@
           </button>
         </div>
       </div>
+
+      <!-- Gestionnaire de Résilience & Fallback OpenRouter -->
+      <OpenRouterFallbackManager />
     </div>
   </div>
 </template>
@@ -238,6 +239,8 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
+import OpenRouterModelSelect from '~/components/common/OpenRouterModelSelect.vue';
+import OpenRouterFallbackManager from '~/components/common/OpenRouterFallbackManager.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
