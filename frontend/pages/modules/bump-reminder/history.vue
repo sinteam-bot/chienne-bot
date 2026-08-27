@@ -92,13 +92,17 @@
               <td style="font-family: var(--font-code); color: var(--text-muted);">#{{ item.id }}</td>
               <td>
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <strong style="color: var(--header-primary);">{{ item.bumper_username || item.username || 'Inconnu' }}</strong>
+                  <DiscordUser
+                    :user-id="item.bumper_id"
+                    :username="item.bumper_username || item.username"
+                    :show-id="true"
+                    :avatar-size="28"
+                  />
                   <span v-if="isTestRow(item)" class="badge-variable" style="background: rgba(240, 71, 71, 0.15); color: var(--red); border-color: rgba(240, 71, 71, 0.3); font-size: 10px; padding: 1px 5px;">TEST</span>
                 </div>
-                <div v-if="item.bumper_id" style="font-size: 11px; color: var(--text-muted); font-family: var(--font-code);">ID: {{ item.bumper_id }}</div>
               </td>
               <td>
-                <span class="discord-mention discord-mention-channel">#{{ resolveChannelName(item.channel_id) }}</span>
+                <DiscordChannel :channel-id="item.channel_id" />
               </td>
               <td style="font-size: 13px; color: var(--text-normal);">
                 <DiscordTime :value="item.bumped_at || item.bumpedAt" mode="both" />
@@ -144,6 +148,8 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
+import DiscordUser from '~/components/common/DiscordUser.vue';
+import DiscordChannel from '~/components/common/DiscordChannel.vue';
 
 const { discordChannels } = useAppState();
 const { apiFetch } = useDiscordApi();
