@@ -46,6 +46,21 @@ import { ref, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 
+definePageMeta({
+  title: 'Configuration Discord',
+  icon: '🤖',
+  description: 'Paramètres généraux du bot Discord',
+  section: 'bot',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Configuration Discord',
+  description: 'Paramètres généraux du bot Discord',
+  ogTitle: 'Configuration Discord - Chienne Bot',
+  ogDescription: 'Paramètres généraux du bot Discord'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 

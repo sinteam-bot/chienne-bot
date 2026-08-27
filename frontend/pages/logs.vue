@@ -86,6 +86,21 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useLogs, type LogEntry } from '~/composables/useLogs';
 import { useAuth } from '~/composables/useAuth';
 
+definePageMeta({
+  title: 'Logs Console & Stats',
+  icon: '📜',
+  description: 'Console en direct via Server-Sent Events (SSE) et historique des événements',
+  section: 'bot',
+  order: 8
+});
+
+useSeoMeta({
+  title: 'Logs Console & Stats',
+  description: 'Console en direct et historique des logs Discord',
+  ogTitle: 'Logs Console & Stats - Chienne Bot',
+  ogDescription: 'Console en direct et historique des logs Discord'
+});
+
 const logsApi = useLogs();
 const { getApiKey } = useAuth();
 const logs = ref<LogEntry[]>([]);

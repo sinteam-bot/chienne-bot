@@ -95,6 +95,21 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
+definePageMeta({
+  title: 'Cartes & Canvas',
+  icon: '🃏',
+  description: 'Générateur et prévisualisation des cartes de profil Discord',
+  section: 'bot',
+  order: 14
+});
+
+useSeoMeta({
+  title: 'Cartes & Canvas',
+  description: 'Générateur et prévisualisation des cartes de profil Discord',
+  ogTitle: 'Cartes & Canvas - Chienne Bot',
+  ogDescription: 'Générateur et prévisualisation des cartes de profil Discord'
+});
+
 const guildId = ref('1234567890');
 const userId = ref('987654321');
 const server = ref('Chienne Test');

@@ -127,6 +127,21 @@ import { useAppState } from '~/composables/useAppState.ts';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 
+definePageMeta({
+  title: 'Aperçu & Brouillon',
+  icon: '👁️',
+  description: 'Aperçu et génération manuelle du brouillon de la pensée du jour',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Aperçu & Brouillon - Pensée du Jour',
+  description: 'Aperçu et génération manuelle du brouillon de la pensée du jour',
+  ogTitle: 'Aperçu & Brouillon - Pensée du Jour',
+  ogDescription: 'Aperçu et génération manuelle du brouillon de la pensée du jour'
+});
+
 const { discordChannels } = useAppState();
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

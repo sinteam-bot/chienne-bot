@@ -13,15 +13,14 @@
       </div>
     </header>
 
-    <!-- Liste des sections et menus scrollable -->
+    <!-- Liste des sections et menus scrollable générée dynamiquement depuis le router -->
     <div class="channels-scroller">
-      <!-- SECTIONS PRINCIPALES (Chienne Bot, Modules, Games) -->
       <div
-        v-for="section in sections"
+        v-for="section in dynamicSections"
         :key="section.id"
-        :class="['channel-category', { 'virtual-category': true, collapsed: section.collapsed }]"
+        :class="['channel-category', { 'virtual-category': true, collapsed: collapsedSections[section.id] }]"
       >
-        <div class="category-header" @click="section.collapsed = !section.collapsed">
+        <div class="category-header" @click="toggleSection(section.id)">
           <span class="category-arrow">▾</span>
           <span>{{ section.icon }} {{ section.title }}</span>
           <span v-if="section.badge" class="category-badge">{{ section.badge }}</span>
@@ -36,6 +35,7 @@
           >
             <span class="channel-icon">{{ item.icon }}</span>
             <span class="channel-name">{{ item.name }}</span>
+            <span v-if="item.badge" class="category-badge" style="margin-left: auto;">{{ item.badge }}</span>
           </div>
         </div>
       </div>
@@ -47,22 +47,31 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAppState, type ChannelItem } from '~/composables/useAppState.ts';
+import { useDynamicNavigation } from '~/composables/useDynamicNavigation.ts';
 import BotFooter from './BotFooter.vue';
 
 const route = useRoute();
 const router = useRouter();
-const { guild, sections, navigateTo } = useAppState();
+const { guild } = useAppState();
+const { dynamicSections } = useDynamicNavigation();
+
+const collapsedSections = ref<Record<string, boolean>>({});
+
+function toggleSection(secId: string) {
+  collapsedSections.value[secId] = !collapsedSections.value[secId];
+}
 
 function isItemActive(item: ChannelItem): boolean {
   const currentPath = route.path;
   if (!item.routePath) return false;
 
-  if (item.id === 'info' && (currentPath === '/' || currentPath === '/info')) {
+  if (item.routePath === '/info' && (currentPath === '/' || currentPath === '/info')) {
     return true;
   }
-  if (item.id === 'archives' && currentPath.startsWith('/archives')) {
+  if (item.routePath === '/archives' && currentPath.startsWith('/archives')) {
     return true;
   }
   if (item.routePath.startsWith('/config') && currentPath.startsWith('/config')) {

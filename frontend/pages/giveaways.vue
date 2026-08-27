@@ -55,6 +55,21 @@
 import { ref, onMounted } from 'vue';
 import { useEngagement, type Giveaway } from '~/composables/useEngagement';
 
+definePageMeta({
+  title: 'Giveaways & Concours',
+  icon: '🎉',
+  description: 'Gestion et tirage au sort des concours communautaires',
+  section: 'bot',
+  order: 12
+});
+
+useSeoMeta({
+  title: 'Giveaways & Concours',
+  description: 'Gestion et tirage au sort des concours communautaires',
+  ogTitle: 'Giveaways & Concours - Chienne Bot',
+  ogDescription: 'Gestion et tirage au sort des concours communautaires'
+});
+
 const engagement = useEngagement();
 const giveaways = ref<Giveaway[]>([]);
 const statusFilter = ref('');

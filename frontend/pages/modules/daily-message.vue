@@ -49,6 +49,21 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 
+definePageMeta({
+  title: 'Daily Message (Pensée)',
+  icon: '🌅',
+  description: 'Statistiques, pré-rendu et configuration de la pensée du jour',
+  section: 'modules',
+  order: 1
+});
+
+useSeoMeta({
+  title: 'Pensée du Jour IA',
+  description: 'Génération automatique de messages quotidiens par IA et diffusion planifiée',
+  ogTitle: 'Pensée du Jour IA - Chienne Bot',
+  ogDescription: 'Génération automatique de messages quotidiens par IA et diffusion planifiée'
+});
+
 const route = useRoute();
 
 function isTabActive(path: string): boolean {
@@ -57,10 +72,6 @@ function isTabActive(path: string): boolean {
   }
   return route.path.startsWith(path);
 }
-
-useHead({
-  title: 'Pensée du Jour IA - Chienne Bot'
-});
 </script>
 
 <style scoped>

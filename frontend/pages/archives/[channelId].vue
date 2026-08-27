@@ -20,6 +20,21 @@ import { useAppState, type ChannelItem } from '~/composables/useAppState.ts';
 import DiscordChannelsSubSidebar from '~/components/layout/DiscordChannelsSubSidebar.vue';
 import MessagesView from '~/components/views/MessagesView.vue';
 
+definePageMeta({
+  title: 'Archives & Salons',
+  icon: '💬',
+  description: 'Explorateur de salons Discord et historique des messages',
+  section: 'bot',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Archives & Salons',
+  description: 'Explorateur de salons Discord et historique des messages',
+  ogTitle: 'Archives & Salons - Chienne Bot',
+  ogDescription: 'Explorateur de salons Discord et historique des messages'
+});
+
 const route = useRoute();
 const router = useRouter();
 const { activeDiscordChannel, discordChannels, setActiveDiscordChannel } = useAppState();

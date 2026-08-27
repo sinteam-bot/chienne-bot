@@ -62,6 +62,21 @@
 import { ref, onMounted } from 'vue';
 import { useEngagement, type Poll } from '~/composables/useEngagement';
 
+definePageMeta({
+  title: 'Sondages & Votes',
+  icon: '🗳️',
+  description: 'Création et résultats des votes et sondages du serveur',
+  section: 'bot',
+  order: 13
+});
+
+useSeoMeta({
+  title: 'Sondages & Votes',
+  description: 'Création et résultats des votes et sondages du serveur',
+  ogTitle: 'Sondages & Votes - Chienne Bot',
+  ogDescription: 'Création et résultats des votes et sondages du serveur'
+});
+
 const engagement = useEngagement();
 const polls = ref<Poll[]>([]);
 const statusFilter = ref('');

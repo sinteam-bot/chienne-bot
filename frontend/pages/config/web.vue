@@ -54,6 +54,21 @@ import { ref, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 
+definePageMeta({
+  title: 'Sécurité API & Web',
+  icon: '🛡️',
+  description: 'Gestion de l\'authentification web et sécurité API',
+  section: 'bot',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Sécurité API & Web',
+  description: 'Gestion de l\'authentification web et sécurité API',
+  ogTitle: 'Sécurité API & Web - Chienne Bot',
+  ogDescription: 'Gestion de l\'authentification web et sécurité API'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 

@@ -84,6 +84,21 @@ import { useToast } from '~/composables/useToast.ts';
 import { useDateFormatter } from '~/composables/useDateFormatter.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 
+definePageMeta({
+  title: 'Décompte & État',
+  icon: '⏳',
+  description: 'Décompte temps réel 2h et déclenchement manuel de rappel Disboard',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Décompte & État - Rappels de Bump',
+  description: 'Décompte temps réel 2h et déclenchement manuel de rappel Disboard',
+  ogTitle: 'Décompte & État - Rappels de Bump',
+  ogDescription: 'Décompte temps réel 2h et déclenchement manuel de rappel Disboard'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 const { parseDateSafe } = useDateFormatter();

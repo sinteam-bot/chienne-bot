@@ -98,6 +98,21 @@
 import { ref, computed, onMounted } from 'vue';
 import { useTickets, type Ticket, type TicketMessage } from '~/composables/useTickets';
 
+definePageMeta({
+  title: 'Tickets de Support',
+  icon: '🎫',
+  description: 'Gestion des tickets de support, transcripts et réglages du panel',
+  section: 'bot',
+  order: 10
+});
+
+useSeoMeta({
+  title: 'Tickets de Support',
+  description: 'Gestion des tickets de support, transcripts et réglages du panel',
+  ogTitle: 'Tickets de Support - Chienne Bot',
+  ogDescription: 'Gestion des tickets de support, transcripts et réglages du panel'
+});
+
 const ticketsApi = useTickets();
 const tickets = ref<Ticket[]>([]);
 const total = ref(0);

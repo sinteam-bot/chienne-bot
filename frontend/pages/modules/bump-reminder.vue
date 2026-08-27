@@ -68,6 +68,21 @@ import { useRoute } from 'vue-router';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 
+definePageMeta({
+  title: 'Rappels de Bump',
+  icon: '⏰',
+  description: 'Détection automatique de Disboard, minuterie 2h et rappels',
+  section: 'modules',
+  order: 2
+});
+
+useSeoMeta({
+  title: 'Rappels de Bump Disboard',
+  description: 'Détection automatique du bot Disboard, minuterie 2h et rappels configurables',
+  ogTitle: 'Rappels de Bump Disboard - Chienne Bot',
+  ogDescription: 'Détection automatique du bot Disboard, minuterie 2h et rappels configurables'
+});
+
 const route = useRoute();
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

@@ -56,6 +56,21 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 
+definePageMeta({
+  title: 'Configuration Système',
+  icon: '⚙️',
+  description: 'Configuration générale du bot (Tokens, Auth Web, Scheduler, OpenRouter)',
+  section: 'bot',
+  order: 9
+});
+
+useSeoMeta({
+  title: 'Configuration Système',
+  description: 'Configuration générale du bot (Tokens, Auth Web, Scheduler, OpenRouter)',
+  ogTitle: 'Configuration Système - Chienne Bot',
+  ogDescription: 'Configuration générale du bot (Tokens, Auth Web, Scheduler, OpenRouter)'
+});
+
 const route = useRoute();
 
 function isTabActive(path: string): boolean {
@@ -64,10 +79,6 @@ function isTabActive(path: string): boolean {
   }
   return route.path.startsWith(path);
 }
-
-useHead({
-  title: 'Configuration Système - Chienne Bot'
-});
 </script>
 
 <style scoped>

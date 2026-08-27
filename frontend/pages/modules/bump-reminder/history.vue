@@ -151,6 +151,21 @@ import DiscordPagination from '~/components/common/DiscordPagination.vue';
 import DiscordUser from '~/components/common/DiscordUser.vue';
 import DiscordChannel from '~/components/common/DiscordChannel.vue';
 
+definePageMeta({
+  title: 'Historique des Bumps',
+  icon: '📜',
+  description: 'Historique et logs des bumps Disboard effectués sur le serveur',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Historique des Bumps - Rappels de Bump',
+  description: 'Historique et logs des bumps Disboard effectués sur le serveur',
+  ogTitle: 'Historique des Bumps - Rappels de Bump',
+  ogDescription: 'Historique et logs des bumps Disboard effectués sur le serveur'
+});
+
 const { discordChannels } = useAppState();
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();

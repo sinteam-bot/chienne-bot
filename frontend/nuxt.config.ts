@@ -16,6 +16,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'Chienne Bot - Interface Discord',
+      titleTemplate: '%s · Chienne Bot',
       htmlAttrs: {
         lang: 'fr'
       },

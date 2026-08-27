@@ -266,19 +266,31 @@ export function useAppState() {
   }
 
   const currentViewTitle = computed(() => {
+    try {
+      const route = useRoute();
+      if (route.path.startsWith('/archives') && activeDiscordChannel.value) {
+        return {
+          id: activeDiscordChannel.value.id,
+          name: `#${activeDiscordChannel.value.name}`,
+          icon: '💬',
+          topic: activeDiscordChannel.value.topic || 'Explorateur de salons Discord et historique'
+        };
+      }
+      if (route.meta?.title) {
+        return {
+          id: (route.name as string) || route.path,
+          name: (route.meta.title as string),
+          icon: (route.meta.icon as string) || '⭐',
+          topic: (route.meta.description as string) || (route.meta.topic as string) || ''
+        };
+      }
+    } catch (_) {}
+
     for (const sec of sections.value) {
       const found = sec.items.find(i => i.id === activeView.value);
       if (found) return found;
     }
-    if (activeView.value === 'archives' && activeDiscordChannel.value) {
-      return {
-        id: activeDiscordChannel.value.id,
-        name: `#${activeDiscordChannel.value.name}`,
-        icon: '💬',
-        topic: activeDiscordChannel.value.topic || 'Historique du salon'
-      };
-    }
-    return { id: activeView.value, name: activeView.value, icon: '⭐', topic: '' };
+    return { id: activeView.value, name: 'Chienne Bot', icon: '🐕', topic: 'Interface Web Discord' };
   });
 
   function getUserAvatar(userId?: string): string {

@@ -78,6 +78,21 @@ import { useToast } from '~/composables/useToast.ts';
 import OpenRouterModelSelect from '~/components/common/OpenRouterModelSelect.vue';
 import OpenRouterFallbackManager from '~/components/common/OpenRouterFallbackManager.vue';
 
+definePageMeta({
+  title: 'OpenRouter & IA',
+  icon: '🤖',
+  description: 'Configuration du LLM OpenRouter et résilience IA',
+  section: 'bot',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'OpenRouter & IA',
+  description: 'Configuration du LLM OpenRouter et résilience IA',
+  ogTitle: 'OpenRouter & IA - Chienne Bot',
+  ogDescription: 'Configuration du LLM OpenRouter et résilience IA'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 

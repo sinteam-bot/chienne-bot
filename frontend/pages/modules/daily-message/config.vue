@@ -84,6 +84,21 @@ import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 import OpenRouterModelSelect from '~/components/common/OpenRouterModelSelect.vue';
 import OpenRouterFallbackManager from '~/components/common/OpenRouterFallbackManager.vue';
 
+definePageMeta({
+  title: 'Configuration & IA',
+  icon: '⚙️',
+  description: 'Configuration du canal, du prompt et du modèle IA pour la pensée du jour',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Configuration - Pensée du Jour',
+  description: 'Configuration du canal, du prompt et du modèle IA pour la pensée du jour',
+  ogTitle: 'Configuration - Pensée du Jour',
+  ogDescription: 'Configuration du canal, du prompt et du modèle IA pour la pensée du jour'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 

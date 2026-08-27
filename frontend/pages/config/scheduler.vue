@@ -65,6 +65,21 @@ import { ref, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 
+definePageMeta({
+  title: 'Planificateur & Crons',
+  icon: '⏰',
+  description: 'Gestion des tâches planifiées et programmations crons',
+  section: 'bot',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Planificateur & Crons',
+  description: 'Gestion des tâches planifiées et programmations crons',
+  ogTitle: 'Planificateur & Crons - Chienne Bot',
+  ogDescription: 'Gestion des tâches planifiées et programmations crons'
+});
+
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 

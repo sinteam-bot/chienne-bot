@@ -63,6 +63,21 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
+definePageMeta({
+  title: 'Historique des Pensées',
+  icon: '📜',
+  description: 'Archives et historique des pensées du jour générées',
+  section: 'modules',
+  hidden: true
+});
+
+useSeoMeta({
+  title: 'Historique des Pensées - Pensée du Jour',
+  description: 'Archives et historique des pensées du jour générées',
+  ogTitle: 'Historique des Pensées - Pensée du Jour',
+  ogDescription: 'Archives et historique des pensées du jour générées'
+});
+
 const { apiFetch } = useDiscordApi();
 
 const history = ref<any[]>([]);

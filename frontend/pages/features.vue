@@ -48,6 +48,21 @@
 import { ref, onMounted, computed } from 'vue';
 import { useFeatures, type FeatureEntry } from '~/composables/useFeatures';
 
+definePageMeta({
+  title: 'Features & Modules',
+  icon: '🚀',
+  description: 'Registre et état d\'activation des fonctionnalités du bot',
+  section: 'bot',
+  order: 5
+});
+
+useSeoMeta({
+  title: 'Features & Modules',
+  description: 'Registre et état d\'activation des fonctionnalités du bot',
+  ogTitle: 'Features & Modules - Chienne Bot',
+  ogDescription: 'Registre et état d\'activation des fonctionnalités du bot'
+});
+
 const featuresApi = useFeatures();
 const features = ref<FeatureEntry[]>([]);
 const loading = ref(false);

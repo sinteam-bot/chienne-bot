@@ -59,6 +59,21 @@
 import { ref, computed, onMounted } from 'vue';
 import { useXp, type LeaderboardEntry } from '~/composables/useXp';
 
+definePageMeta({
+  title: 'Classement Général',
+  icon: '🏆',
+  description: 'Tableau d\'honneur et classements globaux de la communauté',
+  section: 'bot',
+  order: 11
+});
+
+useSeoMeta({
+  title: 'Classement Général',
+  description: 'Tableau d\'honneur et classements globaux',
+  ogTitle: 'Classement Général - Chienne Bot',
+  ogDescription: 'Tableau d\'honneur et classements globaux'
+});
+
 const xp = useXp();
 const entries = ref<LeaderboardEntry[]>([]);
 const total = ref(0);
