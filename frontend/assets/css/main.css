@@ -1097,6 +1097,83 @@ html, body {
     color: var(--red);
 }
 
+/* ========================================================================= */
+/* MODULE TOOLBAR, FILTER PILLS & BUTTONS                                    */
+/* ========================================================================= */
+.module-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.module-filter-btn, .filter-pill-btn {
+    background-color: var(--bg-tertiary, #1e1f22);
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+    color: var(--text-muted, #949ba4);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+}
+
+.module-filter-btn:hover, .filter-pill-btn:hover {
+    background-color: var(--bg-modifier-hover, rgba(255, 255, 255, 0.08));
+    color: var(--text-normal, #dbdee1);
+    border-color: var(--border-subtle, rgba(255, 255, 255, 0.2));
+}
+
+.module-filter-btn.active, .filter-pill-btn.active {
+    background-color: var(--brand-experiment, #5865f2);
+    border-color: var(--brand-experiment, #5865f2);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(88, 101, 242, 0.35);
+}
+
+.module-btn {
+    background-color: var(--bg-tertiary, #1e1f22);
+    color: var(--text-normal, #dbdee1);
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.module-btn:hover:not(:disabled) {
+    background-color: var(--bg-modifier-hover, rgba(255, 255, 255, 0.08));
+    color: var(--header-primary, #ffffff);
+    border-color: var(--border-subtle, rgba(255, 255, 255, 0.25));
+}
+
+.module-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.module-btn.danger {
+    background-color: rgba(237, 66, 69, 0.15);
+    color: var(--red, #f23f43);
+    border-color: rgba(237, 66, 69, 0.3);
+}
+
+.module-btn.danger:hover:not(:disabled) {
+    background-color: var(--red, #f23f43);
+    color: #ffffff;
+    border-color: var(--red, #f23f43);
+}
+
 .logs-terminal {
     flex: 1;
     background-color: #111214;

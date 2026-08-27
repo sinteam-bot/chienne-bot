@@ -1,6 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { useDiscordApi } from './useDiscordApi.ts';
 import { useToast } from './useToast.ts';
+import { getProxiedImageUrl } from './useDiscordImageProxy.ts';
 
 export interface ChannelItem {
   id: string;
@@ -280,6 +281,20 @@ export function useAppState() {
     return { id: activeView.value, name: activeView.value, icon: '⭐', topic: '' };
   });
 
+  function getUserAvatar(userId?: string): string {
+    if (!userId) return getProxiedImageUrl('https://cdn.discordapp.com/embed/avatars/0.png');
+    const u = users.value.find((m: any) => m.id === userId || m.userId === userId || m.user_id === userId);
+    if (u && (u.avatarUrl || u.avatar || u.displayAvatarURL)) {
+      return getProxiedImageUrl(u.avatarUrl || u.avatar || u.displayAvatarURL);
+    }
+    try {
+      const idx = (BigInt(userId) >> 22n) % 6n;
+      return getProxiedImageUrl(`https://cdn.discordapp.com/embed/avatars/${Number(idx)}.png`);
+    } catch {
+      return getProxiedImageUrl('https://cdn.discordapp.com/embed/avatars/0.png');
+    }
+  }
+
   return {
     guild: readonly(guild),
     sections,
@@ -298,6 +313,8 @@ export function useAppState() {
     fetchChannels,
     fetchStats,
     fetchUsersAndRoles,
+    getUserAvatar,
+    getProxiedImageUrl,
     setActiveDiscordChannel,
     navigateTo,
     refreshAll

@@ -203,12 +203,14 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import { useAppState } from '~/composables/useAppState.ts';
 import { useToast } from '~/composables/useToast.ts';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
+const { getUserAvatar } = useAppState();
 
 const logs = ref<any[]>([]);
 const isLoading = ref(true);

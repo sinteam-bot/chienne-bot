@@ -12,13 +12,24 @@ export function useDiscordApi() {
     if (apiKey && !headers.has('x-api-key')) {
       headers.set('x-api-key', apiKey);
     }
-    if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+    let reqBody = options.body;
+    const isFormData = typeof FormData !== 'undefined' && reqBody instanceof FormData;
+    const isBlob = typeof Blob !== 'undefined' && reqBody instanceof Blob;
+    const isURLSearchParams = typeof URLSearchParams !== 'undefined' && reqBody instanceof URLSearchParams;
+    const isArrayBuffer = typeof ArrayBuffer !== 'undefined' && (reqBody instanceof ArrayBuffer || ArrayBuffer.isView(reqBody));
+
+    if (reqBody !== undefined && reqBody !== null && typeof reqBody === 'object' && !isFormData && !isBlob && !isURLSearchParams && !isArrayBuffer) {
+      reqBody = JSON.stringify(reqBody);
+    }
+
+    if (!headers.has('Content-Type') && !isFormData) {
       headers.set('Content-Type', 'application/json');
     }
 
     try {
       const response = await fetch(endpoint, {
         ...options,
+        body: reqBody,
         headers
       });
 

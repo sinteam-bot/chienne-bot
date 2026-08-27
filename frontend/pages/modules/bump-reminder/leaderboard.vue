@@ -83,6 +83,7 @@ import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 const bumpStatus = inject<Ref<any>>('bumpStatus', ref({}));
+const { getUserAvatar } = useAppState();
 
 const currentPage = ref(1);
 const pageSize = ref(10);
