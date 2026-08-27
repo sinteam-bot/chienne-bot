@@ -1132,14 +1132,48 @@ html, body {
     font-size: 11px;
 }
 
-.log-badge {
+.log-badge,
+.log-level-badge,
+.log-module-badge {
     padding: 1px 6px;
-    border-radius: 3px;
+    border-radius: 4px;
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
 }
+
+.log-level-badge.badge-level-info { background-color: rgba(88, 101, 242, 0.15); color: #5865f2; border: 1px solid rgba(88, 101, 242, 0.3); }
+.log-level-badge.badge-level-warn { background-color: rgba(240, 178, 50, 0.15); color: #f0b232; border: 1px solid rgba(240, 178, 50, 0.3); }
+.log-level-badge.badge-level-error { background-color: rgba(242, 63, 67, 0.15); color: #f23f43; border: 1px solid rgba(242, 63, 67, 0.3); }
+.log-level-badge.badge-level-event { background-color: rgba(155, 89, 182, 0.15); color: #bb8fce; border: 1px solid rgba(155, 89, 182, 0.3); }
+.log-level-badge.badge-level-debug { background-color: rgba(148, 155, 164, 0.15); color: #949ba4; border: 1px solid rgba(148, 155, 164, 0.3); }
+
+.log-module-badge {
+    background-color: var(--bg-secondary);
+    color: var(--text-normal);
+    border: 1px solid var(--border-subtle);
+    font-family: var(--font-code);
+}
+
+.log-module-badge.badge-mod-captcha { color: #2ecc71; border-color: rgba(46, 204, 113, 0.3); background-color: rgba(46, 204, 113, 0.08); }
+.log-module-badge.badge-mod-bump { color: #e67e22; border-color: rgba(230, 126, 34, 0.3); background-color: rgba(230, 126, 34, 0.08); }
+.log-module-badge.badge-mod-daily { color: #3498db; border-color: rgba(52, 152, 219, 0.3); background-color: rgba(52, 152, 219, 0.08); }
+.log-module-badge.badge-mod-xp { color: #f1c40f; border-color: rgba(241, 196, 15, 0.3); background-color: rgba(241, 196, 15, 0.08); }
+.log-module-badge.badge-mod-countdown { color: #e74c3c; border-color: rgba(231, 76, 60, 0.3); background-color: rgba(231, 76, 60, 0.08); }
+.log-module-badge.badge-mod-infinite { color: #a29bfe; border-color: rgba(162, 155, 254, 0.3); background-color: rgba(162, 155, 254, 0.08); }
+.log-module-badge.badge-mod-welcome { color: #1abc9c; border-color: rgba(26, 188, 156, 0.3); background-color: rgba(26, 188, 156, 0.08); }
+.log-module-badge.badge-mod-startup { color: #fab1a0; border-color: rgba(250, 177, 160, 0.3); background-color: rgba(250, 177, 160, 0.08); }
+.log-module-badge.badge-mod-discord { color: #7289da; border-color: rgba(114, 137, 218, 0.3); background-color: rgba(114, 137, 218, 0.08); }
+.log-module-badge.badge-mod-api { color: #00cec9; border-color: rgba(0, 206, 201, 0.3); background-color: rgba(0, 206, 201, 0.08); }
+.log-module-badge.badge-mod-db { color: #6c5ce7; border-color: rgba(108, 92, 231, 0.3); background-color: rgba(108, 92, 231, 0.08); }
+.log-module-badge.badge-mod-scheduler { color: #fdcb6e; border-color: rgba(253, 203, 110, 0.3); background-color: rgba(253, 203, 110, 0.08); }
+.log-module-badge.badge-mod-event { color: #bb8fce; border-color: rgba(187, 143, 206, 0.3); background-color: rgba(187, 143, 206, 0.08); }
+.log-module-badge.badge-mod-config { color: #81ecec; border-color: rgba(129, 236, 236, 0.3); background-color: rgba(129, 236, 236, 0.08); }
+.log-module-badge.badge-mod-system { color: #b2bec3; border-color: rgba(178, 190, 195, 0.3); background-color: rgba(178, 190, 195, 0.08); }
 
 .badge-info { background-color: rgba(52, 152, 219, 0.2); color: #5dade2; }
 .badge-warn { background-color: rgba(241, 196, 15, 0.2); color: #f4d03f; }

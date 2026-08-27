@@ -13,6 +13,7 @@ const logs = ref<LogEntry[]>([]);
 const isConnected = ref(false);
 const autoScroll = ref(true);
 const levelFilter = ref('ALL');
+const moduleFilter = ref('ALL');
 const searchQuery = ref('');
 let eventSource: EventSource | null = null;
 let logIdCounter = 1;
@@ -121,7 +122,7 @@ export function useLogsSSE() {
       id: logIdCounter++,
       time: timeStr,
       level: (item.level || 'INFO').toUpperCase(),
-      module: item.module || item.category || '',
+      module: item.module || item.category || 'SYSTEM',
       message: item.message || (typeof item === 'string' ? item : JSON.stringify(item))
     };
 
@@ -143,7 +144,7 @@ export function useLogsSSE() {
 
   function exportLogs() {
     const text = logs.value
-      .map(l => `[${l.time}] [${l.level}] ${l.module ? `[${l.module}] ` : ''}${l.message}`)
+      .map(l => `[${l.time}] [${l.level}] [${l.module || 'SYSTEM'}] ${l.message}`)
       .join('\n');
 
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -156,13 +157,39 @@ export function useLogsSSE() {
   }
 
   const filteredLogs = computed(() => {
-    const filter = levelFilter.value;
+    const lvl = levelFilter.value;
+    const mod = moduleFilter.value;
     const query = searchQuery.value.toLowerCase().trim();
 
     return logs.value.filter(l => {
-      const matchLevel = filter === 'ALL' || l.level === filter || l.module === filter;
-      const matchQuery = !query || l.message.toLowerCase().includes(query) || (l.module && l.module.toLowerCase().includes(query));
-      return matchLevel && matchQuery;
+      const matchLevel = lvl === 'ALL' || l.level === lvl;
+      
+      let matchModule = true;
+      if (mod !== 'ALL') {
+        const logMod = (l.module || '').toUpperCase();
+        if (mod === 'CAPTCHA') matchModule = logMod === 'CAPTCHA' || logMod === 'SECURITY_QUESTION' || logMod === 'SECURITYQUESTION';
+        else if (mod === 'BUMP') matchModule = logMod === 'BUMP' || logMod === 'BUMP_REMINDER';
+        else if (mod === 'DAILY') matchModule = logMod === 'DAILY' || logMod === 'DAILY_MESSAGE' || logMod === 'AI';
+        else if (mod === 'XP') matchModule = logMod === 'XP' || logMod === 'XP_LEVEL' || logMod === 'LEVEL';
+        else if (mod === 'COUNTDOWN') matchModule = logMod === 'COUNTDOWN';
+        else if (mod === 'INFINITE') matchModule = logMod === 'INFINITE' || logMod === 'ROAD_TO_INFINITE' || logMod === 'COUNTER';
+        else if (mod === 'WELCOME') matchModule = logMod === 'WELCOME';
+        else if (mod === 'STARTUP') matchModule = logMod === 'STARTUP' || logMod === 'STARTUP_NOTIFIER';
+        else if (mod === 'DISCORD') matchModule = logMod === 'DISCORD' || logMod === 'DISCORD_CACHE';
+        else if (mod === 'API') matchModule = logMod === 'API' || logMod === 'WEB' || logMod === 'WEB_API';
+        else if (mod === 'DATABASE') matchModule = logMod === 'DATABASE' || logMod === 'DB' || logMod === 'DRIZZLE';
+        else if (mod === 'SCHEDULER') matchModule = logMod === 'SCHEDULER' || logMod === 'CRON';
+        else if (mod === 'EVENT') matchModule = logMod === 'EVENT' || logMod === 'EVENT_BUS';
+        else if (mod === 'CONFIG') matchModule = logMod === 'CONFIG';
+        else matchModule = logMod === mod;
+      }
+
+      const matchQuery = !query || 
+        l.message.toLowerCase().includes(query) || 
+        (l.module && l.module.toLowerCase().includes(query)) ||
+        l.level.toLowerCase().includes(query);
+
+      return matchLevel && matchModule && matchQuery;
     });
   });
 
@@ -172,6 +199,7 @@ export function useLogsSSE() {
     isConnected: readonly(isConnected),
     autoScroll,
     levelFilter,
+    moduleFilter,
     searchQuery,
     startStream,
     stopStream,
