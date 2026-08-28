@@ -19,8 +19,8 @@
     </header>
 
     <div v-if="error" class="engagement-page__error">❌ {{ error }}</div>
-    <div v-if="loading && giveaways.length === 0" class="engagement-page__loading">Chargement…</div>
-    <div v-else-if="giveaways.length === 0" class="engagement-page__empty">
+    <div v-if="loading && (!giveaways || giveaways.length === 0)" class="engagement-page__loading">Chargement…</div>
+    <div v-else-if="!giveaways || giveaways.length === 0" class="engagement-page__empty">
       Aucun giveaway pour ce filtre. Lancez-en un avec la commande slash <code>/giveaway-start</code>.
     </div>
 
@@ -57,7 +57,7 @@
           </span>
         </div>
 
-        <div v-if="g.status === 'ended' && g.winners && g.winners.length" class="engagement-row__winners">
+        <div v-if="g.status === 'ended' && Array.isArray(g.winners) && g.winners.length" class="engagement-row__winners">
           <span class="winners-label">🏆 Gagnants :</span>
           <div class="winners-list">
             <DiscordUser v-for="id in g.winners" :key="id" :user-id="id" :show-id="true" />
@@ -72,11 +72,11 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="giveaways.length > pageSize" class="pagination-container">
+    <div v-if="(giveaways?.length || 0) > pageSize" class="pagination-container">
       <DiscordPagination
         v-model="page"
         v-model:page-size="pageSize"
-        :total-items="giveaways.length"
+        :total-items="giveaways?.length || 0"
         :page-size-options="[5, 10, 25, 50]"
       />
     </div>
@@ -117,6 +117,7 @@ const page = ref(1);
 const pageSize = ref(10);
 
 const paginatedGiveaways = computed(() => {
+  if (!giveaways.value || !Array.isArray(giveaways.value)) return [];
   const start = (page.value - 1) * pageSize.value;
   return giveaways.value.slice(start, start + pageSize.value);
 });
@@ -125,10 +126,12 @@ async function load() {
   loading.value = true;
   error.value = null;
   try {
-    giveaways.value = await engagement.listGiveaways({ status: statusFilter.value || undefined });
+    const res = await engagement.listGiveaways({ status: statusFilter.value || undefined });
+    giveaways.value = Array.isArray(res) ? res : [];
     page.value = 1;
   } catch (e: any) {
     error.value = e.message || 'Erreur inconnue';
+    giveaways.value = [];
   } finally {
     loading.value = false;
   }

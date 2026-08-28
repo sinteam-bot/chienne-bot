@@ -49,18 +49,26 @@ export const useEngagement = () => {
     Object.entries(params).forEach(([k, v]) => {
       if (v) qs.set(k, String(v));
     });
-    const res = await api.apiFetch<{ success: boolean; data: Giveaway[] }>(`/api/giveaways${qs.toString() ? '?' + qs.toString() : ''}`);
-    return res.data;
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: Giveaway[] }>(`/api/giveaways${qs.toString() ? '?' + qs.toString() : ''}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
-  async function getGiveaway(id: string): Promise<Giveaway> {
+  async function getGiveaway(id: string): Promise<Giveaway | null> {
     const res = await api.apiFetch<{ success: boolean; data: Giveaway }>(`/api/giveaways/${id}`);
-    return res.data;
+    return res?.data || null;
   }
 
   async function listEntries(id: string): Promise<string[]> {
-    const res = await api.apiFetch<{ success: boolean; data: string[] }>(`/api/giveaways/${id}/entries`);
-    return res.data;
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: string[] }>(`/api/giveaways/${id}/entries`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
   async function endGiveaway(id: string): Promise<Giveaway> {
@@ -80,8 +88,12 @@ export const useEngagement = () => {
     Object.entries(params).forEach(([k, v]) => {
       if (v) qs.set(k, String(v));
     });
-    const res = await api.apiFetch<{ success: boolean; data: Poll[] }>(`/api/polls${qs.toString() ? '?' + qs.toString() : ''}`);
-    return res.data;
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: Poll[] }>(`/api/polls${qs.toString() ? '?' + qs.toString() : ''}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
   async function getPoll(id: string): Promise<Poll & { tally: PollTally }> {

@@ -18,8 +18,8 @@
     </header>
 
     <div v-if="error" class="polls-page__error">❌ {{ error }}</div>
-    <div v-if="loading && polls.length === 0" class="polls-page__loading">Chargement…</div>
-    <div v-else-if="polls.length === 0" class="polls-page__empty">
+    <div v-if="loading && (!polls || polls.length === 0)" class="polls-page__loading">Chargement…</div>
+    <div v-else-if="!polls || polls.length === 0" class="polls-page__empty">
       Aucun sondage pour ce filtre. Lancez-en un avec la commande slash <code>/poll-create</code>.
     </div>
 
@@ -44,7 +44,7 @@
             Créé par : <DiscordUser :user-id="p.createdBy" />
           </span>
           <span class="meta-item badge-opt">
-            {{ p.options.length }} options
+            {{ p.options?.length || 0 }} options
           </span>
           <span v-if="p.multiChoice" class="meta-item badge-multi">
             Choix multiple
@@ -79,11 +79,11 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="polls.length > pageSize" class="pagination-container">
+    <div v-if="(polls?.length || 0) > pageSize" class="pagination-container">
       <DiscordPagination
         v-model="page"
         v-model:page-size="pageSize"
-        :total-items="polls.length"
+        :total-items="polls?.length || 0"
         :page-size-options="[5, 10, 25, 50]"
       />
     </div>
@@ -124,6 +124,7 @@ const page = ref(1);
 const pageSize = ref(10);
 
 const paginatedPolls = computed(() => {
+  if (!polls.value || !Array.isArray(polls.value)) return [];
   const start = (page.value - 1) * pageSize.value;
   return polls.value.slice(start, start + pageSize.value);
 });
@@ -133,15 +134,20 @@ async function load() {
   error.value = null;
   try {
     const list = await engagement.listPolls({ status: statusFilter.value || undefined });
-    polls.value = await Promise.all(
-      list.map(async (p) => {
-        const detail = await engagement.getPoll(p.id);
-        return detail;
-      })
-    );
+    if (Array.isArray(list)) {
+      polls.value = await Promise.all(
+        list.map(async (p) => {
+          const detail = await engagement.getPoll(p.id);
+          return detail;
+        })
+      );
+    } else {
+      polls.value = [];
+    }
     page.value = 1;
   } catch (e: any) {
     error.value = e.message || 'Erreur inconnue';
+    polls.value = [];
   } finally {
     loading.value = false;
   }
