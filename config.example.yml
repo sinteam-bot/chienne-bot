@@ -638,6 +638,37 @@ reaction-roles:
   self_assignable: true  # si false, seuls les ManageRoles peuvent déclencher
 
 # ==============================================================================
+# CONFIGURATION DE L'ÉCONOMIE & INVENTAIRE (Phase 9)
+# ==============================================================================
+# Monnaie virtuelle, boutique d'items, drops, échanges entre membres.
+# Moteur économique complet (fondationnel pour giveaways, anniversaires).
+#
+# Activer via le dashboard /features ou features.economy.enabled = true
+economy:
+  enabled: false
+  allowed_roles: [] # Discord roles autorisés aux commandes admin
+
+  daily_reward: 100          # montant du /daily
+  cooldown_hours: 22         # heures entre deux /daily
+  starting_balance: 0        # solde donné aux nouveaux membres
+  tax_percent: 0             # taxe sur /pay (0 = aucune)
+  max_balance: 999999999      # plafond dur
+
+  shop:
+    max_items: 100            # limite dure d'items dans le shop
+
+  inventory:
+    max_per_user: 200         # limite dure d'items cumulés par user
+    max_quantity_per_item: 999 # quantité max pour un même item
+
+  drops:
+    default_duration_min: 2   # durée par défaut d'un /dropobjet
+    max_duration_min: 10       # durée max
+    require_button: true       # claim via bouton uniquement (false = aussi via 🎉)
+
+  history_retention_days: 90  # rétention des transactions avant éligibilité au cleanup
+
+# ==============================================================================
 # CONFIGURATION DES TICKETS DE SUPPORT (Phase 3)
 # ==============================================================================
 # Système de tickets avec bouton persistant, modal de création,
