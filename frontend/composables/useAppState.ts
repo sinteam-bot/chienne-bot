@@ -112,7 +112,10 @@ export function useAppState() {
     { id: 'module-tickets', name: 'Tickets de Support', icon: '🎫', routePath: '/modules/tickets', section: 'modules', topic: 'Gestion des tickets de support, transcripts et réglages du panel' },
     { id: 'module-cards', name: 'Cartes & Canvas', icon: '🃏', routePath: '/modules/cards', section: 'modules', topic: 'Générateur et prévisualisation des cartes de profil Discord' },
     { id: 'module-reaction-roles', name: 'Rôles à Réaction', icon: '🎭', routePath: '/modules/reaction-roles', section: 'modules', topic: 'Attribution automatique de rôles via réactions sur un message' },
-    { id: 'module-economy', name: 'Économie & Inventaire', icon: '💰', routePath: '/modules/economy', section: 'modules', topic: 'Monnaie virtuelle, boutique d\'items, drops et échanges entre membres' }
+    { id: 'module-economy', name: 'Économie & Inventaire', icon: '💰', routePath: '/modules/economy', section: 'modules', topic: 'Monnaie virtuelle, boutique d\'items, drops et échanges entre membres' },
+    { id: 'module-sticky-roles', name: 'Rôles Sticky', icon: '🎭', routePath: '/modules/sticky-roles', section: 'modules', topic: 'Rôles automatiquement ré-attribués aux membres à leur retour' },
+    { id: 'module-info', name: 'Commandes d\'Information', icon: 'ℹ️', routePath: '/modules/info', section: 'modules', topic: '/serverinfo, /userinfo, /avatar et leur équivalent dashboard' },
+    { id: 'module-games-stats', name: 'Statistiques de Jeux', icon: '🎮', routePath: '/modules/games-stats', section: 'modules', topic: 'Compteur et Countdown — état en temps réel et top joueurs' }
   ];
 
   const GAME_SECTION_ITEMS: ChannelItem[] = [
