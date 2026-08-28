@@ -113,16 +113,17 @@ const allResults = computed<SearchResultItem[]>(() => {
   // 1. Pages du Dashboard
   for (const sec of dynamicSections.value) {
     for (const item of sec.items) {
+      const path = item.routePath || ('/' + item.id);
       items.push({
-        id: `page-${item.path}`,
+        id: `page-${path}`,
         category: 'page',
-        categoryLabel: sec.label,
-        title: item.title,
-        subtitle: item.description || item.path,
+        categoryLabel: sec.title || 'Navigation',
+        title: item.name,
+        subtitle: item.topic || path,
         icon: item.icon || '📄',
         badge: item.badge,
         action: () => {
-          router.push(item.path);
+          router.push(path);
           close();
         }
       });

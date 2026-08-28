@@ -95,8 +95,8 @@ definePageMeta({
   title: 'Giveaways & Concours',
   icon: '🎉',
   description: 'Gestion et tirage au sort des concours communautaires',
-  section: 'bot',
-  order: 12
+  section: 'modules',
+  order: 7
 });
 
 useSeoMeta({

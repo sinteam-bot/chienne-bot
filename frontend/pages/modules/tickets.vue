@@ -143,8 +143,8 @@ definePageMeta({
   title: 'Tickets de Support',
   icon: '🎫',
   description: 'Gestion des tickets de support, transcripts et réglages du panel',
-  section: 'bot',
-  order: 10
+  section: 'modules',
+  order: 9
 });
 
 useSeoMeta({

@@ -102,8 +102,8 @@ definePageMeta({
   title: 'Sondages & Votes',
   icon: '🗳️',
   description: 'Création et résultats des votes et sondages du serveur',
-  section: 'bot',
-  order: 13
+  section: 'modules',
+  order: 8
 });
 
 useSeoMeta({

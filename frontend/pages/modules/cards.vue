@@ -99,8 +99,8 @@ definePageMeta({
   title: 'Cartes & Canvas',
   icon: '🃏',
   description: 'Générateur et prévisualisation des cartes de profil Discord',
-  section: 'bot',
-  order: 14
+  section: 'modules',
+  order: 10
 });
 
 useSeoMeta({

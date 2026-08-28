@@ -105,7 +105,12 @@ export function useAppState() {
     { id: 'module-bump-reminder', name: 'Rappels de Bump', icon: '⏰', routePath: '/modules/bump-reminder', section: 'modules', topic: 'Décompte Disboard en temps réel, historique des bumps et configuration' },
     { id: 'module-captcha', name: 'Captcha Mathématique', icon: '🔒', routePath: '/modules/captcha', section: 'modules', topic: 'Statistiques, suivi des vérifications et réglages captcha' },
     { id: 'module-welcome', name: 'Message de Bienvenue', icon: '👋', routePath: '/modules/welcome', section: 'modules', topic: 'Statistiques d\'arrivées, aperçu live et configuration d\'accueil' },
-    { id: 'module-xp-level', name: 'Système XP & Level', icon: '⭐', routePath: '/modules/xp-level', section: 'modules', topic: 'Leaderboard XP des membres et réglages des multiplicateurs/paliers' }
+    { id: 'module-xp-level', name: 'Système XP & Level', icon: '⭐', routePath: '/modules/xp-level', section: 'modules', topic: 'Leaderboard XP des membres et réglages des multiplicateurs/paliers' },
+    { id: 'module-birthdays', name: 'Anniversaires', icon: '🎂', routePath: '/modules/birthdays', section: 'modules', topic: 'Célébration automatique des anniversaires, rôles temporaires et cadeaux' },
+    { id: 'module-giveaways', name: 'Giveaways & Concours', icon: '🎉', routePath: '/modules/giveaways', section: 'modules', topic: 'Gestion et tirage au sort des concours communautaires' },
+    { id: 'module-polls', name: 'Sondages & Votes', icon: '🗳️', routePath: '/modules/polls', section: 'modules', topic: 'Création et résultats des votes et sondages du serveur' },
+    { id: 'module-tickets', name: 'Tickets de Support', icon: '🎫', routePath: '/modules/tickets', section: 'modules', topic: 'Gestion des tickets de support, transcripts et réglages du panel' },
+    { id: 'module-cards', name: 'Cartes & Canvas', icon: '🃏', routePath: '/modules/cards', section: 'modules', topic: 'Générateur et prévisualisation des cartes de profil Discord' }
   ];
 
   const GAME_SECTION_ITEMS: ChannelItem[] = [
