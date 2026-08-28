@@ -623,6 +623,21 @@ birthdays:
     default_change_days: 365
 
 # ==============================================================================
+# CONFIGURATION DES RÔLES À RÉACTION (Phase RR)
+# ==============================================================================
+# Attribution automatique de rôles via réactions sur un message.
+# Idéal pour : salons de rôles, sondages self-roles, accès RP.
+#
+# Activer via le dashboard /features ou features.reaction-roles.enabled = true
+reaction-roles:
+  enabled: false
+  allowed_roles: [] # Discord roles autorisés à utiliser /reactionrole-* (sinon ManageRoles)
+
+  max_per_message: 25   # limite dure de paires emoji↔rôle par message
+  unique_per_user: false # si true, un user ne peut avoir qu'un seul rôle du groupe
+  self_assignable: true  # si false, seuls les ManageRoles peuvent déclencher
+
+# ==============================================================================
 # CONFIGURATION DES TICKETS DE SUPPORT (Phase 3)
 # ==============================================================================
 # Système de tickets avec bouton persistant, modal de création,
