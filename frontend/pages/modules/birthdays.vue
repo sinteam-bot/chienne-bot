@@ -34,16 +34,23 @@
           </div>
         </div>
         <div class="kpi-card">
+          <div class="kpi-icon">👥</div>
+          <div class="kpi-info">
+            <div class="kpi-val">{{ upcomingBirthdays.length }}</div>
+            <div class="kpi-lbl">Membres inscrits</div>
+          </div>
+        </div>
+        <div class="kpi-card">
           <div class="kpi-icon">🎁</div>
           <div class="kpi-info">
-            <div class="kpi-val">{{ config.gifts.xp_per_birthday }} XP</div>
+            <div class="kpi-val">{{ config.gifts?.xp_per_birthday || 500 }} XP</div>
             <div class="kpi-lbl">Cadeau XP annuel</div>
           </div>
         </div>
         <div class="kpi-card">
           <div class="kpi-icon">⏰</div>
           <div class="kpi-info">
-            <div class="kpi-val">{{ config.announce.hour }}:00</div>
+            <div class="kpi-val">{{ config.announce?.hour ?? 9 }}:00</div>
             <div class="kpi-lbl">Heure d'annonce</div>
           </div>
         </div>
@@ -52,12 +59,17 @@
       <div class="card-section">
         <div class="card-header">
           <h2>🎉 Anniversaires à venir</h2>
-          <span class="badge-mode">Mode : {{ config.mode === 'public' ? 'Public (Global)' : 'Privé (Serveur)' }}</span>
+          <div class="card-header-actions">
+            <button class="btn-secondary-sm" :disabled="loading" @click="loadUpcoming">
+              {{ loading ? 'Chargement…' : '🔄 Actualiser' }}
+            </button>
+            <span class="badge-mode">Mode : {{ config.mode === 'public' ? 'Public (Global)' : 'Privé (Serveur)' }}</span>
+          </div>
         </div>
 
         <div v-if="loading" class="empty-state">Chargement des anniversaires…</div>
         <div v-else-if="upcomingBirthdays.length === 0" class="empty-state">
-          Aucun anniversaire enregistré ou à venir prochainement. Les membres peuvent renseigner leur date avec <code>/anniversaire set</code>.
+          Aucun anniversaire enregistré ou à venir prochainement. Les membres peuvent renseigner leur date avec <code>/anniversaire set</code> ou <code>!anniversaire set</code>.
         </div>
         <div v-else class="birthdays-list">
           <div v-for="b in upcomingBirthdays" :key="b.userId" class="birthday-row">
@@ -65,11 +77,11 @@
               <DiscordUser :user-id="b.userId" :show-id="true" />
             </div>
             <div class="bday-date">
-              🗓️ {{ b.dateFormatted }}
+              🗓️ {{ b.dateFormatted }} <span v-if="b.age" class="age-hint">({{ b.age }} ans)</span>
             </div>
             <div class="bday-days">
               <span v-if="b.daysLeft === 0" class="today-badge">🎉 Aujourd'hui !</span>
-              <span v-else>Dans {{ b.daysLeft }} jour(s)</span>
+              <span v-else class="days-badge">Dans {{ b.daysLeft }} jour(s)</span>
             </div>
           </div>
         </div>
@@ -102,7 +114,7 @@
             </select>
           </div>
           <div class="col-half">
-            <label class="form-label">Heure de l'annonce (Fuseau: {{ config.announce.timezone }})</label>
+            <label class="form-label">Heure de l'annonce (Fuseau: {{ config.announce?.timezone || 'Europe/Paris' }})</label>
             <input v-model.number="config.announce.hour" type="number" min="0" max="23" class="discord-input" />
           </div>
         </div>
@@ -248,17 +260,60 @@ const config = ref<any>({
   }
 });
 
+async function loadUpcoming() {
+  loading.value = true;
+  try {
+    const res = await apiFetch<{ success: boolean; data: any[] }>('/api/birthdays/upcoming?days=365');
+    if (res.success && Array.isArray(res.data)) {
+      upcomingBirthdays.value = res.data.map(b => ({
+        ...b,
+        userId: b.userId || b.user_id,
+        dateFormatted: b.dateFormatted || b.birthdate,
+        daysLeft: b.daysLeft !== undefined ? b.daysLeft : b.days_until
+      }));
+    } else {
+      upcomingBirthdays.value = [];
+    }
+  } catch (err: any) {
+    console.error('Erreur chargement anniversaires:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
 async function loadConfig() {
   try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.birthdays) {
-      const b = res.data.birthdays;
+    const res = await apiFetch<{ success: boolean; data: any }>('/api/birthdays/settings');
+    if (res.success && res.data) {
+      const b = res.data;
       config.value = {
         ...config.value,
         ...b,
-        announce: { ...config.value.announce, ...(b.announce || {}) },
-        temp_role: { ...config.value.temp_role, ...(b.temp_role || {}) },
-        gifts: { ...config.value.gifts, ...(b.gifts || {}) }
+        enabled: b.enabled !== undefined ? !!b.enabled : config.value.enabled,
+        mode: b.mode || config.value.mode,
+        announce: {
+          ...config.value.announce,
+          ...(b.announce || {}),
+          channel_id: b.announceChannelId !== undefined && b.announceChannelId !== null ? b.announceChannelId : (b.announce?.channel_id ?? config.value.announce.channel_id),
+          hour: b.announceHour !== undefined ? b.announceHour : (b.announce?.hour ?? config.value.announce.hour),
+          timezone: b.announceTimezone || b.announce?.timezone || config.value.announce.timezone,
+          ping_role_id: b.pingRoleId !== undefined && b.pingRoleId !== null ? b.pingRoleId : (b.announce?.ping_role_id ?? config.value.announce.ping_role_id),
+          message_template: b.messageTemplate || b.announce?.message_template || config.value.announce.message_template
+        },
+        temp_role: {
+          ...config.value.temp_role,
+          ...(b.temp_role || {}),
+          enabled: b.tempRoleEnabled !== undefined ? !!b.tempRoleEnabled : (b.tempRoleId ? true : (b.temp_role?.enabled ?? config.value.temp_role.enabled)),
+          role_id: b.tempRoleId !== undefined && b.tempRoleId !== null ? b.tempRoleId : (b.temp_role?.role_id ?? config.value.temp_role.role_id)
+        },
+        gifts: {
+          ...config.value.gifts,
+          ...(b.gifts || {})
+        },
+        cooldown: {
+          ...config.value.cooldown,
+          ...(b.cooldown || {})
+        }
       };
     }
   } catch (err) {
@@ -269,17 +324,26 @@ async function loadConfig() {
 async function saveConfig() {
   isSaving.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: {
-        module: 'birthdays',
-        config: config.value
-      }
+    const payload = {
+      ...config.value,
+      announceChannelId: config.value.announce?.channel_id || null,
+      announceHour: config.value.announce?.hour ?? 9,
+      announceTimezone: config.value.announce?.timezone || 'Europe/Paris',
+      pingRoleId: config.value.announce?.ping_role_id || null,
+      messageTemplate: config.value.announce?.message_template,
+      tempRoleId: config.value.temp_role?.enabled ? (config.value.temp_role?.role_id || null) : null
+    };
+
+    const res = await apiFetch<{ success: boolean; message?: string; error?: string }>('/api/birthdays/settings', {
+      method: 'PUT',
+      body: payload
     });
+
     if (res.success) {
       showToast('Configuration Anniversaires enregistrée avec succès !', 'success');
+      await Promise.all([loadConfig(), loadUpcoming()]);
     } else {
-      showToast('Erreur lors de l\'enregistrement', 'error');
+      showToast('Erreur lors de l\'enregistrement : ' + (res.error || 'Erreur inconnue'), 'error');
     }
   } catch (err: any) {
     showToast('Erreur: ' + err.message, 'error');
@@ -288,8 +352,8 @@ async function saveConfig() {
   }
 }
 
-onMounted(() => {
-  loadConfig();
+onMounted(async () => {
+  await Promise.all([loadConfig(), loadUpcoming()]);
 });
 </script>
 
@@ -376,7 +440,23 @@ onMounted(() => {
 }
 
 .card-header h2 { margin: 0; font-size: 18px; }
-.badge-mode { background: #1e1f22; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: #fee75c; }
+.card-header-actions { display: flex; align-items: center; gap: 10px; }
+.badge-mode { background: #1e1f22; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: #fee75c; font-weight: 500; }
+
+.btn-secondary-sm {
+  background: #35373c;
+  color: #f2f3f5;
+  border: 1px solid #4e5058;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-secondary-sm:hover:not(:disabled) {
+  background: #404249;
+  border-color: #5865f2;
+}
 
 .empty-state {
   text-align: center;
@@ -391,12 +471,14 @@ onMounted(() => {
 .birthdays-list { display: flex; flex-direction: column; gap: 8px; }
 .birthday-row {
   display: grid;
-  grid-template-columns: 1fr 140px 140px;
+  grid-template-columns: 1fr 160px 140px;
   align-items: center;
   background: #1e1f22;
   border-radius: 6px;
   padding: 12px 16px;
 }
+
+.age-hint { color: #80848e; font-size: 13px; margin-left: 4px; }
 
 .today-badge {
   background: #57f287;
@@ -405,6 +487,11 @@ onMounted(() => {
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 11px;
+}
+
+.days-badge {
+  color: #b5bac1;
+  font-size: 13px;
 }
 
 /* Config cards */
