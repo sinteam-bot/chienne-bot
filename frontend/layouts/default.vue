@@ -9,6 +9,9 @@
       <slot />
     </main>
 
+    <!-- Modale Quick Switcher & Command Palette (Ctrl+K / Cmd+K) -->
+    <QuickSwitcherModal />
+
     <!-- Modale d'inspection d'utilisateur globale -->
     <UserModal
       v-if="inspectedUser"
@@ -26,14 +29,31 @@
 
 <script setup lang="ts">
 import { ref, onMounted, provide } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAppState } from '~/composables/useAppState.ts';
 import { useAuth } from '~/composables/useAuth.ts';
 
 import ChannelsSidebar from '~/components/layout/ChannelsSidebar.vue';
 import ChatHeader from '~/components/layout/ChatHeader.vue';
+import QuickSwitcherModal from '~/components/common/QuickSwitcherModal.vue';
 import UserModal from '~/components/common/UserModal.vue';
 import AuthModal from '~/components/common/AuthModal.vue';
 import ToastContainer from '~/components/common/ToastContainer.vue';
+
+const route = useRoute();
+useHead(() => {
+  const meta = route.meta || {};
+  const pageTitle = (meta.title as string) || 'Dashboard';
+  const pageDesc = (meta.description as string) || (meta.topic as string) || 'Tableau de bord Discord';
+  return {
+    title: `${pageTitle} • Chienne Bot`,
+    meta: [
+      { name: 'description', content: pageDesc },
+      { property: 'og:title', content: `${pageTitle} • Chienne Bot` },
+      { property: 'og:description', content: pageDesc }
+    ]
+  };
+});
 
 const { fetchGuild, fetchChannels, fetchStats, fetchUsersAndRoles, users } = useAppState();
 const { checkAuthStatus } = useAuth();

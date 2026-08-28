@@ -3,12 +3,12 @@
     <header class="logs-page__header">
       <div>
         <h1>📜 Logs &amp; Statistiques</h1>
-        <p>Surveillance en temps réel des événements du serveur.</p>
+        <p>Surveillance en temps réel des événements du serveur et audit trail.</p>
       </div>
       <div class="logs-page__actions">
         <span class="ws-status" :class="{ 'is-connected': wsConnected }">
           <span class="ws-status__dot"></span>
-          {{ wsConnected ? 'Live' : 'Hors ligne' }}
+          {{ wsConnected ? 'Live WebSocket' : 'Polling HTTP' }}
         </span>
         <select v-model="typeFilter" class="logs-page__filter" @change="load">
           <option value="">Tous types</option>
@@ -48,11 +48,11 @@
     <div v-if="error" class="logs-page__error">❌ {{ error }}</div>
 
     <div v-if="loading && logs.length === 0" class="logs-page__loading">
-      Chargement…
+      Chargement du flux d'audit…
     </div>
 
     <div v-else-if="logs.length === 0" class="logs-page__empty">
-      Aucun log pour ce filtre.
+      Aucun log enregistré pour ce filtre.
     </div>
 
     <div v-else class="logs-page__list">
@@ -61,30 +61,46 @@
         <div class="log-row__body">
           <div class="log-row__head">
             <span class="log-row__type">{{ log.event_type }}</span>
-            <span class="log-row__time">{{ formatTime(log.created_at) }}</span>
+            <DiscordTime :value="log.created_at" mode="both" class="log-row__time" />
           </div>
           <div class="log-row__summary">{{ log.summary || '(sans description)' }}</div>
           <div class="log-row__meta">
-            <span v-if="log.target_id">👤 <code>{{ log.target_id.slice(0, 14) }}…</code></span>
-            <span v-if="log.channel_id"># <code>{{ log.channel_id.slice(0, 14) }}…</code></span>
-            <span v-if="log.actor_id">par <code>{{ log.actor_id.slice(0, 14) }}…</code></span>
+            <span v-if="log.target_id" class="meta-item">
+              Cible : <DiscordUser :user-id="log.target_id" :show-id="true" />
+            </span>
+            <span v-if="log.channel_id" class="meta-item">
+              Salon : <DiscordChannel :channel-id="log.channel_id" />
+            </span>
+            <span v-if="log.actor_id" class="meta-item">
+              Auteur : <DiscordUser :user-id="log.actor_id" :show-id="true" />
+            </span>
           </div>
         </div>
       </div>
     </div>
 
-    <footer v-if="total > 0" class="logs-page__pagination">
-      <button :disabled="page <= 1 || loading" @click="prev">◀</button>
-      <span>Page {{ page }} / {{ pages }} — {{ total }} entrée(s)</span>
-      <button :disabled="page >= pages || loading" @click="next">▶</button>
-    </footer>
+    <!-- Pagination DiscordPagination -->
+    <div v-if="total > 0" class="pagination-container">
+      <DiscordPagination
+        v-model="page"
+        v-model:page-size="limit"
+        :total-items="total"
+        :page-size-options="[25, 50, 100, 200]"
+        @update:model-value="load"
+        @update:page-size="load"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useLogs, type LogEntry } from '~/composables/useLogs';
 import { useAuth } from '~/composables/useAuth';
+import DiscordUser from '~/components/common/DiscordUser.vue';
+import DiscordChannel from '~/components/common/DiscordChannel.vue';
+import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 definePageMeta({
   title: 'Logs Console & Stats',
@@ -107,15 +123,13 @@ const logs = ref<LogEntry[]>([]);
 const types = ref<{ event_type: string; count: number }[]>([]);
 const overview = ref<any>(null);
 const total = ref(0);
-const limit = 50;
+const limit = ref(50);
 const page = ref(1);
 const typeFilter = ref('');
 const loading = ref(false);
 const error = ref<string | null>(null);
 const wsConnected = ref(false);
 let ws: WebSocket | null = null;
-
-const pages = computed(() => Math.max(1, Math.ceil(total.value / limit)));
 
 const ICONS = {
   message_delete: '🗑️', message_edit: '✏️', message_bulk_delete: '🗑️',
@@ -140,16 +154,6 @@ function eventClass(t: string): string {
   return 'is-other';
 }
 
-function formatTime(ts: number) {
-  const d = new Date(ts);
-  const now = Date.now();
-  const diff = (now - ts) / 1000;
-  if (diff < 60) return `il y a ${Math.floor(diff)}s`;
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)}h`;
-  return d.toLocaleString('fr-FR');
-}
-
 async function load() {
   loading.value = true;
   error.value = null;
@@ -157,7 +161,7 @@ async function load() {
     const data = await logsApi.list({
       event_type: typeFilter.value || undefined,
       page: page.value,
-      limit
+      limit: limit.value
     });
     logs.value = data.logs;
     total.value = data.total;
@@ -180,9 +184,6 @@ async function loadTypes() {
   } catch {}
 }
 
-function prev() { if (page.value > 1) { page.value--; load(); } }
-function next() { if (page.value < pages.value) { page.value++; load(); } }
-
 function connectWs() {
   if (typeof window === 'undefined') return;
   const apiKey = getApiKey();
@@ -202,7 +203,7 @@ function connectWs() {
         const msg = JSON.parse(event.data);
         if (msg.type === 'log' && msg.entry) {
           if (!typeFilter.value || msg.entry.event_type === typeFilter.value) {
-            logs.value = [msg.entry, ...logs.value].slice(0, limit);
+            logs.value = [msg.entry, ...logs.value].slice(0, limit.value);
             total.value++;
           }
         }
@@ -266,6 +267,7 @@ onUnmounted(() => {
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
+  transition: background 0.15s;
 }
 
 .btn-refresh:hover:not(:disabled) { background: #5865f2; }
@@ -308,16 +310,15 @@ onUnmounted(() => {
 }
 
 .kpi__value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #fee75c;
+  font-size: 24px;
+  font-weight: bold;
+  color: #5865f2;
 }
 
 .kpi__label {
   font-size: 12px;
   color: #80848e;
   margin-top: 4px;
-  text-transform: uppercase;
 }
 
 .logs-page__error,
@@ -337,32 +338,32 @@ onUnmounted(() => {
 .logs-page__list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
 .log-row {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  gap: 12px;
+  display: flex;
+  gap: 16px;
   background: #2b2d31;
   border: 1px solid #3f4147;
-  border-left: 3px solid #3f4147;
-  border-radius: 6px;
-  padding: 10px 14px;
-  transition: border-color 0.15s;
+  border-radius: 8px;
+  padding: 12px 16px;
+  align-items: flex-start;
+  transition: all 0.15s;
 }
 
-.log-row:hover { border-color: #5865f2; }
+.log-row:hover { border-color: #5865f2; transform: translateX(3px); }
 
-.log-row.is-message { border-left-color: #5865f2; }
-.log-row.is-member { border-left-color: #57f287; }
-.log-row.is-role { border-left-color: #fee75c; }
-.log-row.is-channel { border-left-color: #eb459e; }
-.log-row.is-voice { border-left-color: #9b59b6; }
-.log-row.is-other { border-left-color: #80848e; }
+.log-row__icon {
+  font-size: 20px;
+  padding: 6px;
+  background: #1e1f22;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
 
-.log-row__icon { font-size: 20px; line-height: 1; }
+.log-row__body { flex: 1; min-width: 0; }
 
 .log-row__head {
   display: flex;
@@ -372,48 +373,37 @@ onUnmounted(() => {
 }
 
 .log-row__type {
-  font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
+  font-size: 13px;
   color: #fee75c;
-  background: #1e1f22;
-  padding: 1px 8px;
-  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
 }
 
-.log-row__time {
-  font-size: 11px;
-  color: #80848e;
-}
+.log-row__time { font-size: 12px; color: #80848e; }
 
-.log-row__summary { color: #dcddde; font-size: 14px; }
+.log-row__summary {
+  font-size: 14px;
+  color: #dcddde;
+  margin-bottom: 8px;
+}
 
 .log-row__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  font-size: 11px;
-  color: #80848e;
-  margin-top: 4px;
-}
-
-.log-row__meta code { font-family: 'JetBrains Mono', monospace; }
-
-.logs-page__pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 16px;
+  font-size: 12px;
+  color: #b5bac1;
 }
 
-.logs-page__pagination button {
-  background: #4e5058;
-  color: #f2f3f5;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.logs-page__pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
 </style>

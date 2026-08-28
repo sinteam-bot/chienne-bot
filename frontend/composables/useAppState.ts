@@ -53,6 +53,8 @@ export interface BotProfile {
   avatarUrl: string;
   status: 'online' | 'idle' | 'dnd' | 'offline';
   customStatus?: string;
+  ping?: number;
+  uptime?: number;
 }
 
 export interface EmojiItem {
@@ -74,7 +76,9 @@ const botProfile = ref<BotProfile>({
   tag: 'Chienne Bot#0000',
   avatarUrl: 'https://cdn.discordapp.com/embed/avatars/0.png',
   status: 'online',
-  customStatus: 'En ligne'
+  customStatus: 'En ligne',
+  ping: 24,
+  uptime: 0
 });
 const users = ref<any[]>([]);
 const roles = ref<any[]>([]);
@@ -152,8 +156,9 @@ export function useAppState() {
           guildEmojis.value = g.emojis;
         }
       }
-      if (res.bot) {
-        botProfile.value = { ...botProfile.value, ...res.bot };
+      const botData = res.bot || res.data?.bot;
+      if (botData) {
+        botProfile.value = { ...botProfile.value, ...botData };
       }
     } catch (e: any) {
       console.warn('Erreur chargement guild:', e.message);

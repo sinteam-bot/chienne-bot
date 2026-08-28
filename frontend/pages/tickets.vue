@@ -3,7 +3,7 @@
     <header class="tickets-page__header">
       <div>
         <h1>🎫 Tickets</h1>
-        <p>Gestion des tickets de support.</p>
+        <p>Gestion des tickets de support, transcripts et suivi des membres.</p>
       </div>
       <div class="tickets-page__actions">
         <select v-model="statusFilter" class="tickets-page__filter" @change="load">
@@ -42,61 +42,102 @@
         <div class="ticket-row__subject">
           <div class="ticket-row__title">{{ t.subject || '(sans sujet)' }}</div>
           <div class="ticket-row__meta">
-            #{{ t.id.slice(0, 8) }} · {{ t.category }} · par <code>{{ t.user_id.slice(0, 10) }}…</code>
+            <span class="ticket-id">#{{ t.id.slice(0, 8) }}</span>
+            <span class="ticket-cat">{{ t.category }}</span>
+            <span class="ticket-user">
+              par <DiscordUser :user-id="t.user_id" :show-id="true" />
+            </span>
           </div>
         </div>
         <div class="ticket-row__claim">
-          <span v-if="t.claimed_by">🙋 {{ t.claimed_by.slice(0, 10) }}…</span>
-          <span v-else class="ticket-row__muted">non claim</span>
+          <span v-if="t.claimed_by" class="ticket-claim-user">
+            🙋 <DiscordUser :user-id="t.claimed_by" :show-id="false" />
+          </span>
+          <span v-else class="ticket-row__muted">Non claim</span>
         </div>
         <div class="ticket-row__date">
-          {{ formatDate(t.created_at) }}
+          <DiscordTime :value="t.created_at" mode="relative" />
         </div>
       </div>
     </div>
 
+    <!-- Détail du ticket sélectionné -->
     <div v-if="selected" class="tickets-page__detail">
       <div class="tickets-page__detail-header">
         <h2>{{ selected.subject || '(sans sujet)' }}</h2>
         <span class="status-pill" :class="`status-pill-${selected.status}`">{{ statusLabel(selected.status) }}</span>
-        <button v-if="selected.status !== 'closed'" class="btn-close" @click="doClose">🔒 Fermer</button>
+        <div class="detail-actions">
+          <button class="btn-export" title="Exporter en HTML interactif" @click="exportHtml">📥 Export HTML</button>
+          <button class="btn-export" title="Exporter en JSON" @click="exportJson">📄 Export JSON</button>
+          <button v-if="selected.status !== 'closed'" class="btn-close" @click="doClose">🔒 Fermer</button>
+        </div>
       </div>
+
       <div class="tickets-page__detail-meta">
-        <span>ID : <code>{{ selected.id }}</code></span>
-        <span>Channel : <code>{{ selected.channel_id }}</code></span>
-        <span>Ouvert par : <code>{{ selected.user_id }}</code></span>
-        <span v-if="selected.claimed_by">Claim : <code>{{ selected.claimed_by }}</code></span>
+        <div class="meta-item">
+          <span class="label">ID :</span>
+          <code>{{ selected.id }}</code>
+        </div>
+        <div class="meta-item">
+          <span class="label">Salon :</span>
+          <DiscordChannel v-if="selected.channel_id" :channel-id="selected.channel_id" />
+          <code v-else>Non renseigné</code>
+        </div>
+        <div class="meta-item">
+          <span class="label">Ouvert par :</span>
+          <DiscordUser :user-id="selected.user_id" :show-id="true" />
+        </div>
+        <div v-if="selected.claimed_by" class="meta-item">
+          <span class="label">Claim par :</span>
+          <DiscordUser :user-id="selected.claimed_by" :show-id="true" />
+        </div>
+        <div class="meta-item">
+          <span class="label">Créé :</span>
+          <DiscordTime :value="selected.created_at" mode="both" />
+        </div>
       </div>
+
       <div class="tickets-page__messages">
-        <h3>📜 Messages ({{ messages.length }})</h3>
-        <div v-if="messages.length === 0" class="tickets-page__empty">Aucun message loggé.</div>
+        <h3>📜 Échanges et Messages ({{ messages.length }})</h3>
+        <div v-if="messages.length === 0" class="tickets-page__empty">Aucun message enregistré pour ce ticket.</div>
         <div
-          v-for="m in messages.slice(-50)"
+          v-for="m in messages.slice(-100)"
           :key="m.id"
           class="ticket-message"
           :class="{ 'is-staff': m.is_staff }"
         >
           <div class="ticket-message__head">
-            <span class="ticket-message__author">{{ m.author_id }}</span>
+            <DiscordUser :user-id="m.author_id" />
             <span v-if="m.is_staff" class="ticket-message__badge">STAFF</span>
-            <span class="ticket-message__time">{{ formatDate(m.created_at) }}</span>
+            <DiscordTime :value="m.created_at" mode="relative" class="ticket-message__time" />
           </div>
           <div class="ticket-message__content">{{ m.content || '(vide)' }}</div>
         </div>
       </div>
     </div>
 
-    <footer v-if="total > 0" class="tickets-page__pagination">
-      <button :disabled="page <= 1 || loading" @click="prev">◀</button>
-      <span>Page {{ page }} / {{ pages }} — {{ total }} ticket(s)</span>
-      <button :disabled="page >= pages || loading" @click="next">▶</button>
-    </footer>
+    <!-- Pagination DiscordPagination -->
+    <div v-if="total > 0" class="tickets-page__pagination-container">
+      <DiscordPagination
+        v-model="page"
+        v-model:page-size="limit"
+        :total-items="total"
+        :page-size-options="[10, 25, 50, 100]"
+        @update:model-value="load"
+        @update:page-size="load"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useTickets, type Ticket, type TicketMessage } from '~/composables/useTickets';
+import DiscordUser from '~/components/common/DiscordUser.vue';
+import DiscordChannel from '~/components/common/DiscordChannel.vue';
+import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
+import { generateHtmlTranscript, downloadFile } from '~/utils/transcriptExporter';
 
 definePageMeta({
   title: 'Tickets de Support',
@@ -116,15 +157,13 @@ useSeoMeta({
 const ticketsApi = useTickets();
 const tickets = ref<Ticket[]>([]);
 const total = ref(0);
-const limit = 25;
+const limit = ref(25);
 const page = ref(1);
 const statusFilter = ref('');
 const loading = ref(false);
 const error = ref<string | null>(null);
 const selected = ref<Ticket | null>(null);
 const messages = ref<TicketMessage[]>([]);
-
-const pages = computed(() => Math.max(1, Math.ceil(total.value / limit)));
 
 async function load() {
   loading.value = true;
@@ -133,7 +172,7 @@ async function load() {
     const data = await ticketsApi.list({
       status: statusFilter.value || undefined,
       page: page.value,
-      limit
+      limit: limit.value
     });
     tickets.value = data.tickets;
     total.value = data.total;
@@ -171,12 +210,27 @@ function statusLabel(s: string) {
   return { open: 'Ouvert', claimed: 'Claim', closed: 'Fermé' }[s] || s;
 }
 
-function formatDate(ts: number) {
-  return new Date(ts).toLocaleString('fr-FR');
+function exportHtml() {
+  if (!selected.value) return;
+  const html = generateHtmlTranscript({
+    title: `Ticket #${selected.value.id.slice(0, 8)} - ${selected.value.subject || 'Support'}`,
+    category: selected.value.category,
+    exportedAt: new Date()
+  }, messages.value);
+
+  downloadFile(html, `transcript-ticket-${selected.value.id.slice(0, 8)}.html`, 'text/html');
 }
 
-function prev() { if (page.value > 1) { page.value--; load(); } }
-function next() { if (page.value < pages.value) { page.value++; load(); } }
+function exportJson() {
+  if (!selected.value) return;
+  const data = {
+    ticket: selected.value,
+    exportedAt: new Date().toISOString(),
+    messages: messages.value
+  };
+
+  downloadFile(JSON.stringify(data, null, 2), `transcript-ticket-${selected.value.id.slice(0, 8)}.json`, 'application/json');
+}
 
 onMounted(load);
 </script>
@@ -218,6 +272,7 @@ onMounted(load);
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
+  transition: background 0.15s;
 }
 
 .btn-refresh:hover:not(:disabled) { background: #5865f2; }
@@ -245,25 +300,42 @@ onMounted(load);
 
 .ticket-row {
   display: grid;
-  grid-template-columns: 100px 1fr 180px 160px;
-  gap: 12px;
+  grid-template-columns: 90px 1fr 180px 150px;
+  gap: 16px;
   align-items: center;
   background: #2b2d31;
   border: 1px solid #3f4147;
   border-radius: 8px;
   padding: 12px 16px;
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.15s;
+  transition: border-color 0.15s, transform 0.15s, background 0.15s;
 }
 
 .ticket-row:hover { border-color: #5865f2; transform: translateX(4px); }
-.ticket-row.is-selected { border-color: #fee75c; background: #3a3a3a; }
+.ticket-row.is-selected { border-color: #fee75c; background: #35373c; }
 
-.ticket-row__title { font-weight: 600; font-size: 15px; }
-.ticket-row__meta { color: #80848e; font-size: 12px; }
-.ticket-row__meta code { font-family: 'JetBrains Mono', monospace; }
+.ticket-row__title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.ticket-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #80848e;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.ticket-id { font-family: 'JetBrains Mono', monospace; color: #b5bac1; }
+.ticket-cat { background: #1e1f22; padding: 2px 6px; border-radius: 4px; color: #dbdee1; }
+.ticket-user { display: inline-flex; align-items: center; gap: 4px; }
 
-.ticket-row__claim,
+.ticket-row__claim {
+  text-align: left;
+  font-size: 12px;
+  color: #b5bac1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .ticket-row__date {
   text-align: right;
   font-size: 12px;
@@ -279,6 +351,7 @@ onMounted(load);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .status-pill-open { background: #57f287; color: #1e1f22; }
@@ -290,69 +363,39 @@ onMounted(load);
   border: 1px solid #3f4147;
   border-radius: 8px;
   padding: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .tickets-page__detail-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .tickets-page__detail-header h2 { margin: 0; flex: 1; font-size: 20px; }
 
-.tickets-page__detail-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  color: #b5bac1;
-  font-size: 13px;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #3f4147;
-}
-
-.tickets-page__detail-meta code { font-family: 'JetBrains Mono', monospace; }
-
-.tickets-page__messages h3 { margin: 0 0 12px; font-size: 16px; }
-
-.ticket-message {
-  background: #1e1f22;
-  border-radius: 6px;
-  padding: 10px 12px;
-  margin-bottom: 6px;
-}
-
-.ticket-message.is-staff { border-left: 3px solid #5865f2; }
-
-.ticket-message__head {
+.detail-actions {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.btn-export {
+  background: #35373c;
+  color: #f2f3f5;
+  border: 1px solid #4e5058;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
   font-size: 12px;
-  color: #80848e;
-  margin-bottom: 4px;
+  transition: all 0.15s;
 }
 
-.ticket-message__author { color: #fee75c; font-family: 'JetBrains Mono', monospace; }
-
-.ticket-message__badge {
+.btn-export:hover {
   background: #5865f2;
-  color: white;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.ticket-message__time { margin-left: auto; }
-
-.ticket-message__content {
-  color: #dcddde;
-  font-size: 14px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  border-color: #5865f2;
 }
 
 .btn-close {
@@ -362,24 +405,78 @@ onMounted(load);
   padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.15s;
 }
 
-.tickets-page__pagination {
+.btn-close:hover { background: #c03537; }
+
+.tickets-page__detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  color: #b5bac1;
+  font-size: 13px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #1e1f22;
+  border-radius: 6px;
+}
+
+.meta-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
+  gap: 6px;
 }
 
-.tickets-page__pagination button {
-  background: #4e5058;
-  color: #f2f3f5;
-  border: none;
-  padding: 8px 16px;
+.meta-item .label {
+  color: #80848e;
+  font-size: 12px;
+}
+
+.tickets-page__messages h3 { margin: 0 0 12px; font-size: 16px; color: #f2f3f5; }
+
+.ticket-message {
+  background: #1e1f22;
   border-radius: 6px;
-  cursor: pointer;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border-left: 3px solid transparent;
 }
 
-.tickets-page__pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+.ticket-message.is-staff { border-left-color: #5865f2; background: #23252a; }
+
+.ticket-message__head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+  color: #80848e;
+  margin-bottom: 6px;
+}
+
+.ticket-message__badge {
+  background: #5865f2;
+  color: white;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.ticket-message__time { margin-left: auto; color: #80848e; font-size: 11px; }
+
+.ticket-message__content {
+  color: #dcddde;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.tickets-page__pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
 </style>

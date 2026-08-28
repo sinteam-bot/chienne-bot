@@ -9,7 +9,12 @@
         <span class="username">{{ botProfile.username }}</span>
         <span class="bot-badge">BOT</span>
       </div>
-      <span class="custom-status">{{ botProfile.customStatus || 'En ligne' }}</span>
+      <div class="footer-status-row">
+        <span class="custom-status">{{ botProfile.customStatus || 'En ligne' }}</span>
+        <span v-if="botProfile.ping !== undefined" class="ping-pill" :title="`Latence Gateway WebSocket: ${botProfile.ping}ms`">
+          📶 {{ botProfile.ping }}ms
+        </span>
+      </div>
     </div>
     <div class="user-actions">
       <button class="icon-btn" title="Rafraîchir les données" @click="refreshAll">
@@ -27,10 +32,28 @@
 </template>
 
 <script setup lang="ts">
-import { useAppState } from '~/composables/useAppState.ts';
-import { useAuth } from '~/composables/useAuth.ts';
-import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
+import { useAppState } from '~/composables/useAppState';
+import { useAuth } from '~/composables/useAuth';
+import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy';
 
 const { botProfile, refreshAll } = useAppState();
 const { openAuthModal } = useAuth();
 </script>
+
+<style scoped>
+.footer-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ping-pill {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(87, 242, 135, 0.12);
+  color: #57f287;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(87, 242, 135, 0.25);
+}
+</style>

@@ -2,8 +2,8 @@
   <div class="polls-page">
     <header class="polls-page__header">
       <div>
-        <h1>📊 Sondages</h1>
-        <p>Sondages actifs et résultats.</p>
+        <h1>🗳️ Sondages & Votes</h1>
+        <p>Gestion, dépouillement en temps réel et historique des sondages du serveur.</p>
       </div>
       <div class="polls-page__actions">
         <select v-model="statusFilter" class="polls-page__filter" @change="load">
@@ -20,47 +20,83 @@
     <div v-if="error" class="polls-page__error">❌ {{ error }}</div>
     <div v-if="loading && polls.length === 0" class="polls-page__loading">Chargement…</div>
     <div v-else-if="polls.length === 0" class="polls-page__empty">
-      Aucun sondage. Crée-en un avec <code>/poll-create</code>.
+      Aucun sondage pour ce filtre. Lancez-en un avec la commande slash <code>/poll-create</code>.
     </div>
 
     <div v-else class="polls-page__list">
       <div
-        v-for="p in polls"
+        v-for="p in paginatedPolls"
         :key="p.id"
         class="poll-row"
         :class="['status-' + p.status, { 'is-selected': selected?.id === p.id }]"
         @click="select(p)"
       >
         <div class="poll-row__head">
-          <span class="poll-row__question">{{ p.question }}</span>
+          <div class="poll-row__question">❓ {{ p.question }}</div>
           <span class="status-pill" :class="`status-pill-${p.status}`">{{ statusLabel(p.status) }}</span>
         </div>
+
         <div class="poll-row__meta">
-          {{ p.options.length }} options{{ p.multiChoice ? ' · multi' : '' }}{{ p.endsAt ? ` · finit <t :datetime="${new Date(p.endsAt).toISOString()}">--</t>` : '' }}
+          <span v-if="p.channelId" class="meta-item">
+            Salon : <DiscordChannel :channel-id="p.channelId" />
+          </span>
+          <span v-if="p.createdBy" class="meta-item">
+            Créé par : <DiscordUser :user-id="p.createdBy" />
+          </span>
+          <span class="meta-item badge-opt">
+            {{ p.options.length }} options
+          </span>
+          <span v-if="p.multiChoice" class="meta-item badge-multi">
+            Choix multiple
+          </span>
+          <span class="meta-item">
+            <span v-if="p.status === 'active' && p.endsAt">
+              Fin : <DiscordTime :value="p.endsAt" mode="relative" />
+            </span>
+            <span v-else-if="p.endsAt">
+              Terminé : <DiscordTime :value="p.endsAt" mode="both" />
+            </span>
+          </span>
         </div>
+
         <div v-if="p.tally" class="poll-row__tally">
           <div v-for="opt in p.tally.perOption" :key="opt.index" class="tally-bar">
             <div class="tally-bar__label">
-              <strong>{{ opt.index + 1 }}.</strong> {{ opt.label }}
-              <span class="tally-bar__count">{{ opt.count }} ({{ totalFor(p, opt) }}%)</span>
+              <span><strong>{{ opt.index + 1 }}.</strong> {{ opt.label }}</span>
+              <span class="tally-bar__count">{{ opt.count }} vote(s) ({{ totalFor(p, opt) }}%)</span>
             </div>
             <div class="tally-bar__track">
               <div class="tally-bar__fill" :style="{ width: totalFor(p, opt) + '%' }" />
             </div>
           </div>
-          <div class="poll-row__total">Total : {{ p.tally.total }} vote(s)</div>
+          <div class="poll-row__total">Participation totale : {{ p.tally.total }} vote(s)</div>
         </div>
+
         <div v-if="selected?.id === p.id && p.status === 'active'" class="poll-row__actions">
-          <button class="btn-mini btn-danger" @click.stop="doEnd(p)">🔒 Terminer</button>
+          <button class="btn-mini btn-danger" @click.stop="doEnd(p)">🔒 Clôturer le sondage</button>
         </div>
       </div>
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="polls.length > pageSize" class="pagination-container">
+      <DiscordPagination
+        v-model="page"
+        v-model:page-size="pageSize"
+        :total-items="polls.length"
+        :page-size-options="[5, 10, 25, 50]"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useEngagement, type Poll } from '~/composables/useEngagement';
+import DiscordUser from '~/components/common/DiscordUser.vue';
+import DiscordChannel from '~/components/common/DiscordChannel.vue';
+import DiscordTime from '~/components/common/DiscordTime.vue';
+import DiscordPagination from '~/components/common/DiscordPagination.vue';
 
 definePageMeta({
   title: 'Sondages & Votes',
@@ -84,18 +120,26 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const selected = ref<Poll | null>(null);
 
+const page = ref(1);
+const pageSize = ref(10);
+
+const paginatedPolls = computed(() => {
+  const start = (page.value - 1) * pageSize.value;
+  return polls.value.slice(start, start + pageSize.value);
+});
+
 async function load() {
   loading.value = true;
   error.value = null;
   try {
     const list = await engagement.listPolls({ status: statusFilter.value || undefined });
-    // Charge aussi le tally pour chaque poll
     polls.value = await Promise.all(
       list.map(async (p) => {
         const detail = await engagement.getPoll(p.id);
         return detail;
       })
     );
+    page.value = 1;
   } catch (e: any) {
     error.value = e.message || 'Erreur inconnue';
   } finally {
@@ -132,13 +176,13 @@ onMounted(load);
 </script>
 
 <style scoped>
-.polls-page { max-width: 1024px; margin: 0 auto; padding: 24px; color: #f2f3f5; }
+.polls-page { max-width: 1100px; margin: 0 auto; padding: 24px; color: #f2f3f5; }
 .polls-page__header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
 .polls-page__header h1 { margin: 0 0 4px; font-size: 28px; }
 .polls-page__header p { margin: 0; color: #b5bac1; font-size: 14px; }
 .polls-page__actions { display: flex; gap: 8px; align-items: center; }
 .polls-page__filter { background: #2b2d31; color: #f2f3f5; border: 1px solid #3f4147; padding: 8px 12px; border-radius: 6px; }
-.btn-refresh { background: #4e5058; color: #f2f3f5; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+.btn-refresh { background: #4e5058; color: #f2f3f5; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
 .btn-refresh:hover:not(:disabled) { background: #5865f2; }
 
 .polls-page__error,
@@ -147,28 +191,45 @@ onMounted(load);
 .polls-page__error { background: #ed4245; color: white; border-color: #ed4245; }
 .polls-page__empty code { font-family: 'JetBrains Mono', monospace; background: #1e1f22; padding: 2px 6px; border-radius: 4px; }
 
-.polls-page__list { display: flex; flex-direction: column; gap: 12px; }
-.poll-row { background: #2b2d31; border: 1px solid #3f4147; border-radius: 8px; padding: 14px 18px; cursor: pointer; transition: border-color 0.15s; }
-.poll-row:hover { border-color: #5865f2; }
-.poll-row.is-selected { border-color: #fee75c; background: #3a3a3a; }
+.polls-page__list { display: flex; flex-direction: column; gap: 14px; }
+.poll-row { background: #2b2d31; border: 1px solid #3f4147; border-radius: 8px; padding: 16px 20px; cursor: pointer; transition: all 0.15s; }
+.poll-row:hover { border-color: #5865f2; transform: translateX(3px); }
+.poll-row.is-selected { border-color: #fee75c; background: #35373c; }
 
-.poll-row__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
-.poll-row__question { font-weight: 600; font-size: 15px; }
-.poll-row__meta { color: #80848e; font-size: 12px; margin-bottom: 12px; }
+.poll-row__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+.poll-row__question { font-weight: 600; font-size: 16px; color: #f2f3f5; }
+.poll-row__meta {
+  color: #b5bac1;
+  font-size: 13px;
+  margin-bottom: 14px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.meta-item { display: inline-flex; align-items: center; gap: 6px; }
+.badge-opt { background: #1e1f22; padding: 2px 8px; border-radius: 4px; color: #dbdee1; }
+.badge-multi { background: #5865f2; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; }
 
-.poll-row__tally { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-.tally-bar__label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
-.tally-bar__count { color: #b5bac1; }
-.tally-bar__track { background: #1e1f22; border-radius: 4px; height: 8px; overflow: hidden; }
-.tally-bar__fill { background: linear-gradient(90deg, #5865f2, #eb459e); height: 100%; border-radius: 4px; transition: width 0.3s; }
-.poll-row__total { margin-top: 6px; font-size: 12px; color: #80848e; text-align: right; }
+.poll-row__tally { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; background: #1e1f22; padding: 14px; border-radius: 6px; }
+.tally-bar__label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #dbdee1; }
+.tally-bar__count { color: #b5bac1; font-weight: 500; }
+.tally-bar__track { background: #2b2d31; border-radius: 4px; height: 10px; overflow: hidden; }
+.tally-bar__fill { background: linear-gradient(90deg, #5865f2, #eb459e); height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+.poll-row__total { margin-top: 8px; font-size: 12px; color: #80848e; text-align: right; }
 
-.poll-row__actions { margin-top: 10px; display: flex; gap: 8px; }
+.poll-row__actions { margin-top: 12px; display: flex; gap: 10px; padding-top: 10px; border-top: 1px solid #3f4147; }
 
 .status-pill { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
 .status-pill-active { background: #57f287; color: #1e1f22; }
 .status-pill-ended { background: #80848e; color: #1e1f22; }
 
-.btn-mini { background: #4e5058; color: #f2f3f5; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.btn-mini { background: #4e5058; color: #f2f3f5; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
 .btn-danger { background: #ed4245; color: white; }
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
 </style>
