@@ -587,6 +587,42 @@ engagement:
     show_results_after_vote: true
 
 # ==============================================================================
+# CONFIGURATION DES ANNIVERSAIRES (Phase 7)
+# ==============================================================================
+# Système d'anniversaires conforme à Draftbot : mode public/privé,
+# annonce quotidienne, cooldown sur changement de date, rôle
+# temporaire, cadeaux (XP / role / custom), visibilité par serveur.
+#
+# Activer via le dashboard /features ou features.birthdays.enabled = true
+birthdays:
+  enabled: false
+  allowed_roles: []
+
+  mode: public                    # public (BDD globale) | private (BDD par-guild)
+  default_visibility: true        # par défaut, l'anniv est visible
+
+  announce:
+    channel_id: null              # salon où poster l'annonce
+    hour: 9                       # heure locale (24h)
+    timezone: Europe/Paris
+    ping_role_id: null            # rôle à mentionner (optionnel)
+    message_template: "🎂 Joyeux anniversaire {user} ! Tu fêtes tes **{age} ans** aujourd'hui ! 🎉"
+
+  temp_role:
+    enabled: true                 # donne un rôle le jour J (retiré à 00:00)
+    role_id: null
+
+  gifts:
+    max_per_user: 2               # spec Draftbot (5 en premium)
+    xp_per_birthday: 500          # cadeau XP automatique (0 = désactivé)
+
+  cooldown:                       # spec Draftbot (1j / 2j / 6m / 1an)
+    first_change_days: 1
+    second_change_days: 2
+    third_change_days: 180
+    default_change_days: 365
+
+# ==============================================================================
 # CONFIGURATION DES TICKETS DE SUPPORT (Phase 3)
 # ==============================================================================
 # Système de tickets avec bouton persistant, modal de création,
