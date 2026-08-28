@@ -656,7 +656,7 @@ birthdays:
     hour: 9                       # heure locale (24h)
     timezone: Europe/Paris
     ping_role_id: null            # rôle à mentionner (optionnel)
-    message_template: "🎂 Joyeux anniversaire {user} ! Tu fêtes tes **{age} ans** aujourd'hui ! 🎉"
+    message_template: "🎂 Joyeux anniversaire {user} ! {% if age %}Tu fêtes tes **{age} ans** aujourd'hui ! {% endif %}🎉"
 
   temp_role:
     enabled: true                 # donne un rôle le jour J (retiré à 00:00)
