@@ -163,10 +163,12 @@ async function load() {
       page: page.value,
       limit: limit.value
     });
-    logs.value = data.logs;
-    total.value = data.total;
+    logs.value = data?.logs || [];
+    total.value = data?.total || 0;
   } catch (e: any) {
     error.value = e.message || 'Erreur inconnue';
+    logs.value = [];
+    total.value = 0;
   } finally {
     loading.value = false;
   }
@@ -174,14 +176,18 @@ async function load() {
 
 async function loadOverview() {
   try {
-    overview.value = await logsApi.getOverview();
+    const res = await logsApi.getOverview();
+    if (res) overview.value = res;
   } catch {}
 }
 
 async function loadTypes() {
   try {
-    types.value = await logsApi.getTypes();
-  } catch {}
+    const res = await logsApi.getTypes();
+    types.value = Array.isArray(res) ? res : [];
+  } catch {
+    types.value = [];
+  }
 }
 
 function connectWs() {

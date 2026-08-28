@@ -85,7 +85,7 @@ export const useReports = () => {
   async function stats(guildId?: string): Promise<ReportStats> {
     const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
     const res = await api.apiFetch<{ success: boolean; data: ReportStats }>(`/api/reports/stats${qs}`);
-    return res.data;
+    return res?.data || { open: 0, resolved: 0, dismissed: 0, total: 0 };
   }
 
   return { list, get, create, resolve, dismiss, actions, stats };

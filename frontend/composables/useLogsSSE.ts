@@ -1,7 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { useAuth } from './useAuth.ts';
 
-export interface LogEntry {
+export interface LogEntrySSE {
   id: number;
   time: string;
   level: string;
@@ -14,7 +14,7 @@ export interface LogEntry {
   message: string;
 }
 
-const logs = ref<LogEntry[]>([]);
+const logs = ref<LogEntrySSE[]>([]);
 const isConnected = ref(false);
 const autoScroll = ref(true);
 const levelFilter = ref('ALL');
@@ -117,7 +117,7 @@ export function useLogsSSE() {
     const d = parseDateSafe(rawTime) || new Date();
     const timeStr = formatLocalDate(d, { showDate: false, showTime: true, showSeconds: true });
 
-    const entry: LogEntry = {
+    const entry: LogEntrySSE = {
       id: logIdCounter++,
       time: timeStr,
       level: (item.level || 'INFO').toUpperCase(),
@@ -163,7 +163,7 @@ export function useLogsSSE() {
 
     return logs.value.filter(l => {
       const matchLevel = lvl === 'ALL' || l.level === lvl;
-      
+
       let matchModule = true;
       if (mod !== 'ALL') {
         const logMod = (l.module || '').toUpperCase();
@@ -184,8 +184,8 @@ export function useLogsSSE() {
         else matchModule = logMod === mod;
       }
 
-      const matchQuery = !query || 
-        l.message.toLowerCase().includes(query) || 
+      const matchQuery = !query ||
+        l.message.toLowerCase().includes(query) ||
         (l.module && l.module.toLowerCase().includes(query)) ||
         l.level.toLowerCase().includes(query);
 

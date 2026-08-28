@@ -63,7 +63,10 @@ const error = ref<string | null>(null);
 
 async function load() {
   try {
-    stats.value = await api.stats();
+    const res = await api.stats();
+    if (res) {
+      stats.value = res;
+    }
   } catch (e: any) {
     error.value = e.message;
   }
