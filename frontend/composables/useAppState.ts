@@ -110,7 +110,8 @@ export function useAppState() {
     { id: 'module-giveaways', name: 'Giveaways & Concours', icon: '🎉', routePath: '/modules/giveaways', section: 'modules', topic: 'Gestion et tirage au sort des concours communautaires' },
     { id: 'module-polls', name: 'Sondages & Votes', icon: '🗳️', routePath: '/modules/polls', section: 'modules', topic: 'Création et résultats des votes et sondages du serveur' },
     { id: 'module-tickets', name: 'Tickets de Support', icon: '🎫', routePath: '/modules/tickets', section: 'modules', topic: 'Gestion des tickets de support, transcripts et réglages du panel' },
-    { id: 'module-cards', name: 'Cartes & Canvas', icon: '🃏', routePath: '/modules/cards', section: 'modules', topic: 'Générateur et prévisualisation des cartes de profil Discord' }
+    { id: 'module-cards', name: 'Cartes & Canvas', icon: '🃏', routePath: '/modules/cards', section: 'modules', topic: 'Générateur et prévisualisation des cartes de profil Discord' },
+    { id: 'module-reaction-roles', name: 'Rôles à Réaction', icon: '🎭', routePath: '/modules/reaction-roles', section: 'modules', topic: 'Attribution automatique de rôles via réactions sur un message' }
   ];
 
   const GAME_SECTION_ITEMS: ChannelItem[] = [
@@ -130,7 +131,6 @@ export function useAppState() {
       id: 'modules',
       title: 'Modules',
       icon: '🧩',
-      badge: '5',
       items: MODULE_SECTION_ITEMS,
       collapsed: false
     },
