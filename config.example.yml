@@ -669,6 +669,38 @@ economy:
   history_retention_days: 90  # rétention des transactions avant éligibilité au cleanup
 
 # ==============================================================================
+# CONFIGURATION DES RÔLES STICKY (Phase 8.2)
+# ==============================================================================
+# Les rôles sticky sont ré-attribués automatiquement aux membres
+# qui quittent puis reviennent sur le serveur.
+#
+# Activer via le dashboard /features ou features.sticky-roles.enabled = true
+sticky-roles:
+  enabled: false
+  allowed_roles: []
+  max_per_user: 10             # limite dure de rôles sticky par user
+  restore_delay_ms: 2000        # délai avant de re-attribuer (évite les race conditions)
+
+# ==============================================================================
+# CONFIGURATION DES COMMANDES D'INFORMATION (Phase 8.3)
+# ==============================================================================
+# Équivalent dashboard de /serverinfo, /userinfo, /avatar.
+# Toujours activé par défaut (info = utilitaire, pas de toggle).
+info:
+  enabled: true
+  color: "#5865F2"
+  footer: "Chienne Bot — Information"
+  show_id: true                # affiche les IDs Discord dans les embeds
+
+# ==============================================================================
+# CONFIGURATION DES STATS DE JEUX (Phase 8.4)
+# ==============================================================================
+# Endpoint /api/games/stats pour le dashboard.
+# Le state Counter / Countdown est lu depuis counterState / countdownState.
+games-stats:
+  enabled: true
+
+# ==============================================================================
 # CONFIGURATION DES TICKETS DE SUPPORT (Phase 3)
 # ==============================================================================
 # Système de tickets avec bouton persistant, modal de création,
