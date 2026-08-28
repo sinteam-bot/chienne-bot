@@ -77,11 +77,14 @@ async function loadAll() {
   loading.value = true;
   try {
     const [triggers, cmds] = await Promise.all([
-      api.listTriggers(process.env.GUILD_ID || '').catch(() => []),
-      api.listCustomCommands(process.env.GUILD_ID || '').catch(() => [])
+      api.listTriggers().catch(() => []),
+      api.listCustomCommands().catch(() => [])
     ]);
-    stats.value.triggers = triggers.length;
-    stats.value.customCommands = cmds.length;
+    stats.value.triggers = Array.isArray(triggers) ? triggers.length : 0;
+    stats.value.customCommands = Array.isArray(cmds) ? cmds.length : 0;
+  } catch {
+    stats.value.triggers = 0;
+    stats.value.customCommands = 0;
   } finally {
     loading.value = false;
   }

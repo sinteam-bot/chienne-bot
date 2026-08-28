@@ -39,9 +39,11 @@ async function load() {
   loading.value = true;
   error.value = null;
   try {
-    triggers.value = await api.listTriggers(process.env.GUILD_ID || '');
+    const res = await api.listTriggers();
+    triggers.value = Array.isArray(res) ? res : [];
   } catch (e: any) {
     error.value = e.message;
+    triggers.value = [];
   } finally {
     loading.value = false;
   }

@@ -46,13 +46,18 @@ export const useEngagementAdvanced = () => {
 
   // =================== REMINDERS ===================
 
-  async function listReminders(userId: string, guildId?: string): Promise<Reminder[]> {
+  async function listReminders(userId?: string, guildId?: string): Promise<Reminder[]> {
+    if (!userId) return [];
     const qs = guildId ? `?user_id=${userId}&guild_id=${encodeURIComponent(guildId)}` : `?user_id=${userId}`;
-    const res = await api.apiFetch<{ success: boolean; data: Reminder[] }>(`/api/engagement-advanced/reminders${qs}`);
-    return res.data;
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: Reminder[] }>(`/api/engagement-advanced/reminders${qs}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
-  async function createReminder(payload: { userId: string; guildId: string; channelId?: string; text: string; fireAt: number }): Promise<{ success: boolean; data?: Reminder; error?: string }> {
+  async function createReminder(payload: { userId: string; guildId?: string; channelId?: string; text: string; fireAt: number }): Promise<{ success: boolean; data?: Reminder; error?: string }> {
     const res = await api.apiFetch<{ success: boolean; data?: Reminder; error?: string }>('/api/engagement-advanced/reminders', {
       method: 'POST', body: payload
     });
@@ -68,12 +73,17 @@ export const useEngagementAdvanced = () => {
 
   // =================== TRIGGERS ===================
 
-  async function listTriggers(guildId: string): Promise<WordTrigger[]> {
-    const res = await api.apiFetch<{ success: boolean; data: WordTrigger[] }>(`/api/engagement-advanced/triggers?guild_id=${encodeURIComponent(guildId)}`);
-    return res.data;
+  async function listTriggers(guildId?: string): Promise<WordTrigger[]> {
+    const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: WordTrigger[] }>(`/api/engagement-advanced/triggers${qs}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
-  async function createTrigger(payload: { guildId: string; triggerText: string; matchType?: 'exact' | 'contains'; responseText: string; cooldown?: number; createdBy: string }): Promise<{ success: boolean; data?: WordTrigger; error?: string }> {
+  async function createTrigger(payload: { guildId?: string; triggerText: string; matchType?: 'exact' | 'contains'; responseText: string; cooldown?: number; createdBy: string }): Promise<{ success: boolean; data?: WordTrigger; error?: string }> {
     const res = await api.apiFetch<{ success: boolean; data?: WordTrigger; error?: string }>('/api/engagement-advanced/triggers', {
       method: 'POST', body: { ...payload, matchType: payload.matchType || 'exact' }
     });
@@ -87,12 +97,17 @@ export const useEngagementAdvanced = () => {
 
   // =================== CUSTOM COMMANDS ===================
 
-  async function listCustomCommands(guildId: string): Promise<CustomCommand[]> {
-    const res = await api.apiFetch<{ success: boolean; data: CustomCommand[] }>(`/api/engagement-advanced/commands?guild_id=${encodeURIComponent(guildId)}`);
-    return res.data;
+  async function listCustomCommands(guildId?: string): Promise<CustomCommand[]> {
+    const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: CustomCommand[] }>(`/api/engagement-advanced/commands${qs}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
-  async function createCustomCommand(payload: { guildId: string; name: string; responseText: string; createdBy: string }): Promise<{ success: boolean; data?: CustomCommand; error?: string }> {
+  async function createCustomCommand(payload: { guildId?: string; name: string; responseText: string; createdBy: string }): Promise<{ success: boolean; data?: CustomCommand; error?: string }> {
     const res = await api.apiFetch<{ success: boolean; data?: CustomCommand; error?: string }>('/api/engagement-advanced/commands', {
       method: 'POST', body: payload
     });

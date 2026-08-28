@@ -37,9 +37,11 @@ async function load() {
   loading.value = true;
   error.value = null;
   try {
-    commands.value = await api.listCustomCommands(process.env.GUILD_ID || '');
+    const res = await api.listCustomCommands();
+    commands.value = Array.isArray(res) ? res : [];
   } catch (e: any) {
     error.value = e.message;
+    commands.value = [];
   } finally {
     loading.value = false;
   }
