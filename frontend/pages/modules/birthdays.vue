@@ -217,9 +217,9 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: 'Anniversaires - Chienne Bot',
+  title: 'Anniversaires - Bot',
   description: 'Célébration automatique des anniversaires, rôles temporaires et cadeaux',
-  ogTitle: 'Anniversaires - Chienne Bot',
+  ogTitle: 'Anniversaires - Bot',
   ogDescription: 'Célébration automatique des anniversaires, rôles temporaires et cadeaux'
 });
 

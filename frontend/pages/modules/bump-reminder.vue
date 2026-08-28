@@ -79,7 +79,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Rappels de Bump Disboard',
   description: 'Détection automatique du bot Disboard, minuterie 2h et rappels configurables',
-  ogTitle: 'Rappels de Bump Disboard - Chienne Bot',
+  ogTitle: 'Rappels de Bump Disboard - Bot',
   ogDescription: 'Détection automatique du bot Disboard, minuterie 2h et rappels configurables'
 });
 
@@ -139,7 +139,7 @@ onUnmounted(() => {
 });
 
 useHead({
-  title: 'Rappels de Bump Disboard - Chienne Bot'
+  title: 'Rappels de Bump Disboard - Bot'
 });
 </script>
 

@@ -72,8 +72,8 @@ const channelCategories = ref<ChannelCategory[]>([]);
 const guildEmojis = ref<EmojiItem[]>([]);
 const botProfile = ref<BotProfile>({
   id: '',
-  username: 'Chienne Bot',
-  tag: 'Chienne Bot#0000',
+  username: 'Bot',
+  tag: 'Bot#0000',
   avatarUrl: 'https://cdn.discordapp.com/embed/avatars/0.png',
   status: 'online',
   customStatus: 'En ligne',
@@ -129,7 +129,7 @@ export function useAppState() {
   const sections = ref<NavigationSection[]>([
     {
       id: 'bot',
-      title: 'Chienne Bot',
+      title: 'Bot',
       icon: '🐕',
       items: BOT_SECTION_ITEMS,
       collapsed: false
@@ -307,7 +307,7 @@ export function useAppState() {
       const found = sec.items.find(i => i.id === activeView.value);
       if (found) return found;
     }
-    return { id: activeView.value, name: 'Chienne Bot', icon: '🐕', topic: 'Interface Web Discord' };
+    return { id: activeView.value, name: 'Bot', icon: '🐕', topic: 'Interface Web Discord' };
   });
 
   function getUserAvatar(userId?: string): string {

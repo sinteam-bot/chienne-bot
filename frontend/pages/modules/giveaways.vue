@@ -102,7 +102,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Giveaways & Concours',
   description: 'Gestion et tirage au sort des concours communautaires',
-  ogTitle: 'Giveaways & Concours - Chienne Bot',
+  ogTitle: 'Giveaways & Concours - Bot',
   ogDescription: 'Gestion et tirage au sort des concours communautaires'
 });
 

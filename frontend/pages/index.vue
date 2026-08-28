@@ -17,7 +17,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Informations',
   description: 'Statistiques globales, performances et état du bot',
-  ogTitle: 'Informations - Chienne Bot',
+  ogTitle: 'Informations - Bot',
   ogDescription: 'Statistiques globales, performances et état du bot'
 });
 </script>

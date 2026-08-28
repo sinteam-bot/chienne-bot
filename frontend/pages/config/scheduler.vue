@@ -76,7 +76,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Planificateur & Crons',
   description: 'Gestion des tâches planifiées et programmations crons',
-  ogTitle: 'Planificateur & Crons - Chienne Bot',
+  ogTitle: 'Planificateur & Crons - Bot',
   ogDescription: 'Gestion des tâches planifiées et programmations crons'
 });
 

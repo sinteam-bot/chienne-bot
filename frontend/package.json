@@ -1,5 +1,5 @@
 {
-  "name": "chienne-bot-frontend",
+  "name": "bot-frontend",
   "private": true,
   "type": "module",
   "scripts": {

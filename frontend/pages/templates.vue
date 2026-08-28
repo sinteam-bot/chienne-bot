@@ -16,7 +16,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Moteur de Templates Discord',
   description: 'Moteur de templating Discord universel avec prévisualisation en direct',
-  ogTitle: 'Moteur de Templates Discord - Chienne Bot',
+  ogTitle: 'Moteur de Templates Discord - Bot',
   ogDescription: 'Moteur de templating Discord universel avec prévisualisation en direct'
 });
 </script>

@@ -65,9 +65,9 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: 'Rôles à Réaction - Chienne Bot',
+  title: 'Rôles à Réaction - Bot',
   description: 'Configurez des rôles automatiquement attribués via réactions Discord',
-  ogTitle: 'Rôles à Réaction - Chienne Bot',
+  ogTitle: 'Rôles à Réaction - Bot',
   ogDescription: 'Attribution automatique de rôles via réactions sur un message'
 });
 

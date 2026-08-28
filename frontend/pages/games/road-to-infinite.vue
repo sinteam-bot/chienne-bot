@@ -16,7 +16,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Road to Infinite',
   description: 'Jeu du Compteur : Classement des compteurs et configuration',
-  ogTitle: 'Road to Infinite - Chienne Bot',
+  ogTitle: 'Road to Infinite - Bot',
   ogDescription: 'Jeu du Compteur : Classement des compteurs et configuration'
 });
 </script>

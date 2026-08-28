@@ -58,7 +58,7 @@
               style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover;"
             />
             <div style="display: flex; flex-direction: column; gap: 3px;">
-              <h3 style="font-size: 18px; font-weight: 700; color: var(--header-primary); margin: 0;">{{ guild?.name || 'Chienne Bot Serveur' }}</h3>
+              <h3 style="font-size: 18px; font-weight: 700; color: var(--header-primary); margin: 0;">{{ guild?.name || 'Bot Serveur' }}</h3>
               <span style="font-size: 12px; color: var(--text-muted); font-family: var(--font-code);">ID: {{ guild?.id || 'Inconnu' }}</span>
               <div v-if="guild?.ownerId || guild?.ownerTag" style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted);">
                 <span>Propriétaire :</span>

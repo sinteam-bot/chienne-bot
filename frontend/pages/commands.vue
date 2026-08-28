@@ -16,7 +16,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Commandes',
   description: 'Liste des commandes Discord et permissions d\'accès',
-  ogTitle: 'Commandes Discord - Chienne Bot',
+  ogTitle: 'Commandes Discord - Bot',
   ogDescription: 'Liste des commandes Discord et permissions d\'accès'
 });
 </script>

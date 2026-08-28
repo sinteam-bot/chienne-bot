@@ -61,7 +61,7 @@
             <span><kbd>↵</kbd> Sélectionner</span>
             <span><kbd>ESC</kbd> Fermer</span>
           </div>
-          <div class="qs-brand">Chienne Bot · Quick Switcher</div>
+          <div class="qs-brand">Bot · Quick Switcher</div>
         </div>
       </div>
     </div>

@@ -17,7 +17,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Membres & Rôles',
   description: 'Annuaire des utilisateurs, rôles et inspection de profil',
-  ogTitle: 'Membres & Rôles - Chienne Bot',
+  ogTitle: 'Membres & Rôles - Bot',
   ogDescription: 'Annuaire des utilisateurs, rôles et inspection de profil'
 });
 

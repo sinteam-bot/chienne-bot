@@ -3,7 +3,7 @@
     <header class="features-page__header">
       <div>
         <h1>🧩 Fonctionnalités du bot</h1>
-        <p>Activez ou désactivez les fonctionnalités de <strong>Chienne</strong> pour ce serveur.</p>
+        <p>Activez ou désactivez les fonctionnalités pour ce serveur.</p>
       </div>
       <div class="features-page__actions">
         <button class="btn-refresh" :disabled="loading" @click="load">
@@ -59,7 +59,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Features & Modules',
   description: 'Registre et état d\'activation des fonctionnalités du bot',
-  ogTitle: 'Features & Modules - Chienne Bot',
+  ogTitle: 'Features & Modules - Bot',
   ogDescription: 'Registre et état d\'activation des fonctionnalités du bot'
 });
 

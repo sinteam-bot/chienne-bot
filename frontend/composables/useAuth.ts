@@ -6,12 +6,12 @@ const savedApiKey = ref('');
 
 export function useAuth() {
   if (typeof window !== 'undefined' && !savedApiKey.value) {
-    savedApiKey.value = localStorage.getItem('chienne_bot_api_key') || '';
+    savedApiKey.value = localStorage.getItem('bot_api_key') || '';
   }
 
   function getApiKey(): string {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('chienne_bot_api_key') || savedApiKey.value;
+      return localStorage.getItem('bot_api_key') || savedApiKey.value;
     }
     return savedApiKey.value;
   }
@@ -19,14 +19,14 @@ export function useAuth() {
   function setApiKey(key: string) {
     savedApiKey.value = key;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('chienne_bot_api_key', key);
+      localStorage.setItem('bot_api_key', key);
     }
   }
 
   function clearApiKey() {
     savedApiKey.value = '';
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('chienne_bot_api_key');
+      localStorage.removeItem('bot_api_key');
     }
   }
 

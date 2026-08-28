@@ -44,9 +44,9 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: 'Engagement Avancé - Chienne Bot',
+  title: 'Engagement Avancé - Bot',
   description: 'Rappels, déclencheurs et commandes personnalisées pour animer votre Discord',
-  ogTitle: 'Engagement Avancé - Chienne Bot',
+  ogTitle: 'Engagement Avancé - Bot',
   ogDescription: 'Système de rappels, déclencheurs de mots et commandes personnalisées.'
 });
 

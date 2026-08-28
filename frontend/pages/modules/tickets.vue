@@ -150,7 +150,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Tickets de Support',
   description: 'Gestion des tickets de support, transcripts et réglages du panel',
-  ogTitle: 'Tickets de Support - Chienne Bot',
+  ogTitle: 'Tickets de Support - Bot',
   ogDescription: 'Gestion des tickets de support, transcripts et réglages du panel'
 });
 

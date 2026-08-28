@@ -60,7 +60,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Message de Bienvenue',
   description: 'Accueil personnalisé des nouveaux membres, envoi d\'embed Discord dynamique et redirection',
-  ogTitle: 'Message de Bienvenue - Chienne Bot',
+  ogTitle: 'Message de Bienvenue - Bot',
   ogDescription: 'Accueil personnalisé des nouveaux membres, envoi d\'embed Discord dynamique et redirection'
 });
 

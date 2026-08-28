@@ -444,8 +444,8 @@ const mockDiscordMessagePayload = computed(() => {
     id: 'mock_preview_msg',
     author: {
       id: 'bot_id',
-      username: 'Chienne',
-      displayName: 'Chienne Bot',
+      username: 'bot',
+      displayName: 'bot',
       avatarUrl: 'https://cdn.discordapp.com/embed/avatars/0.png',
       bot: true
     },

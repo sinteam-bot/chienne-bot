@@ -89,7 +89,7 @@ definePageMeta({
 useSeoMeta({
   title: 'OpenRouter & IA',
   description: 'Configuration du LLM OpenRouter et résilience IA',
-  ogTitle: 'OpenRouter & IA - Chienne Bot',
+  ogTitle: 'OpenRouter & IA - Bot',
   ogDescription: 'Configuration du LLM OpenRouter et résilience IA'
 });
 

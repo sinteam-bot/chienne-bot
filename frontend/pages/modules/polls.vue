@@ -109,7 +109,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Sondages & Votes',
   description: 'Création et résultats des votes et sondages du serveur',
-  ogTitle: 'Sondages & Votes - Chienne Bot',
+  ogTitle: 'Sondages & Votes - Bot',
   ogDescription: 'Création et résultats des votes et sondages du serveur'
 });
 

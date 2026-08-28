@@ -65,7 +65,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Sécurité API & Web',
   description: 'Gestion de l\'authentification web et sécurité API',
-  ogTitle: 'Sécurité API & Web - Chienne Bot',
+  ogTitle: 'Sécurité API & Web - Bot',
   ogDescription: 'Gestion de l\'authentification web et sécurité API'
 });
 

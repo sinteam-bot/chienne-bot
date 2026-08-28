@@ -202,7 +202,7 @@ export function generateHtmlTranscript(
       ${renderedMessages || '<div style="color: var(--text-muted); text-align: center;">Aucun message dans ce transcript.</div>'}
     </div>
     <div class="footer">
-      Généré par Chienne Bot · Dashboard
+      Généré par Bot · Dashboard
     </div>
   </div>
 </body>

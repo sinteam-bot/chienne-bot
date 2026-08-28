@@ -28,9 +28,9 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: 'Commandes d\'Information - Chienne Bot',
+  title: 'Commandes d\'Information - Bot',
   description: 'Voir les informations du serveur, d\'un membre et les avatars',
-  ogTitle: 'Commandes d\'Information - Chienne Bot',
+  ogTitle: 'Commandes d\'Information - Bot',
   ogDescription: 'Visualisez les informations du serveur, d\'un membre et les avatars depuis le dashboard.'
 });
 </script>

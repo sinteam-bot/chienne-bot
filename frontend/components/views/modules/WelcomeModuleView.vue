@@ -207,7 +207,7 @@ const presentationChannelName = computed(() => {
 const previewEmbed = computed(() => {
   const desc = (config.value?.embed?.description || 'Bienvenue !')
     .replace('{username}', 'NouveauMembre#1234')
-    .replace('{server}', guild.value?.name || 'Chienne Bot');
+    .replace('{server}', guild.value?.name || 'Bot');
 
   return {
     title: config.value?.embed?.title || 'Bienvenue !',

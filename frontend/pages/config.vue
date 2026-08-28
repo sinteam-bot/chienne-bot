@@ -67,7 +67,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Configuration Système',
   description: 'Configuration générale du bot (Tokens, Auth Web, Scheduler, OpenRouter)',
-  ogTitle: 'Configuration Système - Chienne Bot',
+  ogTitle: 'Configuration Système - Bot',
   ogDescription: 'Configuration générale du bot (Tokens, Auth Web, Scheduler, OpenRouter)'
 });
 

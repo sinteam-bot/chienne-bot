@@ -31,7 +31,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Archives & Salons',
   description: 'Explorateur de salons Discord et historique des messages',
-  ogTitle: 'Archives & Salons - Chienne Bot',
+  ogTitle: 'Archives & Salons - Bot',
   ogDescription: 'Explorateur de salons Discord et historique des messages'
 });
 

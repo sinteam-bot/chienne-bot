@@ -46,9 +46,9 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: 'Statistiques de Jeux - Chienne Bot',
+  title: 'Statistiques de Jeux - Bot',
   description: 'Statistiques des jeux Compteur et Countdown',
-  ogTitle: 'Statistiques de Jeux - Chienne Bot',
+  ogTitle: 'Statistiques de Jeux - Bot',
   ogDescription: 'Vue d\'ensemble des jeux Compteur et Countdown avec top joueurs.'
 });
 

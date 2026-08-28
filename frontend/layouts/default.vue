@@ -1,6 +1,6 @@
 <template>
   <div id="app-container" class="discord-app">
-    <!-- Barre latérale principale (Chienne Bot, Modules, Games) -->
+    <!-- Barre latérale principale (Bot, Modules, Games) -->
     <ChannelsSidebar />
 
     <!-- Zone principale de contenu injectée par la page Nuxt -->
@@ -46,10 +46,10 @@ useHead(() => {
   const pageTitle = (meta.title as string) || 'Dashboard';
   const pageDesc = (meta.description as string) || (meta.topic as string) || 'Tableau de bord Discord';
   return {
-    title: `${pageTitle} • Chienne Bot`,
+    title: `${pageTitle} • Bot`,
     meta: [
       { name: 'description', content: pageDesc },
-      { property: 'og:title', content: `${pageTitle} • Chienne Bot` },
+      { property: 'og:title', content: `${pageTitle} • Bot` },
       { property: 'og:description', content: pageDesc }
     ]
   };

@@ -16,7 +16,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Événements Discord',
   description: 'Journal et archivage en direct de tous les événements Discord (v14)',
-  ogTitle: 'Événements Discord - Chienne Bot',
+  ogTitle: 'Événements Discord - Bot',
   ogDescription: 'Journal et archivage en direct de tous les événements Discord (v14)'
 });
 </script>

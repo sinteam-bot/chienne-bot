@@ -10,7 +10,7 @@ export function useDynamicNavigation() {
   const router = useRouter();
 
   const SECTION_CONFIG: Record<string, { title: string; icon: string; order: number }> = {
-    bot: { title: 'Chienne Bot', icon: '🐕', order: 1 },
+    bot: { title: 'Bot', icon: '🐕', order: 1 },
     modules: { title: 'Modules', icon: '🧩', order: 2 },
     games: { title: 'Games', icon: '🎮', order: 3 }
   };

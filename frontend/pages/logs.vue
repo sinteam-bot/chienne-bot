@@ -113,7 +113,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Logs Console & Stats',
   description: 'Console en direct et historique des logs Discord',
-  ogTitle: 'Logs Console & Stats - Chienne Bot',
+  ogTitle: 'Logs Console & Stats - Bot',
   ogDescription: 'Console en direct et historique des logs Discord'
 });
 

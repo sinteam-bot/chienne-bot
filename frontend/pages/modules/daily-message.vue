@@ -60,7 +60,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Pensée du Jour IA',
   description: 'Génération automatique de messages quotidiens par IA et diffusion planifiée',
-  ogTitle: 'Pensée du Jour IA - Chienne Bot',
+  ogTitle: 'Pensée du Jour IA - Bot',
   ogDescription: 'Génération automatique de messages quotidiens par IA et diffusion planifiée'
 });
 

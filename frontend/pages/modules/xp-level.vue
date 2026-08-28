@@ -53,7 +53,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Système XP & Niveaux',
   description: 'Gain d\'expérience par messages et présence vocale, leaderboard et rôles de paliers',
-  ogTitle: 'Système XP & Niveaux - Chienne Bot',
+  ogTitle: 'Système XP & Niveaux - Bot',
   ogDescription: 'Gain d\'expérience par messages et présence vocale, leaderboard et rôles de paliers'
 });
 

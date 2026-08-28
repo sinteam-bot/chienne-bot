@@ -4,7 +4,7 @@
     <header class="server-header" @click="goTo('/info')">
       <div class="server-name-wrapper">
         <span class="server-badge">⭐</span>
-        <h1 class="server-name">{{ guild?.name || 'Chienne Bot' }}</h1>
+        <h1 class="server-name">{{ guild?.name || 'Bot' }}</h1>
       </div>
       <div class="server-dropdown-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">

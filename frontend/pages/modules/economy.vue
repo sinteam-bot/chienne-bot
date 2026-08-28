@@ -58,9 +58,9 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: 'Économie & Inventaire - Chienne Bot',
+  title: 'Économie & Inventaire - Bot',
   description: 'Système économique complet : monnaie, boutique, drops, échanges entre membres',
-  ogTitle: 'Économie & Inventaire - Chienne Bot',
+  ogTitle: 'Économie & Inventaire - Bot',
   ogDescription: 'Monnaie virtuelle, boutique d\'items, drops et échanges entre membres'
 });
 

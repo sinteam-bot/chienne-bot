@@ -60,7 +60,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Sécurité Captcha Anti-Raid',
   description: 'Génération de questions mathématiques en français, salons éphémères et attribution de rôle',
-  ogTitle: 'Sécurité Captcha Anti-Raid - Chienne Bot',
+  ogTitle: 'Sécurité Captcha Anti-Raid - Bot',
   ogDescription: 'Génération de questions mathématiques en français, salons éphémères et attribution de rôle'
 });
 

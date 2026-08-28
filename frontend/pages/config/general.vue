@@ -57,7 +57,7 @@ definePageMeta({
 useSeoMeta({
   title: 'Configuration Discord',
   description: 'Paramètres généraux du bot Discord',
-  ogTitle: 'Configuration Discord - Chienne Bot',
+  ogTitle: 'Configuration Discord - Bot',
   ogDescription: 'Paramètres généraux du bot Discord'
 });
 

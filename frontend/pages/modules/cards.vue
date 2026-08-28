@@ -106,13 +106,13 @@ definePageMeta({
 useSeoMeta({
   title: 'Cartes & Canvas',
   description: 'Générateur et prévisualisation des cartes de profil Discord',
-  ogTitle: 'Cartes & Canvas - Chienne Bot',
+  ogTitle: 'Cartes & Canvas - Bot',
   ogDescription: 'Générateur et prévisualisation des cartes de profil Discord'
 });
 
 const guildId = ref('1234567890');
 const userId = ref('987654321');
-const server = ref('Chienne Test');
+const server = ref('Bot');
 const level = ref(5);
 
 const welcomePayload = computed(() => ({
@@ -151,7 +151,7 @@ const giveawayPayload = computed(() => ({
 }));
 
 const genericPayload = computed(() => ({
-  title: 'Chienne Bot',
+  title: 'Bot',
   subtitle: 'Une démo du template générique',
   color1: '#5865f2',
   color2: '#f2c7ce'

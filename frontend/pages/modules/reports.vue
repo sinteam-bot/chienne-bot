@@ -38,9 +38,9 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: 'Signalements - Chienne Bot',
+  title: 'Signalements - Bot',
   description: 'Système de signalements de la communauté',
-  ogTitle: 'Signalements - Chienne Bot',
+  ogTitle: 'Signalements - Bot',
   ogDescription: 'Les membres peuvent signaler des messages ou des utilisateurs. Le staff gère la file d\'attente.'
 });
 
