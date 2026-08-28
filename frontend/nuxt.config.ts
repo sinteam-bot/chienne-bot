@@ -15,15 +15,15 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Chienne Bot - Interface Discord',
-      titleTemplate: '%s · Chienne Bot',
+      title: 'Bot - Interface Discord',
+      titleTemplate: '%s · Bot',
       htmlAttrs: {
         lang: 'fr'
       },
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
-        { name: 'description', content: 'Interface Web Discord pour Chienne Bot' }
+        { name: 'description', content: 'Interface Web Discord pour Bot' }
       ],
       link: [
         { rel: 'icon', type: 'image/png', href: '/api/proxy/image?url=https%3A%2F%2Fcdn.discordapp.com%2Fembed%2Favatars%2F0.png' },
