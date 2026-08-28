@@ -64,5 +64,21 @@ export const useReactionRoles = () => {
     return res;
   }
 
-  return { list, create, update, remove, removeBulk };
+  async function createButton(payload: any): Promise<{ success: boolean; data?: ReactionRole; error?: string }> {
+    const res = await api.apiFetch<{ success: boolean; data: ReactionRole; error?: string }>('/api/reaction-roles/button', {
+      method: 'POST',
+      body: payload
+    });
+    return res;
+  }
+
+  async function createSelect(payload: any): Promise<{ success: boolean; data?: ReactionRole; error?: string }> {
+    const res = await api.apiFetch<{ success: boolean; data: ReactionRole; error?: string }>('/api/reaction-roles/select', {
+      method: 'POST',
+      body: payload
+    });
+    return res;
+  }
+
+  return { list, create, update, remove, removeBulk, createButton, createSelect };
 };

@@ -28,7 +28,14 @@
             class="module-tab-btn"
             :class="{ active: isTabActive('/modules/reaction-roles/roles') }"
           >
-            <span>🎭</span> Rôles configurés
+            <span>🎭</span> Réactions
+          </NuxtLink>
+          <NuxtLink
+            to="/modules/reaction-roles/components"
+            class="module-tab-btn"
+            :class="{ active: isTabActive('/modules/reaction-roles/components') }"
+          >
+            <span>🔘</span> Buttons &amp; Selects
           </NuxtLink>
           <NuxtLink
             to="/modules/reaction-roles/config"
