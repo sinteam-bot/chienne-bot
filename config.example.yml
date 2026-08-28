@@ -610,6 +610,33 @@ engagement-advanced:
     prefix: "!"                     # préfixe des commandes custom (ex: !bienvenue)
 
 # ==============================================================================
+# CONFIGURATION DES SIGNALEMENTS (Phase 12)
+# ==============================================================================
+# Système de signalements de la communauté (bouton + context menu).
+# Anti-spam : cooldown 5 min entre deux reports, max 5 ouverts par cible.
+#
+# Activer via le dashboard /features ou features.reports.enabled = true
+reports:
+  enabled: false
+  allowed_roles: []            # Discord roles autorisés à gérer (sinon ManageMessages)
+  report_channel_id: null      # salon où poster la file d'attente
+  log_channel_id: null         # salon optionnel pour le log
+  cooldown_seconds: 300         # entre deux reports du même user
+  max_open_per_user: 5          # max reports ouverts contre la même cible
+  dm_on_resolve: true           # DM le reporter quand son report est résolu
+  categories:                  # catégories disponibles dans le modal
+    - id: spam
+      label: "📧 Spam / Pub"
+    - id: harassment
+      label: "⚠️ Harcèlement"
+    - id: inappropriate
+      label: "🔞 Contenu inapproprié"
+    - id: misinformation
+      label: "❌ Désinformation"
+    - id: other
+      label: "❓ Autre"
+
+# ==============================================================================
 # CONFIGURATION DES ANNIVERSAIRES (Phase 7)
 # ==============================================================================
 # Système d'anniversaires conforme à Draftbot : mode public/privé,
