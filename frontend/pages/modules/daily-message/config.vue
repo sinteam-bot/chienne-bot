@@ -63,15 +63,17 @@
       </div>
     </div>
 
-    <!-- Modèles de Secours & Politique de Réessai Style Polly -->
-    <div class="config-card">
-      <OpenRouterFallbackManager
-        :fallback-models="config.openrouter?.fallback_models || []"
-        :retry-policy="config.openrouter?.retry_policy || {}"
-        @update:fallback-models="onUpdateFallbackModels"
-        @update:retry-policy="onUpdateRetryPolicy"
-        @save="saveModuleConfig"
-      />
+    <!-- Info sur la Résilience Globale OpenRouter -->
+    <div class="config-card" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+      <div>
+        <div class="card-subtitle" style="margin-bottom: 4px;">🛡️ Résilience IA & Modèles de Secours</div>
+        <p class="config-desc" style="margin: 0;">
+          La politique de réessai globale (Polly, Jitter, Backoff) et la liste ordonnée des modèles de secours sont centralisées dans la configuration globale.
+        </p>
+      </div>
+      <NuxtLink to="/config/openrouter" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 8px 14px; font-size: 13px; border-radius: 6px;">
+        <span>⚙️</span> Gérer OpenRouter & Fallbacks
+      </NuxtLink>
     </div>
   </div>
 </template>
@@ -82,7 +84,6 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 import OpenRouterModelSelect from '~/components/common/OpenRouterModelSelect.vue';
-import OpenRouterFallbackManager from '~/components/common/OpenRouterFallbackManager.vue';
 
 definePageMeta({
   title: 'Configuration & IA',
@@ -111,22 +112,8 @@ const config = ref<any>({
   prompt: '',
   ai_config: {
     model: 'nvidia/nemotron-3-ultra-550b-a55b:free'
-  },
-  openrouter: {
-    fallback_models: [],
-    retry_policy: {}
   }
 });
-
-function onUpdateFallbackModels(models: string[]) {
-  config.value.openrouter = config.value.openrouter || {};
-  config.value.openrouter.fallback_models = models;
-}
-
-function onUpdateRetryPolicy(policy: any) {
-  config.value.openrouter = config.value.openrouter || {};
-  config.value.openrouter.retry_policy = policy;
-}
 
 async function loadConfig() {
   try {
@@ -141,9 +128,6 @@ async function loadConfig() {
             ...(res.data.daily_message.ai_config || {})
           }
         };
-      }
-      if (res.data.openrouter) {
-        config.value.openrouter = res.data.openrouter;
       }
     }
   } catch (err) {
@@ -161,16 +145,6 @@ async function saveModuleConfig() {
         config: config.value
       }
     });
-
-    if (config.value.openrouter) {
-      await apiFetch<{ success: boolean }>('/api/config', {
-        method: 'POST',
-        body: {
-          module: 'openrouter',
-          config: config.value.openrouter
-        }
-      });
-    }
 
     if (resDaily.success) {
       showToast('Configuration Daily Message sauvegardée !', 'success');

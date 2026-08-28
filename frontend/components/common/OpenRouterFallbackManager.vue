@@ -69,19 +69,24 @@
     </div>
 
     <!-- Modale d'ajout de modèle de secours -->
-    <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal = false">
-      <div class="modal-card">
-        <h4 style="margin: 0 0 12px 0;">Sélectionner un modèle à ajouter aux secours</h4>
-        <OpenRouterModelSelect
-          v-model="newModelToAdd"
-          placeholder="Choisir un modèle..."
-        />
-        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-          <button class="action-btn" @click="showAddModal = false">Annuler</button>
-          <button class="btn-primary" :disabled="!newModelToAdd" @click="confirmAddModel">Ajouter</button>
+    <Teleport to="body">
+      <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal = false">
+        <div class="modal-card fallback-modal-card">
+          <h4 style="margin: 0 0 14px 0; font-size: 16px; font-weight: 700; color: var(--header-primary);">➕ Ajouter un modèle de secours</h4>
+          <p style="margin: 0 0 14px 0; font-size: 13px; color: var(--text-muted);">
+            Sélectionnez un modèle LLM alternatif qui sera appelé en cascade si le modèle précédent rencontre une erreur ou un quota épuisé.
+          </p>
+          <OpenRouterModelSelect
+            v-model="newModelToAdd"
+            placeholder="Choisir un modèle OpenRouter..."
+          />
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button type="button" class="action-btn" @click="showAddModal = false">Annuler</button>
+            <button type="button" class="btn-primary" :disabled="!newModelToAdd" @click="confirmAddModel">Ajouter à la liste</button>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
     <div class="form-divider"></div>
 
@@ -415,19 +420,25 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  z-index: 9999;
+  padding: 10vh 16px 40px;
+  overflow-y: auto;
+  z-index: 99999;
+  backdrop-filter: blur(4px);
 }
 
-.modal-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+.modal-card.fallback-modal-card {
+  background: var(--bg-primary, #2b2d31);
+  border: 1px solid var(--border-color, #3f4147);
   border-radius: 8px;
   padding: 24px;
-  width: 90%;
-  max-width: 500px;
+  width: 100%;
+  max-width: 560px;
+  overflow: visible !important;
+  position: relative;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 </style>

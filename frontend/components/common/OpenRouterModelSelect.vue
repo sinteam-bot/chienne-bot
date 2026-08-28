@@ -322,14 +322,15 @@ onBeforeUnmount(() => {
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 100000;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  max-height: 420px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+  max-height: 380px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .dropdown-header {
