@@ -111,7 +111,8 @@ export function useAppState() {
     { id: 'module-polls', name: 'Sondages & Votes', icon: '🗳️', routePath: '/modules/polls', section: 'modules', topic: 'Création et résultats des votes et sondages du serveur' },
     { id: 'module-tickets', name: 'Tickets de Support', icon: '🎫', routePath: '/modules/tickets', section: 'modules', topic: 'Gestion des tickets de support, transcripts et réglages du panel' },
     { id: 'module-cards', name: 'Cartes & Canvas', icon: '🃏', routePath: '/modules/cards', section: 'modules', topic: 'Générateur et prévisualisation des cartes de profil Discord' },
-    { id: 'module-reaction-roles', name: 'Rôles à Réaction', icon: '🎭', routePath: '/modules/reaction-roles', section: 'modules', topic: 'Attribution automatique de rôles via réactions sur un message' }
+    { id: 'module-reaction-roles', name: 'Rôles à Réaction', icon: '🎭', routePath: '/modules/reaction-roles', section: 'modules', topic: 'Attribution automatique de rôles via réactions sur un message' },
+    { id: 'module-economy', name: 'Économie & Inventaire', icon: '💰', routePath: '/modules/economy', section: 'modules', topic: 'Monnaie virtuelle, boutique d\'items, drops et échanges entre membres' }
   ];
 
   const GAME_SECTION_ITEMS: ChannelItem[] = [
