@@ -115,7 +115,8 @@ export function useAppState() {
     { id: 'module-economy', name: 'Économie & Inventaire', icon: '💰', routePath: '/modules/economy', section: 'modules', topic: 'Monnaie virtuelle, boutique d\'items, drops et échanges entre membres' },
     { id: 'module-sticky-roles', name: 'Rôles Sticky', icon: '🎭', routePath: '/modules/sticky-roles', section: 'modules', topic: 'Rôles automatiquement ré-attribués aux membres à leur retour' },
     { id: 'module-info', name: 'Commandes d\'Information', icon: 'ℹ️', routePath: '/modules/info', section: 'modules', topic: '/serverinfo, /userinfo, /avatar et leur équivalent dashboard' },
-    { id: 'module-games-stats', name: 'Statistiques de Jeux', icon: '🎮', routePath: '/modules/games-stats', section: 'modules', topic: 'Compteur et Countdown — état en temps réel et top joueurs' }
+    { id: 'module-games-stats', name: 'Statistiques de Jeux', icon: '🎮', routePath: '/modules/games-stats', section: 'modules', topic: 'Compteur et Countdown — état en temps réel et top joueurs' },
+    { id: 'module-engagement-advanced', name: 'Engagement Avancé', icon: '📌', routePath: '/modules/engagement-advanced', section: 'modules', topic: 'Rappels DM, déclencheurs de mots et commandes personnalisées' }
   ];
 
   const GAME_SECTION_ITEMS: ChannelItem[] = [

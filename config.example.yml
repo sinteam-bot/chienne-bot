@@ -587,6 +587,29 @@ engagement:
     show_results_after_vote: true
 
 # ==============================================================================
+# CONFIGURATION DE L'ENGAGEMENT AVANCÉ (Phase 11)
+# ==============================================================================
+# Trois sous-features : rappels DM, déclencheurs de mots (auto-réponses),
+# commandes personnalisées (préfixe !).
+#
+# Activer via le dashboard /features ou features.engagement-advanced.enabled = true
+engagement-advanced:
+  enabled: true
+  allowed_roles: []
+
+  reminders:
+    default_cooldown_seconds: 5   # entre deux /remind par user
+    max_per_user: 20               # limite dure de rappels actifs par user
+
+  word_triggers:
+    default_cooldown_seconds: 10   # entre deux déclenchements du même trigger
+    default_match_type: exact       # 'exact' | 'contains' | 'regex' (regex = V2)
+
+  custom_commands:
+    default_cooldown_seconds: 5
+    prefix: "!"                     # préfixe des commandes custom (ex: !bienvenue)
+
+# ==============================================================================
 # CONFIGURATION DES ANNIVERSAIRES (Phase 7)
 # ==============================================================================
 # Système d'anniversaires conforme à Draftbot : mode public/privé,
