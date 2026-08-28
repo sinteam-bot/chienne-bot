@@ -52,13 +52,18 @@ export interface EconomyTransaction {
 export const useEconomy = () => {
   const api = useDiscordApi();
 
-  async function getBalance(userId: string, guildId?: string): Promise<EconomyBalance> {
+  async function getBalance(userId: string, guildId?: string): Promise<EconomyBalance | null> {
+    if (!userId) return null;
     const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
-    const res = await api.apiFetch<{ success: boolean; data: EconomyBalance }>(`/api/economy/balance/${userId}${qs}`);
-    return res.data;
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: EconomyBalance }>(`/api/economy/balance/${userId}${qs}`);
+      return res?.data || null;
+    } catch {
+      return null;
+    }
   }
 
-  async function claimDaily(payload: { guildId: string; userId: string }): Promise<{ success: boolean; data?: any; error?: string }> {
+  async function claimDaily(payload: { guildId?: string; userId: string }): Promise<{ success: boolean; data?: any; error?: string }> {
     const res = await api.apiFetch<{ success: boolean; data: any; error?: string }>('/api/economy/daily', {
       method: 'POST',
       body: payload
@@ -66,7 +71,7 @@ export const useEconomy = () => {
     return res;
   }
 
-  async function pay(payload: { guildId: string; fromUserId: string; toUserId: string; amount: number }): Promise<{ success: boolean; data?: any; error?: string }> {
+  async function pay(payload: { guildId?: string; fromUserId: string; toUserId: string; amount: number }): Promise<{ success: boolean; data?: any; error?: string }> {
     const res = await api.apiFetch<{ success: boolean; data?: any; error?: string }>('/api/economy/pay', {
       method: 'POST',
       body: payload
@@ -76,31 +81,48 @@ export const useEconomy = () => {
 
   async function getLeaderboard(guildId?: string, limit = 50): Promise<EconomyBalance[]> {
     const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}&limit=${limit}` : `?limit=${limit}`;
-    const res = await api.apiFetch<{ success: boolean; data: EconomyBalance[] }>(`/api/economy/leaderboard${qs}`);
-    return res.data;
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: EconomyBalance[] }>(`/api/economy/leaderboard${qs}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
   async function getTransactions(userId: string, guildId?: string): Promise<EconomyTransaction[]> {
+    if (!userId) return [];
     const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
-    const res = await api.apiFetch<{ success: boolean; data: EconomyTransaction[] }>(`/api/economy/transactions/${userId}${qs}`);
-    return res.data;
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: EconomyTransaction[] }>(`/api/economy/transactions/${userId}${qs}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
   // Shop
   async function listShop(guildId?: string): Promise<ShopItem[]> {
     const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
-    const res = await api.apiFetch<{ success: boolean; data: ShopItem[] }>(`/api/shop${qs}`);
-    return res.data;
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: ShopItem[] }>(`/api/shop${qs}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
-  async function createShopItem(payload: Partial<ShopItem> & { guildId: string; name: string; price: number }): Promise<{ success: boolean; data?: ShopItem; error?: string }> {
+  async function createShopItem(payload: Partial<ShopItem> & { guildId?: string; name: string; price: number }): Promise<{ success: boolean; data?: ShopItem; error?: string }> {
     const res = await api.apiFetch<{ success: boolean; data?: ShopItem; error?: string }>('/api/shop', { method: 'POST', body: payload });
     return res;
   }
 
-  async function updateShopItem(id: string, patch: Partial<ShopItem>): Promise<ShopItem> {
-    const res = await api.apiFetch<{ success: boolean; data: ShopItem }>(`/api/shop/${id}`, { method: 'PATCH', body: patch });
-    return res.data;
+  async function updateShopItem(id: string, patch: Partial<ShopItem>): Promise<ShopItem | null> {
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: ShopItem }>(`/api/shop/${id}`, { method: 'PATCH', body: patch });
+      return res?.data || null;
+    } catch {
+      return null;
+    }
   }
 
   async function deleteShopItem(id: string): Promise<{ success: boolean }> {
@@ -110,17 +132,22 @@ export const useEconomy = () => {
 
   // Inventory
   async function getInventory(userId: string, guildId?: string): Promise<InventoryEntry[]> {
+    if (!userId) return [];
     const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
-    const res = await api.apiFetch<{ success: boolean; data: InventoryEntry[] }>(`/api/inventory/${userId}${qs}`);
-    return res.data;
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: InventoryEntry[] }>(`/api/inventory/${userId}${qs}`);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   }
 
-  async function adminAddItem(payload: { guildId: string; userId: string; itemId: string; quantity?: number }): Promise<{ success: boolean; data?: any; error?: string }> {
+  async function adminAddItem(payload: { guildId?: string; userId: string; itemId: string; quantity?: number }): Promise<{ success: boolean; data?: any; error?: string }> {
     const res = await api.apiFetch<{ success: boolean; data?: any; error?: string }>('/api/inventory/give', { method: 'POST', body: payload });
     return res;
   }
 
-  async function resetInventory(payload: { guildId: string; userId: string }): Promise<{ success: boolean }> {
+  async function resetInventory(payload: { guildId?: string; userId: string }): Promise<{ success: boolean }> {
     const res = await api.apiFetch<{ success: boolean }>('/api/inventory/reset', { method: 'POST', body: payload });
     return res;
   }

@@ -133,12 +133,14 @@ async function load() {
       economy.getLeaderboard(undefined, 50)
     ]);
     config.value = state?.state?.config || state?.config || null;
-    leaderboard.value = lb || [];
+    leaderboard.value = Array.isArray(lb) ? lb : [];
     // Pour le compteur d'items, on fait un appel séparé au shop
     try {
       const shop = await economy.listShop();
-      shopCount.value = shop.length;
-    } catch {}
+      shopCount.value = Array.isArray(shop) ? shop.length : 0;
+    } catch {
+      shopCount.value = 0;
+    }
   } catch (e: any) {
     error.value = e.message || 'Erreur inconnue';
   } finally {

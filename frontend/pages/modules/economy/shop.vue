@@ -107,7 +107,10 @@ const canCreate = computed(() => form.value.name.length > 0 && form.value.price 
 async function load() {
   loading.value = true;
   try {
-    items.value = await economy.listShop();
+    const res = await economy.listShop();
+    items.value = Array.isArray(res) ? res : [];
+  } catch {
+    items.value = [];
   } finally {
     loading.value = false;
   }
