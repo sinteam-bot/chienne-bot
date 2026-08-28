@@ -719,6 +719,24 @@ economy:
   history_retention_days: 90  # rétention des transactions avant éligibilité au cleanup
 
 # ==============================================================================
+# CONFIGURATION DES SALONS VOCAUX TEMPORAIRES (Phase 12b)
+# ==============================================================================
+# Système Join-to-Create : un user qui entre dans un Join-to-Trigger
+# channel se voit créer automatiquement un salon vocal privé.
+# Le salon est supprimé quand il devient vide (après delete_delay_seconds).
+#
+# Activer via le dashboard /features ou features.temp-voice.enabled = true
+temp-voice:
+  enabled: false
+  allowed_roles: []                 # Discord roles autorisés à override
+  join_channels: []                 # IDs des Join-to-Trigger channels
+  category_id: null                 # Catégorie parente (ou root si null)
+  format: "{user}'s game"           # Template du nom ({user} | {username})
+  delete_delay_seconds: 5           # Délai avant suppression d'un salon vide
+  max_per_guild: 0                  # Limite dure (0 = illimité, anti-spam)
+  locked_role_id: null              # Role optionnel ajouté au salon créé
+
+# ==============================================================================
 # CONFIGURATION DES RÔLES STICKY (Phase 8.2)
 # ==============================================================================
 # Les rôles sticky sont ré-attribués automatiquement aux membres
