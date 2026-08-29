@@ -107,6 +107,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import { useCaptcha } from '~/composables/useCaptcha';
 import DiscordTime from '~/components/common/DiscordTime.vue';
 import DiscordUser from '~/components/common/DiscordUser.vue';
 
@@ -125,23 +126,19 @@ useSeoMeta({
   ogDescription: 'Statistiques de vérification anti-raid et taux de réussite'
 });
 
-const { apiFetch } = useDiscordApi();
+
+const { getFullData } = useCaptcha();
 
 const logs = ref<any[]>([]);
+const stats = ref({ total: 0, verifiedCount: 0, pendingCount: 0, failedCount: 0, successRate: 0 });
 const isLoading = ref(true);
 
-const verifiedCount = computed(() => logs.value.filter(l => l.verified).length);
-const failedCount = computed(() => logs.value.filter(l => l.status === 'failed' || (!l.verified && l.attempts >= 3)).length);
-const pendingCount = computed(() => logs.value.filter(l => !l.verified && l.status !== 'failed' && (l.attempts || 0) < 3).length);
+const verifiedCount = computed(() => stats.value.verifiedCount);
+const failedCount = computed(() => stats.value.failedCount);
+const pendingCount = computed(() => stats.value.pendingCount);
+const successRate = computed(() => stats.value.successRate);
 
-const successRate = computed(() => {
-  if (logs.value.length === 0) return 100;
-  return Math.round((verifiedCount.value / logs.value.length) * 100);
-});
-
-const recentLogs = computed(() => {
-  return logs.value.slice(0, 5);
-});
+const recentLogs = computed(() => logs.value.slice(0, 5));
 
 function formatDate(dateStr: string) {
   if (!dateStr) return '—';
@@ -161,10 +158,9 @@ function formatDate(dateStr: string) {
 async function loadLogs() {
   isLoading.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; data: any[] }>('/api/security-question/logs');
-    if (res.success && Array.isArray(res.data)) {
-      logs.value = res.data;
-    }
+    const data = await getFullData();
+    logs.value = data.captchas || [];
+    stats.value = data.stats || stats.value;
   } catch (err) {
     console.error('Erreur chargement logs captcha:', err);
   } finally {

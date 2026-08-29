@@ -301,9 +301,10 @@ function formatDateTime(dateStr: string) {
 async function loadCaptchaLogs() {
   isLoading.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; data: any[] }>('/api/security-question/logs');
-    if (res.success && Array.isArray(res.data)) {
-      logs.value = res.data;
+    const res = await apiFetch<{ success: boolean; data: any }>('/api/security-question/logs');
+    if (res.success && res.data) {
+      // L'API renvoie { stats, config, captchas, logs } : on prend `captchas`.
+      logs.value = Array.isArray(res.data.captchas) ? res.data.captchas : [];
     }
   } catch (err: any) {
     showToast('Erreur chargement logs: ' + err.message, 'error');

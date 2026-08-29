@@ -61,6 +61,7 @@
 import { ref, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
+import { useCaptcha } from '~/composables/useCaptcha';
 import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 
 definePageMeta({
@@ -79,6 +80,7 @@ useSeoMeta({
 });
 
 const { apiFetch } = useDiscordApi();
+const { getFullData, updateConfig: saveConfig, getGuildId: fetchGuildId } = useCaptcha();
 const { showToast } = useToast();
 
 const isSaving = ref(false);
@@ -93,11 +95,14 @@ const config = ref<any>({
 
 async function loadConfig() {
   try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.security_question) {
+    const data = await getFullData();
+    // Mappe la config de l'API vers le format local
+    if (data.config) {
       config.value = {
-        ...config.value,
-        ...res.data.security_question
+        enabled: data.config.isEnabled,
+        verified_role_id: data.config.verifiedRoleId || '',
+        captcha_timeout: data.config.timeoutMinutes || 10,
+        max_attempts: data.config.maxAttempts || 3
       };
     }
   } catch (err) {
@@ -108,18 +113,22 @@ async function loadConfig() {
 async function saveModuleConfig() {
   isSaving.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: {
-        module: 'security_question',
-        config: config.value
+    const guildId = await fetchGuildId();
+    if (!guildId) {
+      showToast('Aucun serveur détecté', 'error');
+      return;
+    }
+    await saveConfig(guildId, {
+      enabled: config.value.enabled,
+      config: {
+        verified_role_id: config.value.verified_role_id,
+        captcha_timeout: config.value.captcha_timeout,
+        max_attempts: config.value.max_attempts
       }
     });
-    if (res.success) {
-      showToast('Configuration Captcha sauvegardée avec succès !', 'success');
-    } else {
-      showToast('Erreur de sauvegarde', 'error');
-    }
+    showToast('Configuration Captcha sauvegardée avec succès !', 'success');
+    // Recharger pour synchroniser
+    await loadConfig();
   } catch (err: any) {
     showToast('Erreur: ' + err.message, 'error');
   } finally {
