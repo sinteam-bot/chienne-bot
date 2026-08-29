@@ -170,10 +170,9 @@ async function load() {
   loading.value = true;
   error.value = null;
   try {
-    const params = new URLSearchParams(window.location.search);
-    const guildId = params.get('guild_id') || '';
+    const guildId = await invites.getGuildId();
     if (!guildId) {
-      error.value = 'Aucun serveur sélectionné. Spécifiez ?guild_id=... dans l\'URL.';
+      error.value = 'Aucun serveur détecté. Configurez discord.guild_id dans config.yml.';
       leaderboard.value = [];
       return;
     }

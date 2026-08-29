@@ -51,11 +51,15 @@
         </div>
       </div>
 
-      <div v-if="!config" class="config-card" style="text-align: center; color: var(--text-muted); padding: 32px;">
+      <div v-if="!config && configLoading" class="config-card" style="text-align: center; color: var(--text-muted); padding: 32px;">
         ⏳ Chargement de la configuration du feature…
       </div>
 
-      <NuxtPage v-else />
+      <div v-if="configError" class="config-card" style="text-align: center; color: var(--red); padding: 16px;">
+        ❌ {{ configError }}
+      </div>
+
+      <NuxtPage v-show="config" />
     </div>
   </div>
 </template>
@@ -84,26 +88,26 @@ const route = useRoute();
 const invites = useInvites();
 
 const config = ref<any>(null);
+const configLoading = ref(false);
+const configError = ref<string | null>(null);
 const guildId = ref<string>('');
 
 async function loadConfig() {
+  configLoading.value = true;
+  configError.value = null;
   try {
-    // Le guildId est passé via query param (configuré globalement par l'app)
-    const params = new URLSearchParams(window.location.search);
-    guildId.value = params.get('guild_id') || '';
+    guildId.value = await invites.getGuildId();
     if (!guildId.value) {
-      // Fallback : essayer via /api/features qui retourne la liste
-      const featuresRes = await fetch('/api/features');
-      if (featuresRes.ok) {
-        const data = await featuresRes.json();
-        guildId.value = data?.default_guild_id || '';
-      }
+      configError.value = 'Aucun serveur détecté. Configurez discord.guild_id dans config.yml ou utilisez le sélecteur de guilde.';
+      config.value = null;
+      return;
     }
-    if (guildId.value) {
-      config.value = await invites.getConfig(guildId.value);
-    }
-  } catch (e) {
+    config.value = await invites.getConfig(guildId.value);
+  } catch (e: any) {
+    configError.value = e.message || 'Erreur inconnue';
     console.warn('Impossible de charger la config invites:', e);
+  } finally {
+    configLoading.value = false;
   }
 }
 
