@@ -57,20 +57,32 @@ export const useCaptcha = () => {
   }
 
   /**
-   * Met à jour la configuration du captcha via PATCH /api/features/security_question.
-   * Le backend persiste en base de données (table feature_flags).
+   * Récupère la configuration du feature captcha pour une guilde donnée.
+   * Endpoint : GET /api/config/{guildId}/captcha
    */
-  async function updateConfig(guildId: string, patch: Partial<{
-    enabled: boolean;
-    config: Partial<CaptchaConfig>;
-  }>): Promise<void> {
-    await api.apiFetch<{ success: boolean; data: any }>(
-      `/api/features/security_question`,
+  async function getModuleConfig(guildId?: string): Promise<any> {
+    const gid = guildId || await getGuildId();
+    if (!gid) return null;
+    const res = await api.apiFetch<{ success: boolean; data: any }>(
+      `/api/config/${encodeURIComponent(gid)}/captcha`
+    );
+    return res.data;
+  }
+
+  /**
+   * Met à jour la configuration du captcha pour une guilde donnée.
+   * Endpoint : PATCH /api/config/{guildId}/captcha
+   * Écrit dans data/{guildId}/captcha.config.yml.
+   */
+  async function updateConfig(guildId: string, patch: any): Promise<any> {
+    const res = await api.apiFetch<{ success: boolean; data: any }>(
+      `/api/config/${encodeURIComponent(guildId)}/captcha`,
       {
         method: 'PATCH',
-        body: { guildId, ...patch }
+        body: patch
       }
     );
+    return res.data;
   }
 
   /**
@@ -92,5 +104,5 @@ export const useCaptcha = () => {
     }
   }
 
-  return { getFullData, updateConfig, getGuildId };
+  return { getFullData, getModuleConfig, updateConfig, getGuildId };
 };

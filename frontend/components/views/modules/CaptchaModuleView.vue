@@ -448,10 +448,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
+import { useCaptcha } from '~/composables/useCaptcha.ts';
 import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
+const { getGuildId, getModuleConfig, updateConfig } = useCaptcha();
 
 const activeSubTab = ref<'stats' | 'config'>('stats');
 const logs = ref<any[]>([]);
@@ -504,9 +506,17 @@ async function loadCaptchaLogs() {
 
 async function loadModuleConfig() {
   try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.captcha) {
-      config.value = res.data.captcha;
+    const guildId = await getGuildId();
+    if (!guildId) return;
+    const data = await getModuleConfig(guildId);
+    if (data) {
+      config.value = {
+        enabled: data.enabled !== undefined ? data.enabled : true,
+        verified_role_id: data.verified_role_id || data.verifiedRoleId || '',
+        captcha_channel_name: data.captcha_channel_name || '✅-verification-captcha',
+        captcha_timeout: data.captcha_timeout || data.timeoutMinutes || 10,
+        max_attempts: data.max_attempts || data.maxAttempts || 3
+      };
     }
   } catch (err) {
     console.error('Erreur config captcha:', err);
@@ -516,16 +526,13 @@ async function loadModuleConfig() {
 async function saveModuleConfig() {
   isSaving.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: JSON.stringify({
-        module: 'captcha',
-        config: config.value
-      })
-    });
-    if (res.success) {
-      showToast('Configuration Captcha enregistrée dans config.yml !', 'success');
+    const guildId = await getGuildId();
+    if (!guildId) {
+      showToast('Aucun serveur sélectionné', 'error');
+      return;
     }
+    await updateConfig(guildId, config.value);
+    showToast(`Configuration Captcha enregistrée dans data/${guildId}/captcha.config.yml !`, 'success');
   } catch (err: any) {
     showToast(`Erreur de sauvegarde: ${err.message}`, 'error');
   } finally {
