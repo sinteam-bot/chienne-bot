@@ -233,6 +233,19 @@
           </div>
         </div>
 
+        <div class="form-divider"></div>
+
+        <div class="config-item">
+          <div class="config-label-group">
+            <label class="config-label">Version texte des opérateurs (plus / moins / fois)</label>
+            <span class="config-hint">Remplace les symboles "+", "-", "*" par "plus", "moins", "fois" dans l'énoncé du captcha.</span>
+          </div>
+          <label class="switch">
+            <input v-model="config.use_word_operators" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
         <div class="config-actions-bar">
           <button class="btn-primary" :disabled="isSaving" @click="saveModuleConfig">
             {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Configuration Captcha' }}
