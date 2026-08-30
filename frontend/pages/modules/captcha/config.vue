@@ -2,14 +2,14 @@
   <div style="display: flex; flex-direction: column; gap: 20px;">
     <!-- Paramètres Généraux -->
     <div class="config-card">
-      <div class="card-subtitle">⚙️ Paramètres du Captcha Mathématique</div>
+      <div class="card-subtitle">⚙️ Paramètres du Captcha</div>
       <p class="config-desc">
         Configurez le comportement du salon temporaire, les rôles attribués et les règles de sécurité.
       </p>
 
       <div class="config-item">
         <div class="config-label-group">
-          <label class="config-label">Activer le Captcha Mathématique</label>
+          <label class="config-label">Activer le Captcha</label>
           <span class="config-hint">Crée automatiquement un salon temporaire dédié à chaque nouveau membre pour vérifier qu'il est humain.</span>
         </div>
         <label class="switch">
@@ -66,8 +66,70 @@
       </div>
     </div>
 
-    <!-- Formulation & Opérateurs Textuels -->
+    <!-- Mode de Captcha -->
     <div class="config-card">
+      <div class="card-subtitle">🎯 Mode de Vérification</div>
+      <p class="config-desc">
+        Choisissez la méthode de vérification présentée aux nouveaux membres. Chaque mode a ses prérequis.
+      </p>
+
+      <div class="form-row">
+        <div class="col-full">
+          <label class="form-label">Type de captcha</label>
+          <select v-model="config.captcha_type" class="discord-input discord-select">
+            <option value="math">🧮 Math — Calcul arithmétique en texte (par défaut)</option>
+            <option value="image">🖼️ Image — Reconnaissance de texte sur image PNG (requiert canvas)</option>
+            <option value="web">🌐 Web — Page hCaptcha externe (requiert HCAPTCHA_SITE_KEY + HCAPTCHA_SECRET)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Encadré d'aperçu / prérequis par mode -->
+      <div class="preview-box" style="margin-top: 14px;">
+        <div class="preview-title">ℹ️ Comportement selon le mode sélectionné :</div>
+        <div v-if="config.captcha_type === 'math'" class="preview-text">
+          <strong>🧮 Math :</strong> le membre reçoit « Combien font 7 + 5 ? » et doit répondre par le chiffre.
+          <div class="preview-hint">Aucun prérequis. Toujours fonctionnel. Recommandé pour démarrer.</div>
+        </div>
+        <div v-else-if="config.captcha_type === 'image'" class="preview-text">
+          <strong>🖼️ Image :</strong> le membre voit une image avec un texte déformé et doit le recopier.
+          <div class="preview-hint">
+            Prérequis : la bibliothèque <code>canvas</code> doit être installée (<code>npm install canvas</code>).
+            Si absente, le bot fallback automatiquement sur le mode math.
+          </div>
+        </div>
+        <div v-else-if="config.captcha_type === 'web'" class="preview-text">
+          <strong>🌐 Web :</strong> le membre clique sur un bouton qui ouvre une page web avec hCaptcha,
+          puis colle le token de validation dans Discord.
+          <div class="preview-hint">
+            Prérequis : <code>HCAPTCHA_SITE_KEY</code> et <code>HCAPTCHA_SECRET</code> dans <code>.env</code>,
+            et <code>WEB_BASE_URL</code> doit pointer sur l'URL publique HTTPS du bot.
+            Si une variable manque, fallback sur math.
+          </div>
+        </div>
+      </div>
+
+      <!-- Accessibilité audio (uniquement pertinente pour math) -->
+      <div class="config-item" style="margin-top: 18px;">
+        <div class="config-label-group">
+          <label class="config-label">🔊 Accessibilité audio (TTS) — uniquement pour le mode Math</label>
+          <span class="config-hint">
+            Attache un fichier WAV au message d'accueil qui prononce la question mathématique.
+            Le membre peut l'écouter localement s'il a des difficultés de lecture.
+            <span v-if="config.captcha_type !== 'math'">
+              <br><em style="color: var(--text-muted);">⚠️ Non applicable aux modes image / web (ignoré).</em>
+            </span>
+          </span>
+        </div>
+        <label class="switch" :class="{ disabled: config.captcha_type !== 'math' }">
+          <input v-model="config.audio_accessibility" type="checkbox" :disabled="config.captcha_type !== 'math'" />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Formulation & Opérateurs Textuels (uniquement pertinent pour math) -->
+    <div class="config-card" v-show="config.captcha_type === 'math' || config.captcha_type === undefined">
       <div class="card-subtitle">🔢 Formulation &amp; Opérateurs Mathématiques</div>
       <p class="config-desc">
         Personnalisez la façon dont les calculs sont énoncés aux nouveaux membres.
@@ -134,21 +196,23 @@ import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 definePageMeta({
   title: 'Configuration',
   icon: '⚙️',
-  description: 'Configuration du rôle vérifié, timeout et règles de sécurité',
+  description: 'Configuration du captcha : mode, rôle vérifié, timeout et règles de sécurité',
   section: 'modules',
   hidden: true
 });
 
 useSeoMeta({
   title: 'Configuration - Captcha',
-  description: 'Configuration du rôle vérifié, timeout et règles de sécurité',
+  description: 'Configuration du captcha : mode, rôle vérifié, timeout et règles de sécurité',
   ogTitle: 'Configuration - Captcha',
-  ogDescription: 'Configuration du rôle vérifié, timeout et règles de sécurité'
+  ogDescription: 'Configuration du captcha : mode, rôle vérifié, timeout et règles de sécurité'
 });
 
 const { config, isSaving, load, save } = useConfigFeature('captcha', {
   defaultConfig: {
     enabled: true,
+    captcha_type: 'math',
+    audio_accessibility: false,
     log_channel_id: null,
     verified_role_id: '',
     captcha_channel_name: 'captcha-{username}',
@@ -199,6 +263,18 @@ async function saveModuleConfig() {
   config.value.math_questions.use_word_operators = !!config.value.use_word_operators;
   config.value.math_questions.word_operators = { ...wordOperators };
   config.value.word_operators = { ...wordOperators };
+
+  // Normalisation du type (fallback sur math si invalide)
+  const validTypes = ['math', 'image', 'web'];
+  if (!validTypes.includes(config.value.captcha_type)) {
+    config.value.captcha_type = 'math';
+  }
+
+  // audio_accessibility n'a de sens qu'avec math ; on persiste la
+  // valeur telle quelle (le service ignore si le type != math)
+  if (typeof config.value.audio_accessibility !== 'boolean') {
+    config.value.audio_accessibility = false;
+  }
 
   await save();
 }
@@ -255,5 +331,15 @@ onMounted(async () => {
 .col-third {
   flex: 1;
   min-width: 140px;
+}
+
+.col-full {
+  flex: 1;
+  min-width: 100%;
+}
+
+.switch.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
