@@ -356,7 +356,7 @@
               v-model="configForm.message"
               class="discord-input"
               rows="3"
-              placeholder="{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})"
+              placeholder="{role} c'est l'heure de bumper {server} (Dernier bump par {user})"
             ></textarea>
           </div>
 
@@ -388,7 +388,7 @@
                 v-model="configForm.messages.description"
                 class="discord-input"
                 rows="4"
-                placeholder="{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})"
+                placeholder="{role} c'est l'heure de bumper {server} ! (Dernier bump par {user})"
               ></textarea>
             </div>
 
@@ -580,11 +580,11 @@ const configForm = ref<any>({
   reminder_cooldown_hours: 2,
   mention_here: true,
   use_embed: false,
-  message: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})",
+  message: "{role} c'est l'heure de bumper {server} (Dernier bump par {user})",
   messages: {
     content: '{role}',
     title: "⏰ C'est l'heure du Bump !",
-    description: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})",
+    description: "{role} c'est l'heure de bumper {server}! (Dernier bump par {user})",
     color: "#f2c7ce",
     thumbnail: '',
     image: '',
@@ -660,7 +660,7 @@ function formatTemplate(text: string) {
 }
 
 const liveSimplePreview = computed(() => {
-  const msg = configForm.value.message || "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})";
+  const msg = configForm.value.message || "{role} c'est l'heure de bumper {server} (Dernier bump par {user})";
   return formatTemplate(msg);
 });
 
@@ -674,7 +674,7 @@ const liveContentPreview = computed(() => {
 
 const liveEmbedPreview = computed(() => {
   const defTitle = "⏰ C'est l'heure du Bump !";
-  const defDesc = "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})";
+  const defDesc = "{role} c'est l'heure de bumper {server}! (Dernier bump par {user})";
 
   const t = configForm.value.messages?.title || defTitle;
   const d = configForm.value.messages?.description || defDesc;
