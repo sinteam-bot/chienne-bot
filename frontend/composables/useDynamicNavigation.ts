@@ -36,7 +36,23 @@ export function useDynamicNavigation() {
           sectionMap.set(section, []);
         }
 
-        const normalizedPath = r.path;
+        let normalizedPath = r.path;
+        const { guild } = useAppState();
+        const activeGuildId = guild.value?.id || 'default';
+
+        // Remplacer le paramètre dynamique :guild ou :guild() par le guild_id actuel
+        normalizedPath = normalizedPath.replace(/:guild(\(\))?/g, activeGuildId);
+
+        // Si la route est le conteneur /panel/{guild}/config, rediriger vers general par défaut
+        if (normalizedPath.endsWith('/config')) {
+          normalizedPath = `${normalizedPath}/general`;
+        }
+
+        // Ignorer les routes contenant des paramètres non résolus (ex: :channelId, :feature)
+        if (normalizedPath.includes(':')) {
+          continue;
+        }
+
         const item: RouteNavigationItem = {
           id: (r.name as string) || normalizedPath.replace(/^\//, '').replace(/\//g, '-'),
           name: (meta.title as string) || normalizedPath,

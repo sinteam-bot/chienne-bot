@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAppState } from '~/composables/useAppState.ts';
 import ConfigSubSidebar from '~/components/layout/ConfigSubSidebar.vue';
@@ -26,7 +26,8 @@ definePageMeta({
   title: 'Configuration Serveur',
   icon: '⚙️',
   description: 'Panneau de configuration globale et modulaire par serveur Discord',
-  section: 'bot'
+  section: 'bot',
+  order: 9
 });
 
 useSeoMeta({
@@ -42,18 +43,27 @@ const { guild } = useAppState();
 
 const currentGuildId = computed(() => {
   const fromParam = route.params.guild as string;
-  if (fromParam && fromParam.trim() !== '') return fromParam;
+  if (fromParam && fromParam.trim() !== '' && fromParam !== ':guild()' && fromParam !== ':guild') {
+    return fromParam;
+  }
   if (guild.value?.id) return guild.value.id;
   return 'default';
 });
 
 const activeFeatureName = computed(() => {
   const f = route.params.feature as string;
-  if (f) return f;
+  if (f && f !== ':feature' && f !== ':feature()') return f;
   const pathParts = route.path.split('/');
   const lastPart = pathParts[pathParts.length - 1];
-  if (lastPart && lastPart !== 'config') return lastPart;
+  if (lastPart && lastPart !== 'config' && !lastPart.startsWith(':')) return lastPart;
   return 'general';
+});
+
+watchEffect(() => {
+  const raw = route.params.guild as string;
+  if (raw === ':guild()' || raw === ':guild') {
+    router.replace(`/panel/${currentGuildId.value}/config/${activeFeatureName.value}`);
+  }
 });
 
 function onFeatureSelect(featureId: string) {

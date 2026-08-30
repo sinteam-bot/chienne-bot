@@ -86,23 +86,31 @@ useSeoMeta({
 });
 
 const route = useRoute();
-const guildId = (route.params.guild as string) || 'default';
+const { guild } = useAppState();
+const rawGuild = route.params.guild as string;
+const guildId = computed(() => {
+  if (rawGuild && rawGuild !== ':guild()' && rawGuild !== ':guild' && rawGuild.trim() !== '') {
+    return rawGuild;
+  }
+  if (guild.value?.id) return guild.value.id;
+  return 'default';
+});
 
 const { config, isLoading, isSaving, load, save } = useConfigFeature('general', {
   defaultConfig: {
     client_id: '',
-    guild_id: guildId,
+    guild_id: guildId.value,
     default_color: '#f2c7ce',
     prefix: '!'
   }
 });
 
 async function saveConfig() {
-  await save(config.value, guildId);
+  await save(config.value, guildId.value);
 }
 
 onMounted(() => {
-  load(guildId);
+  load(guildId.value);
 });
 </script>
 

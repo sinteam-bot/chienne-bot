@@ -61,7 +61,8 @@ definePageMeta({
   icon: '⚙️',
   description: 'Configuration générale du bot (Tokens, Auth Web, Scheduler, OpenRouter)',
   section: 'bot',
-  order: 9
+  order: 9,
+  hidden: true
 });
 
 useSeoMeta({

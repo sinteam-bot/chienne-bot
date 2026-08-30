@@ -30,7 +30,7 @@ export function useConfigFeature<T extends Record<string, any> = Record<string, 
    * Résout le guild_id actuel (URL > localStorage > /api/guild > 'default')
    */
   async function resolveGuildId(explicitGuildId?: string): Promise<string> {
-    if (explicitGuildId && explicitGuildId.trim() !== '') {
+    if (explicitGuildId && explicitGuildId.trim() !== '' && explicitGuildId !== ':guild()' && explicitGuildId !== ':guild') {
       currentGuildId.value = explicitGuildId;
       return explicitGuildId;
     }
@@ -41,14 +41,14 @@ export function useConfigFeature<T extends Record<string, any> = Record<string, 
 
     const params = new URLSearchParams(window.location.search);
     const fromUrl = params.get('guild_id') || params.get('guildId');
-    if (fromUrl) {
+    if (fromUrl && fromUrl.trim() !== '' && fromUrl !== ':guild()' && fromUrl !== ':guild') {
       currentGuildId.value = fromUrl;
       window.localStorage.setItem('guild_id', fromUrl);
       return fromUrl;
     }
 
     const fromStorage = window.localStorage.getItem('guild_id');
-    if (fromStorage && fromStorage.trim() !== '') {
+    if (fromStorage && fromStorage.trim() !== '' && fromStorage !== ':guild()' && fromStorage !== ':guild') {
       currentGuildId.value = fromStorage;
       return fromStorage;
     }
@@ -56,7 +56,7 @@ export function useConfigFeature<T extends Record<string, any> = Record<string, 
     try {
       const res = await api.apiFetch<{ success: boolean; data: any }>('/api/guild');
       const gid = res.data?.id;
-      if (gid) {
+      if (gid && gid !== ':guild()' && gid !== ':guild') {
         currentGuildId.value = gid;
         window.localStorage.setItem('guild_id', gid);
         return gid;
