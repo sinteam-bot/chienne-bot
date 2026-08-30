@@ -47,11 +47,11 @@ export const useCaptcha = () => {
 
   /**
    * Récupère l'état complet du feature captcha (stats + config + captchas + logs).
-   * Endpoint : GET /api/security-question/logs
+   * Endpoint : GET /api/captcha/logs
    */
   async function getFullData(): Promise<CaptchaFullData> {
     const res = await api.apiFetch<{ success: boolean; data: CaptchaFullData }>(
-      '/api/security-question/logs'
+      '/api/captcha/logs'
     );
     return res.data || { stats: { total: 0, verifiedCount: 0, pendingCount: 0, failedCount: 0, successRate: 0 }, config: { isEnabled: false, timeoutMinutes: 10, maxAttempts: 3, verifiedRoleId: null, channelId: null }, captchas: [], logs: [] };
   }

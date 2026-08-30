@@ -487,7 +487,7 @@ function handleKeydown(e: KeyboardEvent) {
 async function loadCaptchaLogs() {
   isLoading.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; data?: any }>('/api/captcha-logs');
+    const res = await apiFetch<{ success: boolean; data?: any }>('/api/captcha/logs');
     if (res.success && res.data) {
       if (Array.isArray(res.data)) {
         logs.value = res.data;
@@ -542,7 +542,7 @@ async function openChannelHistory(item: any) {
     const chId = item.channelId || item.channel_id || '';
     const uId = item.userId || item.user_id || '';
     const res = await apiFetch<{ success: boolean; data: any }>(
-      `/api/captcha-logs/messages?channel_id=${encodeURIComponent(chId)}&user_id=${encodeURIComponent(uId)}`
+      `/api/captcha/messages?channel_id=${encodeURIComponent(chId)}&user_id=${encodeURIComponent(uId)}`
     );
     if (res.success && res.data) {
       channelHistory.value = res.data;

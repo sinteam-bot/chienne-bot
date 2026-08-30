@@ -301,7 +301,7 @@ function formatDateTime(dateStr: string) {
 async function loadCaptchaLogs() {
   isLoading.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/security-question/logs');
+    const res = await apiFetch<{ success: boolean; data: any }>('/api/captcha/logs');
     if (res.success && res.data) {
       // L'API renvoie { stats, config, captchas, logs } : on prend `captchas`.
       logs.value = Array.isArray(res.data.captchas) ? res.data.captchas : [];
@@ -320,7 +320,7 @@ async function openChannelHistory(item: any) {
   try {
     const channelId = item.channelId || item.channel_id;
     if (channelId) {
-      const res = await apiFetch<{ success: boolean; data: any[] }>(`/api/security-question/channel/${channelId}/messages`);
+      const res = await apiFetch<{ success: boolean; data: any[] }>(`/api/captcha/channel/${channelId}/messages`);
       if (res.success && Array.isArray(res.data)) {
         modalMessages.value = res.data;
       }

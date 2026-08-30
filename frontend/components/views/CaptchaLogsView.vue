@@ -153,7 +153,7 @@ onMounted(() => {
 async function loadCaptchaLogs() {
   isLoading.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; data?: any[] }>('/api/captcha-logs');
+    const res = await apiFetch<{ success: boolean; data?: any[] }>('/api/captcha/logs');
     if (res.success && Array.isArray(res.data)) {
       logs.value = res.data;
     }
