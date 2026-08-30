@@ -28,7 +28,7 @@
         </div>
         <div style="flex: 1; max-width: 400px;">
           <DiscordChannelSelect
-            v-model="config.joinChannels"
+            v-model="config.join_channels"
             :multiple="true"
             channel-type="guild-voice"
             placeholder="Sélectionner un ou plusieurs salons vocaux"
@@ -43,7 +43,7 @@
         </div>
         <div style="flex: 1; max-width: 400px;">
           <DiscordChannelSelect
-            v-model="config.categoryId"
+            v-model="config.category_id"
             channel-type="guild-category"
             placeholder="Aucune (racine du serveur)"
           />
@@ -69,7 +69,7 @@
           <span class="config-hint">Délai avant suppression une fois le salon vide (0 = suppression immédiate).</span>
         </div>
         <input
-          v-model.number="config.deleteDelaySeconds"
+          v-model.number="config.delete_delay_seconds"
           type="number"
           min="0"
           max="300"
@@ -84,7 +84,7 @@
           <span class="config-hint">Limite anti-spam (0 = illimité).</span>
         </div>
         <input
-          v-model.number="config.maxPerGuild"
+          v-model.number="config.max_per_guild"
           type="number"
           min="0"
           max="50"
@@ -124,20 +124,47 @@ const guildId = (route.params.guild as string) || 'default';
 const { config, isLoading, isSaving, load, save } = useConfigFeature('temp_voice', {
   defaultConfig: {
     enabled: true,
-    joinChannels: [] as string[],
-    categoryId: null as string | null,
+    allowed_roles: [] as string[],
+    join_channels: [] as string[],
+    category_id: null as string | null,
     format: "{user}'s game",
-    deleteDelaySeconds: 5,
-    maxPerGuild: 0
+    delete_delay_seconds: 5,
+    max_per_guild: 0
   }
 });
 
 async function saveConfig() {
-  await save(config.value, guildId);
+  const joinChans = Array.isArray(config.value.join_channels)
+    ? config.value.join_channels
+    : (config.value.join_channels ? [String(config.value.join_channels)] : []);
+
+  const payload = {
+    enabled: config.value.enabled !== false,
+    allowed_roles: config.value.allowed_roles || [],
+    join_channels: joinChans,
+    category_id: config.value.category_id || null,
+    format: config.value.format || "{user}'s game",
+    delete_delay_seconds: Number(config.value.delete_delay_seconds) || 5,
+    max_per_guild: Number(config.value.max_per_guild) || 0
+  };
+  await save(payload, guildId);
 }
 
-onMounted(() => {
-  load(guildId);
+onMounted(async () => {
+  await load(guildId);
+  if (config.value) {
+    const raw = config.value.join_channels || (config.value as any).joinChannels || [];
+    config.value.join_channels = Array.isArray(raw) ? raw : (typeof raw === 'string' && raw ? [raw] : []);
+    if (!config.value.category_id && (config.value as any).categoryId) {
+      config.value.category_id = (config.value as any).categoryId;
+    }
+    if (config.value.delete_delay_seconds === undefined && (config.value as any).deleteDelaySeconds !== undefined) {
+      config.value.delete_delay_seconds = (config.value as any).deleteDelaySeconds;
+    }
+    if (config.value.max_per_guild === undefined && (config.value as any).maxPerGuild !== undefined) {
+      config.value.max_per_guild = (config.value as any).maxPerGuild;
+    }
+  }
 });
 </script>
 
