@@ -26,11 +26,11 @@
           <label class="config-label">📁 Catégorie Discord des Nouveaux Tickets</label>
           <span class="config-hint">Catégorie où seront créés les salons de tickets.</span>
         </div>
-        <div style="min-width: 260px;">
+        <div style="min-width: 260px; max-width: 400px; flex: 1;">
           <DiscordChannelSelect
             v-model="config.category_id"
-            :filter-text-only="false"
-            placeholder="Sélectionner une catégorie…"
+            channel-type="guild-category"
+            placeholder="Sélectionner une catégorie Discord…"
           />
         </div>
       </div>
@@ -40,12 +40,12 @@
           <label class="config-label">📜 Salon des Transcripts HTML</label>
           <span class="config-hint">Salon où les archives de tickets clôturés sont publiées.</span>
         </div>
-        <div style="min-width: 260px;">
+        <div style="min-width: 260px; max-width: 400px; flex: 1;">
           <DiscordChannelSelect
             v-model="config.transcript_channel_id"
             :allow-null="true"
             null-label="— Aucun salon (Désactivé) —"
-            :filter-text-only="true"
+            channel-type="guild-text"
             placeholder="Sélectionner un salon de transcripts…"
           />
         </div>
@@ -56,7 +56,7 @@
           <label class="config-label">🛡️ Rôle Support Technique</label>
           <span class="config-hint">Rôle pingé et ayant accès aux tickets ouverts.</span>
         </div>
-        <div style="min-width: 260px;">
+        <div style="min-width: 260px; max-width: 400px; flex: 1;">
           <DiscordRoleSelect
             v-model="config.support_role_id"
             placeholder="Sélectionner le rôle support…"
@@ -96,18 +96,31 @@ const guildId = (route.params.guild as string) || 'default';
 const { config, isLoading, isSaving, load, save } = useConfigFeature('tickets', {
   defaultConfig: {
     enabled: true,
-    category_id: null,
-    transcript_channel_id: null,
-    support_role_id: null
+    category_id: null as string | null,
+    transcript_channel_id: null as string | null,
+    support_role_id: null as string | null
   }
 });
 
 async function saveConfig() {
-  await save(config.value, guildId);
+  const payload = {
+    ...config.value,
+    enabled: config.value.enabled !== false,
+    category_id: config.value.category_id || null,
+    categoryId: config.value.category_id || null,
+    transcript_channel_id: config.value.transcript_channel_id || null,
+    support_role_id: config.value.support_role_id || null
+  };
+  await save(payload, guildId);
 }
 
-onMounted(() => {
-  load(guildId);
+onMounted(async () => {
+  await load(guildId);
+  if (config.value) {
+    if (!config.value.category_id && (config.value as any).categoryId) {
+      config.value.category_id = (config.value as any).categoryId;
+    }
+  }
 });
 </script>
 
