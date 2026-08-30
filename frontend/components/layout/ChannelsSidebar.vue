@@ -1,7 +1,7 @@
 <template>
   <aside class="channels-sidebar" aria-label="Menu Principal">
     <!-- En-tête du serveur -->
-    <header class="server-header" @click="goTo('/info')">
+    <header class="server-header" @click="goTo('/panel/' + (guild?.id || 'default') + '/info')">
       <div class="server-name-wrapper">
         <span class="server-badge">⭐</span>
         <h1 class="server-name">{{ guild?.name || 'Bot' }}</h1>
@@ -68,13 +68,13 @@ function isItemActive(item: ChannelItem): boolean {
   const currentPath = route.path;
   if (!item.routePath) return false;
 
-  if (item.routePath === '/info' && (currentPath === '/' || currentPath === '/info')) {
+  if ((item.routePath === '/info' || item.routePath?.endsWith('/info')) && (currentPath === '/' || currentPath === '/info' || currentPath.endsWith('/info'))) {
     return true;
   }
   if (item.routePath === '/archives' && currentPath.startsWith('/archives')) {
     return true;
   }
-  if (item.routePath.startsWith('/config') && currentPath.startsWith('/config')) {
+  if ((item.routePath?.includes('/config') || item.routePath?.startsWith('/config')) && currentPath.includes('/config')) {
     return true;
   }
   if (item.routePath.startsWith('/modules/') && currentPath.startsWith(item.routePath)) {

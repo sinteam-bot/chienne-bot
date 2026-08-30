@@ -155,6 +155,7 @@ const categories = ref<ConfigCategory[]>([
     icon: '🛡️',
     collapsed: false,
     items: [
+      { id: 'logs', name: 'Logs & Audit', icon: '📜', description: 'Routage des événements Discord, salons dédiés, exclusions et filtres', keywords: ['logs', 'audit', 'journal', 'message', 'voice', 'channel', 'member', 'evenement'] },
       { id: 'captcha', name: 'Captcha & Anti-Raid', icon: '🔒', description: 'Sas de vérification mathématique, salon privé, anti-raid', keywords: ['captcha', 'math', 'anti-raid', 'verification', 'sas', 'bot'] },
       { id: 'automod', name: 'Modération Automatique', icon: '🚨', description: 'Filtres de mots interdits, anti-spam, purges programmées', keywords: ['automod', 'spam', 'purge', 'sanction', 'badwords', 'filtre'] },
       { id: 'reports', name: 'Signalements Staff', icon: '🚩', description: 'File d\'attente des signalements communautaires et logs', keywords: ['report', 'signalement', 'plainte', 'staff', 'mod'] }

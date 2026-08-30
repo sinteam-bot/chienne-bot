@@ -90,7 +90,7 @@ export function useAppState() {
   const { showToast } = useToast();
 
   const BOT_SECTION_ITEMS: ChannelItem[] = [
-    { id: 'info', name: 'Informations', icon: '📊', routePath: '/info', section: 'bot', topic: 'Statistiques globales, performances et état du bot' },
+    { id: 'info', name: 'Informations', icon: '📊', routePath: '/panel/default/info', section: 'bot', topic: 'Statistiques globales, performances et état du bot' },
     { id: 'archives', name: 'Archives & Salons', icon: '💬', routePath: '/archives', section: 'bot', topic: 'Explorateur de salons Discord et historique' },
     { id: 'events', name: 'Événements Discord', icon: '📡', routePath: '/events', section: 'bot', topic: 'Journal et archivage en direct de tous les événements Discord (v14)' },
     { id: 'commands', name: 'Commandes', icon: '⚡', routePath: '/commands', section: 'bot', topic: 'Liste des commandes Discord et permissions' },

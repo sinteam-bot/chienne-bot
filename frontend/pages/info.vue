@@ -1,22 +1,16 @@
 <template>
-  <InfoView />
+  <div></div>
 </template>
 
 <script setup lang="ts">
-import InfoView from '~/components/views/bot/InfoView.vue';
+import { useAppState } from '~/composables/useAppState.ts';
 
 definePageMeta({
   title: 'Informations',
-  icon: '📊',
-  description: 'Statistiques globales, performances et état du bot',
-  section: 'bot',
-  order: 1
+  hidden: true
 });
 
-useSeoMeta({
-  title: 'Informations',
-  description: 'Statistiques globales, performances et état du bot',
-  ogTitle: 'Informations - Bot',
-  ogDescription: 'Statistiques globales, performances et état du bot'
-});
+const { guild } = useAppState();
+const targetGuildId = guild.value?.id || 'default';
+await navigateTo(`/panel/${targetGuildId}/info`, { replace: true });
 </script>
