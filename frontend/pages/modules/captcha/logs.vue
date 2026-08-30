@@ -320,7 +320,7 @@ async function openChannelHistory(item: any) {
   try {
     const channelId = item.channelId || item.channel_id;
     if (channelId) {
-      const res = await apiFetch<{ success: boolean; data: any[] }>(`/api/captcha/channel/${channelId}/messages`);
+      const res = await apiFetch<{ success: boolean; data: any[] }>(`/api/captcha/messages?channel_id=${encodeURIComponent(channelId)}`);
       if (res.success && Array.isArray(res.data)) {
         modalMessages.value = res.data;
       }
