@@ -87,6 +87,10 @@ const { config, isSaving, load, save } = useConfigFeature('captcha', {
   }
 });
 
+async function saveModuleConfig() {
+  await save();
+}
+
 onMounted(() => {
   load();
 });
