@@ -1,4 +1,5 @@
-import { useDiscordApi } from './useDiscordApi';
+import { useDiscordApi } from './useDiscordApi.ts';
+import { useConfigFeature } from './useConfigFeature.ts';
 
 export interface CaptchaEntry {
   id: string;
@@ -28,11 +29,11 @@ export interface CaptchaStats {
 }
 
 export interface CaptchaConfig {
-  isEnabled: boolean;
-  timeoutMinutes: number;
-  maxAttempts: number;
-  verifiedRoleId: string | null;
-  channelId: string | null;
+  enabled: boolean;
+  verified_role_id: string;
+  captcha_channel_name: string;
+  captcha_timeout: number;
+  max_attempts: number;
 }
 
 export interface CaptchaFullData {
@@ -44,43 +45,15 @@ export interface CaptchaFullData {
 
 export const useCaptcha = () => {
   const api = useDiscordApi();
-  let cachedGuildId: string | null = null;
-
-  /**
-   * Récupère le guild_id (URL > localStorage > /api/guild > default).
-   */
-  async function getGuildId(): Promise<string> {
-    if (typeof window === 'undefined') return 'default';
-    if (cachedGuildId) return cachedGuildId;
-
-    const params = new URLSearchParams(window.location.search);
-    const fromUrl = params.get('guild_id') || params.get('guildId');
-    if (fromUrl) {
-      cachedGuildId = fromUrl;
-      window.localStorage.setItem('guild_id', fromUrl);
-      return fromUrl;
+  const featureConfig = useConfigFeature<CaptchaConfig>('captcha', {
+    defaultConfig: {
+      enabled: true,
+      verified_role_id: '',
+      captcha_channel_name: 'captcha-{username}',
+      captcha_timeout: 10,
+      max_attempts: 3
     }
-
-    const fromStorage = window.localStorage.getItem('guild_id');
-    if (fromStorage && fromStorage.trim() !== '') {
-      cachedGuildId = fromStorage;
-      return fromStorage;
-    }
-
-    try {
-      const res = await api.apiFetch<{ success: boolean; data: any }>('/api/guild');
-      const gid = res.data?.id;
-      if (gid) {
-        cachedGuildId = gid;
-        window.localStorage.setItem('guild_id', gid);
-        return gid;
-      }
-    } catch {
-      // ignore
-    }
-
-    return 'default';
-  }
+  });
 
   /**
    * Récupère l'état complet du feature captcha (stats + config + captchas + logs).
@@ -90,39 +63,19 @@ export const useCaptcha = () => {
     const res = await api.apiFetch<{ success: boolean; data: CaptchaFullData }>(
       '/api/captcha/logs'
     );
-    return res.data || { stats: { total: 0, verifiedCount: 0, pendingCount: 0, failedCount: 0, successRate: 0 }, config: { isEnabled: false, timeoutMinutes: 10, maxAttempts: 3, verifiedRoleId: null, channelId: null }, captchas: [], logs: [] };
+    return res.data || {
+      stats: { total: 0, verifiedCount: 0, pendingCount: 0, failedCount: 0, successRate: 0 },
+      config: { enabled: false, captcha_timeout: 10, max_attempts: 3, verified_role_id: '', captcha_channel_name: '' },
+      captchas: [],
+      logs: []
+    };
   }
 
-  /**
-   * Récupère la configuration du feature captcha pour une guilde donnée.
-   * Endpoint : GET /api/config/{guildId}/captcha
-   */
-  async function getModuleConfig(guildId?: string): Promise<any> {
-    const gid = guildId || await getGuildId();
-    const targetGuild = gid && gid.trim() !== '' ? gid : 'default';
-    const res = await api.apiFetch<{ success: boolean; data: any }>(
-      `/api/config/${encodeURIComponent(targetGuild)}/captcha`
-    );
-    return res.data;
-  }
-
-  /**
-   * Met à jour la configuration du captcha pour une guilde donnée.
-   * Endpoint : PATCH /api/config/{guildId}/captcha
-   * Écrit dans data/{guildId}/captcha.config.yml.
-   */
-  async function updateConfig(guildId?: string, patch?: any): Promise<any> {
-    const gid = guildId || await getGuildId();
-    const targetGuild = gid && gid.trim() !== '' ? gid : 'default';
-    const res = await api.apiFetch<{ success: boolean; data: any }>(
-      `/api/config/${encodeURIComponent(targetGuild)}/captcha`,
-      {
-        method: 'PATCH',
-        body: patch
-      }
-    );
-    return res.data;
-  }
-
-  return { getFullData, getModuleConfig, updateConfig, getGuildId };
+  return {
+    getFullData,
+    getModuleConfig: (guildId?: string) => featureConfig.getFeatureConfig('captcha', guildId),
+    updateConfig: (guildId?: string, patch?: any) => featureConfig.saveFeatureConfig('captcha', patch, guildId),
+    getGuildId: () => featureConfig.resolveGuildId(),
+    featureConfig
+  };
 };

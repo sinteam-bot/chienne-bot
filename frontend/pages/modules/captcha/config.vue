@@ -58,10 +58,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useDiscordApi } from '~/composables/useDiscordApi.ts';
-import { useToast } from '~/composables/useToast.ts';
-import { useCaptcha } from '~/composables/useCaptcha';
+import { onMounted } from 'vue';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 
 definePageMeta({
@@ -79,59 +77,17 @@ useSeoMeta({
   ogDescription: 'Configuration du rôle vérifié, timeout et règles de sécurité'
 });
 
-const { apiFetch } = useDiscordApi();
-const { getModuleConfig, updateConfig: saveConfig, getGuildId: fetchGuildId } = useCaptcha();
-const { showToast } = useToast();
-
-const isSaving = ref(false);
-
-const config = ref<any>({
-  enabled: true,
-  verified_role_id: '',
-  captcha_channel_name: 'captcha-{username}',
-  captcha_timeout: 10,
-  max_attempts: 3
+const { config, isSaving, load, save } = useConfigFeature('captcha', {
+  defaultConfig: {
+    enabled: true,
+    verified_role_id: '',
+    captcha_channel_name: 'captcha-{username}',
+    captcha_timeout: 10,
+    max_attempts: 3
+  }
 });
 
-async function loadConfig() {
-  try {
-    const guildId = await fetchGuildId();
-    const data = await getModuleConfig(guildId);
-    if (data) {
-      config.value = {
-        enabled: data.enabled !== undefined ? data.enabled : true,
-        verified_role_id: data.verified_role_id || data.verifiedRoleId || '',
-        captcha_channel_name: data.captcha_channel_name || 'captcha-{username}',
-        captcha_timeout: data.captcha_timeout || data.timeoutMinutes || 10,
-        max_attempts: data.max_attempts || data.maxAttempts || 3
-      };
-    }
-  } catch (err) {
-    console.error('Erreur chargement config captcha:', err);
-  }
-}
-
-async function saveModuleConfig() {
-  isSaving.value = true;
-  try {
-    const guildId = await fetchGuildId();
-    await saveConfig(guildId, {
-      enabled: config.value.enabled,
-      verified_role_id: config.value.verified_role_id,
-      captcha_channel_name: config.value.captcha_channel_name,
-      captcha_timeout: config.value.captcha_timeout,
-      max_attempts: config.value.max_attempts
-    });
-    showToast('Configuration Captcha sauvegardée avec succès dans data/' + guildId + '/captcha.config.yml !', 'success');
-    await loadConfig();
-  } catch (err: any) {
-    showToast('Erreur: ' + err.message, 'error');
-  } finally {
-    isSaving.value = false;
-  }
-}
-
 onMounted(() => {
-  loadConfig();
+  load();
 });
 </script>
