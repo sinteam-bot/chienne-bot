@@ -128,18 +128,48 @@
       </div>
     </div>
 
-    <!-- Formulation & Opérateurs Textuels (uniquement pertinent pour math) -->
-    <div class="config-card" v-show="config.captcha_type === 'math' || config.captcha_type === undefined">
-      <div class="card-subtitle">🔢 Formulation &amp; Opérateurs Mathématiques</div>
+    <!-- Formulation & Opérateurs Textuels (uniquement pour le mode Math) -->
+    <div class="config-card" v-show="config.captcha_type === 'math'">
+      <div class="card-subtitle">🔢 Formulation &amp; Représentation</div>
       <p class="config-desc">
-        Personnalisez la façon dont les calculs sont énoncés aux nouveaux membres.
+        Personnalisez la façon dont les nombres et opérateurs sont présentés aux nouveaux membres.
+        Chaque champ peut être rendu en <strong>texte</strong>, en <strong>symbole/chiffre</strong>, ou en <strong>aléatoire</strong>.
       </p>
 
-      <div class="config-item">
+      <!-- Modes par champ -->
+      <div class="form-row" style="margin-bottom: 18px;">
+        <div class="col-third">
+          <label class="form-label">Nombre 1</label>
+          <select v-model="config.num1_mode" class="discord-input discord-select">
+            <option value="text">📝 Texte (ex: "douze")</option>
+            <option value="digit">🔢 Chiffre (ex: "12")</option>
+            <option value="random">🎲 Aléatoire</option>
+          </select>
+        </div>
+        <div class="col-third">
+          <label class="form-label">Opérateur</label>
+          <select v-model="config.operator_mode" class="discord-input discord-select">
+            <option value="text">📝 Texte (ex: "plus")</option>
+            <option value="symbol">🔣 Symbole (ex: "+")</option>
+            <option value="random">🎲 Aléatoire</option>
+          </select>
+        </div>
+        <div class="col-third">
+          <label class="form-label">Nombre 2</label>
+          <select v-model="config.num2_mode" class="discord-input discord-select">
+            <option value="text">📝 Texte (ex: "douze")</option>
+            <option value="digit">🔢 Chiffre (ex: "12")</option>
+            <option value="random">🎲 Aléatoire</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="config-item" style="margin-top: 8px;">
         <div class="config-label-group">
-          <label class="config-label">Version texte des opérateurs (plus / moins / fois)</label>
+          <label class="config-label">Activer le mode texte pour les opérateurs</label>
           <span class="config-hint">
-            Remplace les symboles mathématiques bruts (<code>+</code>, <code>-</code>, <code>*</code>) par des mots en toutes lettres (<code>plus</code>, <code>moins</code>, <code>fois</code>).
+            Active la conversion automatique des opérateurs en mots (ex: <code>+</code> → <code>plus</code>) quand l'opérateur est rendu en mode <strong>texte</strong>.
+            Si désactivé, l'opérateur est toujours affiché en symbole, indépendamment du mode choisi ci-dessus.
           </span>
         </div>
         <label class="switch">
@@ -155,7 +185,8 @@
           "Combien font douze <span class="op-highlight">{{ previewOperator }}</span> dix-sept ?"
         </div>
         <div class="preview-hint">
-          Réponse attendue de l'utilisateur : <code>29</code>
+          Réponse attendue de l'utilisateur : <code>29</code><br>
+          <em>Avec vos réglages, l'opérateur sera rendu en <strong>{{ config.operator_mode === 'random' ? 'texte ou symbole (aléatoire)' : config.operator_mode === 'text' ? 'texte' : 'symbole' }}</strong>, et les nombres en <strong>{{ config.num1_mode === 'random' ? 'texte ou chiffre (aléatoire)' : config.num1_mode === 'text' ? 'texte' : 'chiffre' }}</strong>.</em>
         </div>
       </div>
 
@@ -219,6 +250,9 @@ const { config, isSaving, load, save } = useConfigFeature('captcha', {
     captcha_timeout: 10,
     max_attempts: 3,
     use_word_operators: false,
+    num1_mode: 'text',
+    num2_mode: 'text',
+    operator_mode: 'symbol',
     math_questions: {
       min_number: 1,
       max_number: 20,
@@ -275,6 +309,13 @@ async function saveModuleConfig() {
   if (typeof config.value.audio_accessibility !== 'boolean') {
     config.value.audio_accessibility = false;
   }
+
+  // Modes de représentation math (text/digit/random)
+  const validNumModes = ['text', 'digit', 'random'];
+  const validOpModes = ['text', 'symbol', 'random'];
+  if (!validNumModes.includes(config.value.num1_mode)) config.value.num1_mode = 'text';
+  if (!validNumModes.includes(config.value.num2_mode)) config.value.num2_mode = 'text';
+  if (!validOpModes.includes(config.value.operator_mode)) config.value.operator_mode = 'symbol';
 
   await save();
 }
