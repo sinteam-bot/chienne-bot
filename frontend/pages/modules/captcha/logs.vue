@@ -30,6 +30,9 @@
           <button :class="['module-filter-btn', { active: statusFilter === 'failed' }]" @click="statusFilter = 'failed'">
             ❌ Échoués ({{ failedCount }})
           </button>
+          <button :class="['module-filter-btn', { active: statusFilter === 'expired' }]" @click="statusFilter = 'expired'">
+            ⏰ Expirés ({{ expiredCount }})
+          </button>
         </div>
       </div>
 
@@ -81,7 +84,7 @@
                     :clickable="false"
                   />
                   <span
-                    v-if="item.isChannelDeleted || item.is_verified || item.status === 'verified' || item.status === 'failed'"
+                    v-if="item.isChannelDeleted || item.is_verified || item.status === 'verified' || item.status === 'failed' || item.status === 'expired'"
                     class="badge-channel-status deleted"
                     title="Salon temporaire supprimé"
                   >
@@ -158,10 +161,11 @@
         <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
           <div>
             <h3 style="margin: 0; font-size: 16px; color: var(--header-primary);">
-              💬 Historique du salon #{{ selectedChannelModal.channelName || 'captcha' }}
+              💬 Historique du salon #{{ modalChannelInfo?.name || selectedChannelModal.channelName || selectedChannelModal.channel_name || 'captcha' }}
             </h3>
             <span style="font-size: 12px; color: var(--text-muted);">
-              Membre: <strong>{{ selectedChannelModal.username }}</strong>
+              Membre: <strong>{{ selectedChannelModal.username || selectedChannelModal.userTag || selectedChannelModal.userId }}</strong>
+              <span v-if="modalChannelInfo?.isDeleted" class="badge-channel-status deleted" style="margin-left: 6px;">Archivé</span>
             </span>
           </div>
           <button class="action-btn" style="padding: 4px 8px;" @click="selectedChannelModal = null">✕</button>
@@ -171,25 +175,42 @@
           <div v-if="modalLoading" style="display: flex; justify-content: center; padding: 40px;">
             <div class="spinner" style="width: 28px; height: 28px;"></div>
           </div>
-          <div v-else-if="modalMessages.length === 0" style="color: var(--text-muted); text-align: center; padding: 40px;">
-            Aucun message enregistré dans ce salon.
-          </div>
-          <div
-            v-for="msg in modalMessages"
-            v-else
-            :key="msg.id"
-            style="background: var(--bg-tertiary); padding: 10px 14px; border-radius: 8px;"
-          >
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 12px;">
-              <DiscordUser
-                :user-id="msg.author_id || msg.authorId"
-                :username="msg.author_username || msg.author"
-                :avatar-size="20"
-              />
-              <DiscordTime :value="msg.created_at || msg.timestamp" mode="both" />
+          <template v-else>
+            <!-- Événements archivés (création/suppression salon, audit) -->
+            <div v-if="modalEvents.length > 0" style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                🗂️ Événements ({{ modalEvents.length }})
+              </div>
+              <div
+                v-for="evt in modalEvents"
+                :key="evt.id"
+                style="background: var(--bg-secondary); padding: 6px 10px; border-radius: 6px; font-size: 12px; color: var(--text-normal); display: flex; justify-content: space-between; gap: 8px;"
+              >
+                <span>📌 <strong>{{ evt.eventName }}</strong> — {{ evt.summary }}</span>
+                <DiscordTime :value="evt.createdAt" mode="relative" />
+              </div>
             </div>
-            <p style="margin: 0; font-size: 13px; color: var(--text-normal); white-space: pre-wrap;">{{ msg.content }}</p>
-          </div>
+
+            <!-- Messages du salon -->
+            <div v-if="modalMessages.length === 0" style="color: var(--text-muted); text-align: center; padding: 40px;">
+              Aucun message enregistré dans ce salon.
+            </div>
+            <div
+              v-for="msg in modalMessages"
+              :key="msg.id"
+              style="background: var(--bg-tertiary); padding: 10px 14px; border-radius: 8px;"
+            >
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 12px;">
+                <DiscordUser
+                  :user-id="msg.authorId || msg.author_id"
+                  :username="msg.authorUsername || msg.author_username || msg.author"
+                  :avatar-size="20"
+                />
+                <DiscordTime :value="msg.createdAt || msg.created_at" mode="both" />
+              </div>
+              <p style="margin: 0; font-size: 13px; color: var(--text-normal); white-space: pre-wrap;">{{ msg.content }}</p>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -226,27 +247,32 @@ const { showToast } = useToast();
 
 const logs = ref<any[]>([]);
 const isLoading = ref(true);
-const statusFilter = ref<'all' | 'verified' | 'pending' | 'failed'>('all');
+const statusFilter = ref<'all' | 'verified' | 'pending' | 'failed' | 'expired'>('all');
 const searchQuery = ref('');
 const currentPage = ref(1);
 const pageSize = ref(15);
 
 const selectedChannelModal = ref<any>(null);
 const modalMessages = ref<any[]>([]);
+const modalEvents = ref<any[]>([]);
+const modalChannelInfo = ref<any>(null);
 const modalLoading = ref(false);
 
 const verifiedCount = computed(() => logs.value.filter(l => l.verified || l.status === 'verified').length);
 const failedCount = computed(() => logs.value.filter(l => l.status === 'failed' || (!l.verified && (l.attempts || 0) >= (l.maxAttempts || 3))).length);
-const pendingCount = computed(() => logs.value.filter(l => !l.verified && l.status !== 'verified' && l.status !== 'failed' && (l.attempts || 0) < (l.maxAttempts || 3)).length);
+const expiredCount = computed(() => logs.value.filter(l => l.status === 'expired' || l.expiredAt).length);
+const pendingCount = computed(() => logs.value.filter(l => !l.verified && l.status !== 'verified' && l.status !== 'failed' && l.status !== 'expired' && (l.attempts || 0) < (l.maxAttempts || 3)).length);
 
 const filteredLogs = computed(() => {
   let list = logs.value;
   if (statusFilter.value === 'verified') {
     list = list.filter(l => l.verified || l.status === 'verified');
   } else if (statusFilter.value === 'pending') {
-    list = list.filter(l => !l.verified && l.status !== 'verified' && l.status !== 'failed' && (l.attempts || 0) < (l.maxAttempts || 3));
+    list = list.filter(l => !l.verified && l.status !== 'verified' && l.status !== 'failed' && l.status !== 'expired' && (l.attempts || 0) < (l.maxAttempts || 3));
   } else if (statusFilter.value === 'failed') {
     list = list.filter(l => l.status === 'failed' || (!l.verified && (l.attempts || 0) >= (l.maxAttempts || 3)));
+  } else if (statusFilter.value === 'expired') {
+    list = list.filter(l => l.status === 'expired' || !!l.expiredAt);
   }
 
   const q = searchQuery.value.trim().toLowerCase();
@@ -274,12 +300,14 @@ watch([searchQuery, statusFilter], () => {
 function getStatusClass(status: string) {
   if (status === 'verified') return 'verified';
   if (status === 'failed') return 'failed';
+  if (status === 'expired') return 'expired';
   return 'pending';
 }
 
 function getStatusLabel(status: string) {
   if (status === 'verified') return '✅ Validé';
   if (status === 'failed') return '❌ Échoué';
+  if (status === 'expired') return '⏰ Expiré';
   return '⏳ En cours';
 }
 
@@ -317,12 +345,16 @@ async function openChannelHistory(item: any) {
   selectedChannelModal.value = item;
   modalLoading.value = true;
   modalMessages.value = [];
+  modalEvents.value = [];
+  modalChannelInfo.value = null;
   try {
     const channelId = item.channelId || item.channel_id;
     if (channelId) {
-      const res = await apiFetch<{ success: boolean; data: any[] }>(`/api/captcha/messages?channel_id=${encodeURIComponent(channelId)}`);
-      if (res.success && Array.isArray(res.data)) {
-        modalMessages.value = res.data;
+      const res = await apiFetch<{ success: boolean; data: any }>(`/api/captcha/messages?channel_id=${encodeURIComponent(channelId)}`);
+      if (res.success && res.data && typeof res.data === 'object') {
+        modalChannelInfo.value = res.data.channel || null;
+        modalMessages.value = Array.isArray(res.data.messages) ? res.data.messages : [];
+        modalEvents.value = Array.isArray(res.data.events) ? res.data.events : [];
       }
     }
   } catch (err: any) {
