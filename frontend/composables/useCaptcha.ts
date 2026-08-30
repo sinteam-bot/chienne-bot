@@ -44,6 +44,43 @@ export interface CaptchaFullData {
 
 export const useCaptcha = () => {
   const api = useDiscordApi();
+  let cachedGuildId: string | null = null;
+
+  /**
+   * Récupère le guild_id (URL > localStorage > /api/guild > default).
+   */
+  async function getGuildId(): Promise<string> {
+    if (typeof window === 'undefined') return 'default';
+    if (cachedGuildId) return cachedGuildId;
+
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = params.get('guild_id') || params.get('guildId');
+    if (fromUrl) {
+      cachedGuildId = fromUrl;
+      window.localStorage.setItem('guild_id', fromUrl);
+      return fromUrl;
+    }
+
+    const fromStorage = window.localStorage.getItem('guild_id');
+    if (fromStorage && fromStorage.trim() !== '') {
+      cachedGuildId = fromStorage;
+      return fromStorage;
+    }
+
+    try {
+      const res = await api.apiFetch<{ success: boolean; data: any }>('/api/guild');
+      const gid = res.data?.id;
+      if (gid) {
+        cachedGuildId = gid;
+        window.localStorage.setItem('guild_id', gid);
+        return gid;
+      }
+    } catch {
+      // ignore
+    }
+
+    return 'default';
+  }
 
   /**
    * Récupère l'état complet du feature captcha (stats + config + captchas + logs).
@@ -62,9 +99,9 @@ export const useCaptcha = () => {
    */
   async function getModuleConfig(guildId?: string): Promise<any> {
     const gid = guildId || await getGuildId();
-    if (!gid) return null;
+    const targetGuild = gid && gid.trim() !== '' ? gid : 'default';
     const res = await api.apiFetch<{ success: boolean; data: any }>(
-      `/api/config/${encodeURIComponent(gid)}/captcha`
+      `/api/config/${encodeURIComponent(targetGuild)}/captcha`
     );
     return res.data;
   }
@@ -74,34 +111,17 @@ export const useCaptcha = () => {
    * Endpoint : PATCH /api/config/{guildId}/captcha
    * Écrit dans data/{guildId}/captcha.config.yml.
    */
-  async function updateConfig(guildId: string, patch: any): Promise<any> {
+  async function updateConfig(guildId?: string, patch?: any): Promise<any> {
+    const gid = guildId || await getGuildId();
+    const targetGuild = gid && gid.trim() !== '' ? gid : 'default';
     const res = await api.apiFetch<{ success: boolean; data: any }>(
-      `/api/config/${encodeURIComponent(guildId)}/captcha`,
+      `/api/config/${encodeURIComponent(targetGuild)}/captcha`,
       {
         method: 'PATCH',
         body: patch
       }
     );
     return res.data;
-  }
-
-  /**
-   * Récupère le guild_id (URL > localStorage > /api/config fallback).
-   */
-  async function getGuildId(): Promise<string> {
-    if (typeof window === 'undefined') return '';
-    const params = new URLSearchParams(window.location.search);
-    const fromUrl = params.get('guild_id');
-    if (fromUrl) return fromUrl;
-    const fromStorage = window.localStorage.getItem('guild_id');
-    if (fromStorage) return fromStorage;
-    try {
-      const res = await api.apiFetch<{ success: boolean; data: any }>('/api/config');
-      const gid = res.data?.discord?.guild_id;
-      return gid || '';
-    } catch {
-      return '';
-    }
   }
 
   return { getFullData, getModuleConfig, updateConfig, getGuildId };

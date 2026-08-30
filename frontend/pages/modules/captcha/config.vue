@@ -96,7 +96,6 @@ const config = ref<any>({
 async function loadConfig() {
   try {
     const guildId = await fetchGuildId();
-    if (!guildId) return;
     const data = await getModuleConfig(guildId);
     if (data) {
       config.value = {
@@ -116,10 +115,6 @@ async function saveModuleConfig() {
   isSaving.value = true;
   try {
     const guildId = await fetchGuildId();
-    if (!guildId) {
-      showToast('Aucun serveur détecté', 'error');
-      return;
-    }
     await saveConfig(guildId, {
       enabled: config.value.enabled,
       verified_role_id: config.value.verified_role_id,
