@@ -4,16 +4,17 @@
   </div>
 
   <div v-else class="config-page-wrapper">
+    <!-- Paramètres Généraux -->
     <div class="config-card">
-      <div class="card-subtitle">💰 Économie Virtuelle &amp; Boutique</div>
+      <div class="card-subtitle">⚙️ Paramètres Généraux de l'Économie</div>
       <p class="config-desc">
-        Configuration des monnaies, récompenses quotidiennes (/daily), salaires de travail (/work) et solde initial.
+        Configurez la monnaie virtuelle, les récompenses quotidiennes, les taxes et les limites de solde.
       </p>
 
       <div class="config-item">
         <div class="config-label-group">
-          <label class="config-label">Activer le Système Économique</label>
-          <span class="config-hint">Permet aux membres de gagner des pièces, acheter des objets et échanger.</span>
+          <label class="config-label">Activer le module Économie</label>
+          <span class="config-hint">Active la monnaie virtuelle, la boutique, les drops et les échanges.</span>
         </div>
         <label class="switch">
           <input v-model="config.enabled" type="checkbox" />
@@ -21,74 +22,194 @@
         </label>
       </div>
 
-      <div class="form-row" style="margin-top: 14px;">
-        <div class="col-half">
-          <label class="form-label">Nom de la Monnaie</label>
-          <input
-            v-model="config.currency_name"
-            type="text"
-            class="discord-input"
-            placeholder="Coins"
-          />
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Récompense quotidienne (/daily)</label>
+          <span class="config-hint">Montant en pièces offert lors de la commande /daily.</span>
         </div>
-        <div class="col-half">
-          <label class="form-label">Symbole / Émoji de la Monnaie</label>
-          <input
-            v-model="config.currency_symbol"
-            type="text"
-            class="discord-input"
-            placeholder="🪙"
-          />
-        </div>
+        <input
+          v-model.number="config.daily_reward"
+          type="number"
+          min="0"
+          class="discord-input"
+          style="width: 120px; text-align: center;"
+        />
       </div>
 
-      <div class="form-row">
-        <div class="col-half">
-          <label class="form-label">Solde Initial des Nouveaux Membres</label>
-          <input
-            v-model.number="config.starting_balance"
-            type="number"
-            class="discord-input"
-            placeholder="100"
-          />
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Cooldown /daily (heures)</label>
+          <span class="config-hint">Nombre d'heures entre deux récompenses quotidiennes.</span>
         </div>
-        <div class="col-half">
-          <label class="form-label">Récompense Quotidienne (/daily)</label>
-          <input
-            v-model.number="config.daily_reward"
-            type="number"
-            class="discord-input"
-            placeholder="250"
-          />
-        </div>
+        <input
+          v-model.number="config.cooldown_hours"
+          type="number"
+          min="1"
+          max="168"
+          class="discord-input"
+          style="width: 80px; text-align: center;"
+        />
       </div>
 
-      <div class="form-row">
-        <div class="col-half">
-          <label class="form-label">Salaire Minimum (/work)</label>
-          <input
-            v-model.number="config.work_min"
-            type="number"
-            class="discord-input"
-            placeholder="50"
-          />
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Solde de départ</label>
+          <span class="config-hint">Montant accordé aux nouveaux membres à leur première interaction.</span>
         </div>
-        <div class="col-half">
-          <label class="form-label">Salaire Maximum (/work)</label>
-          <input
-            v-model.number="config.work_max"
-            type="number"
-            class="discord-input"
-            placeholder="150"
-          />
-        </div>
+        <input
+          v-model.number="config.starting_balance"
+          type="number"
+          min="0"
+          class="discord-input"
+          style="width: 120px; text-align: center;"
+        />
       </div>
 
-      <div class="config-actions-bar">
-        <button class="btn-primary" :disabled="isSaving" @click="saveConfig">
-          {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Économie' }}
-        </button>
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Taxe sur les virements /pay (%)</label>
+          <span class="config-hint">Pourcentage prélevé sur chaque transfert (0 = aucune taxe).</span>
+        </div>
+        <input
+          v-model.number="config.tax_percent"
+          type="number"
+          min="0"
+          max="50"
+          class="discord-input"
+          style="width: 80px; text-align: center;"
+        />
       </div>
+
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Solde maximum autorisé</label>
+          <span class="config-hint">Plafond dur pour éviter les overflows mathématiques.</span>
+        </div>
+        <input
+          v-model.number="config.max_balance"
+          type="number"
+          min="1"
+          class="discord-input"
+          style="width: 140px; text-align: center;"
+        />
+      </div>
+    </div>
+
+    <!-- Drops & Cadeaux -->
+    <div class="config-card">
+      <div class="card-subtitle">🎁 Drops &amp; Boîtes Cadeaux</div>
+      <p class="config-desc">
+        Configuration des distributions d'objets ou de pièces dans les salons textuels.
+      </p>
+
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Durée par défaut (minutes)</label>
+          <span class="config-hint">Durée appliquée si l'argument n'est pas fourni à /drop.</span>
+        </div>
+        <input
+          v-if="config.drops"
+          v-model.number="config.drops.default_duration_min"
+          type="number"
+          min="1"
+          max="10"
+          class="discord-input"
+          style="width: 80px; text-align: center;"
+        />
+      </div>
+
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Durée maximum (minutes)</label>
+          <span class="config-hint">Borne supérieure pour les drops programmés.</span>
+        </div>
+        <input
+          v-if="config.drops"
+          v-model.number="config.drops.max_duration_min"
+          type="number"
+          min="1"
+          max="60"
+          class="discord-input"
+          style="width: 80px; text-align: center;"
+        />
+      </div>
+
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Récupération par bouton uniquement</label>
+          <span class="config-hint">Si activé, les membres doivent cliquer sur le bouton "Récupérer" pour claim.</span>
+        </div>
+        <label class="switch">
+          <input
+            v-if="config.drops"
+            v-model="config.drops.require_button"
+            type="checkbox"
+          />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Inventaire -->
+    <div class="config-card">
+      <div class="card-subtitle">📦 Limites d'Inventaire</div>
+      <p class="config-desc">
+        Capacités maximales de stockage par utilisateur et par item.
+      </p>
+
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Items max par utilisateur</label>
+          <span class="config-hint">Limite dure d'items cumulés (somme des quantités) par membre.</span>
+        </div>
+        <input
+          v-if="config.inventory"
+          v-model.number="config.inventory.max_per_user"
+          type="number"
+          min="1"
+          class="discord-input"
+          style="width: 100px; text-align: center;"
+        />
+      </div>
+
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Quantité max par item</label>
+          <span class="config-hint">Quantité maximale pour un même objet dans l'inventaire d'un membre.</span>
+        </div>
+        <input
+          v-if="config.inventory"
+          v-model.number="config.inventory.max_quantity_per_item"
+          type="number"
+          min="1"
+          class="discord-input"
+          style="width: 100px; text-align: center;"
+        />
+      </div>
+    </div>
+
+    <!-- Rétention -->
+    <div class="config-card">
+      <div class="card-subtitle">📚 Rétention des Transactions</div>
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Rétention de l'historique (jours)</label>
+          <span class="config-hint">Les transactions plus anciennes que X jours sont nettoyées automatiquement par tâche cron.</span>
+        </div>
+        <input
+          v-model.number="config.history_retention_days"
+          type="number"
+          min="1"
+          class="discord-input"
+          style="width: 100px; text-align: center;"
+        />
+      </div>
+    </div>
+
+    <div class="config-actions-bar">
+      <button class="btn-primary" :disabled="isSaving" @click="saveConfig">
+        {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Configuration Économie' }}
+      </button>
     </div>
   </div>
 </template>
@@ -105,7 +226,7 @@ definePageMeta({
 
 useSeoMeta({
   title: 'Économie & Boutique - Configuration',
-  description: 'Configuration de l\'économie et boutique virtuelle'
+  description: 'Configuration de l\'économie, drops et inventaire virtuel'
 });
 
 const route = useRoute();
@@ -114,12 +235,14 @@ const guildId = (route.params.guild as string) || 'default';
 const { config, isLoading, isSaving, load, save } = useConfigFeature('economy', {
   defaultConfig: {
     enabled: true,
-    currency_name: 'Coins',
-    currency_symbol: '🪙',
-    starting_balance: 100,
-    daily_reward: 250,
-    work_min: 50,
-    work_max: 150
+    daily_reward: 100,
+    cooldown_hours: 22,
+    starting_balance: 0,
+    tax_percent: 0,
+    max_balance: 999999999,
+    drops: { default_duration_min: 2, max_duration_min: 10, require_button: true },
+    inventory: { max_per_user: 200, max_quantity_per_item: 999 },
+    history_retention_days: 90
   }
 });
 
@@ -188,27 +311,6 @@ onMounted(() => {
 .config-hint {
   font-size: 12px;
   color: var(--text-muted, #949ba4);
-}
-
-.form-row {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-
-.col-half {
-  flex: 1;
-  min-width: 240px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-normal, #dbdee1);
 }
 
 .discord-input {

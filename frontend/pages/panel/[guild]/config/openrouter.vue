@@ -4,10 +4,11 @@
   </div>
 
   <div v-else class="config-page-wrapper">
+    <!-- OpenRouter & Résilience Polly -->
     <div class="config-card">
-      <div class="card-subtitle">🧠 OpenRouter, Modèles IA &amp; Résilience Polly</div>
+      <div class="card-subtitle">🤖 Configuration OpenRouter &amp; Modèle Principal</div>
       <p class="config-desc">
-        Configuration des clés API de génération d'intelligence artificielle et modèles alternatifs de secours.
+        Sélectionnez le modèle LLM principal utilisé par le bot et configurez les tokens et la température.
       </p>
 
       <div class="form-row">
@@ -21,36 +22,31 @@
           />
         </div>
         <div class="col-half">
-          <label class="form-label">Modèle IA Principal</label>
-          <input
-            v-model="config.primary_model"
-            type="text"
-            class="discord-input"
-            placeholder="nvidia/nemotron-3.5-lightning:free"
-          />
+          <label class="form-label">Modèle LLM Principal (OpenRouter)</label>
+          <OpenRouterModelSelect v-model="config.default_model" />
         </div>
       </div>
 
-      <div class="form-row">
+      <div class="form-row" style="margin-top: 14px;">
         <div class="col-half">
-          <label class="form-label">Modèle IA de Secours (Fallback)</label>
+          <label class="form-label">Tokens Maximum (max_tokens)</label>
           <input
-            v-model="config.fallback_model"
-            type="text"
+            v-model.number="config.max_tokens"
+            type="number"
+            min="50"
+            max="4096"
             class="discord-input"
-            placeholder="meta-llama/llama-3.3-70b-instruct:free"
           />
         </div>
         <div class="col-half">
-          <label class="form-label">Température de Génération</label>
+          <label class="form-label">Température (Créativité : 0.0 - 1.0)</label>
           <input
             v-model.number="config.temperature"
             type="number"
             step="0.1"
             min="0"
-            max="2"
+            max="1"
             class="discord-input"
-            placeholder="0.7"
           />
         </div>
       </div>
@@ -61,6 +57,17 @@
         </button>
       </div>
     </div>
+
+    <!-- Modèles de Secours & Politique de Réessai Style Polly -->
+    <div class="config-card">
+      <OpenRouterFallbackManager
+        :fallback-models="config.fallback_models || []"
+        :retry-policy="config.retry_policy || {}"
+        @update:fallback-models="config.fallback_models = $event"
+        @update:retry-policy="config.retry_policy = $event"
+        @save="saveConfig"
+      />
+    </div>
   </div>
 </template>
 
@@ -68,6 +75,8 @@
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useConfigFeature } from '~/composables/useConfigFeature.ts';
+import OpenRouterModelSelect from '~/components/common/OpenRouterModelSelect.vue';
+import OpenRouterFallbackManager from '~/components/common/OpenRouterFallbackManager.vue';
 
 definePageMeta({
   title: 'Configuration OpenRouter IA',
@@ -76,7 +85,7 @@ definePageMeta({
 
 useSeoMeta({
   title: 'Modèles IA & OpenRouter - Configuration',
-  description: 'Configuration des modèles IA et tokens OpenRouter'
+  description: 'Configuration du LLM OpenRouter et résilience IA'
 });
 
 const route = useRoute();
@@ -85,9 +94,11 @@ const guildId = (route.params.guild as string) || 'default';
 const { config, isLoading, isSaving, load, save } = useConfigFeature('openrouter', {
   defaultConfig: {
     api_key: '',
-    primary_model: 'nvidia/nemotron-3.5-lightning:free',
-    fallback_model: 'meta-llama/llama-3.3-70b-instruct:free',
-    temperature: 0.7
+    default_model: 'nvidia/nemotron-3.5-lightning:free',
+    max_tokens: 500,
+    temperature: 0.7,
+    fallback_models: [],
+    retry_policy: {}
   }
 });
 
@@ -131,7 +142,6 @@ onMounted(() => {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
 }
 
 .col-half {

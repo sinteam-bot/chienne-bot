@@ -4,16 +4,17 @@
   </div>
 
   <div v-else class="config-page-wrapper">
+    <!-- Paramètres Généraux -->
     <div class="config-card">
-      <div class="card-subtitle">🎂 Célébration des Anniversaires</div>
+      <div class="card-subtitle">⚙️ Paramètres Généraux</div>
       <p class="config-desc">
-        Souhaits automatiques, attribution de rôles temporaires et cadeaux en monnaie virtuelle le jour J.
+        Planifie les annonces quotidiennes et l'attribution des rôles festifs d'anniversaire.
       </p>
 
       <div class="config-item">
         <div class="config-label-group">
-          <label class="config-label">Activer le Module Anniversaires</label>
-          <span class="config-hint">Permet aux membres d'enregistrer leur date et publie une annonce le jour J.</span>
+          <label class="config-label">Activer le module Anniversaires</label>
+          <span class="config-hint">Planifie les annonces quotidiennes et l'attribution des rôles festifs.</span>
         </div>
         <label class="switch">
           <input v-model="config.enabled" type="checkbox" />
@@ -21,72 +22,130 @@
         </label>
       </div>
 
-      <div class="config-item">
-        <div class="config-label-group">
-          <label class="config-label">📢 Salon des Annonces d'Anniversaire</label>
-          <span class="config-hint">Salon où le message de fête sera publié à l'heure programmée.</span>
-        </div>
-        <div style="min-width: 260px;">
-          <DiscordChannelSelect
-            v-model="config.channel_id"
-            :allow-null="true"
-            null-label="— Aucun salon (Désactivé) —"
-            :filter-text-only="true"
-            placeholder="Sélectionner un salon…"
-          />
-        </div>
-      </div>
-
-      <div class="config-item">
-        <div class="config-label-group">
-          <label class="config-label">👑 Rôle Temporaire Anniversaire (24h)</label>
-          <span class="config-hint">Rôle exclusif attribué pendant la journée d'anniversaire du membre.</span>
-        </div>
-        <div style="min-width: 260px;">
-          <DiscordRoleSelect
-            v-model="config.role_id"
-            placeholder="Sélectionner un rôle…"
-          />
-        </div>
-      </div>
-
       <div class="form-row" style="margin-top: 14px;">
         <div class="col-half">
-          <label class="form-label">Heure d'Annonce Quotidienne (HH:MM)</label>
+          <label class="form-label">Mode de visibilité BDD</label>
+          <select v-model="config.mode" class="discord-input">
+            <option value="public">Public (Partagé entre tous les serveurs compatibles)</option>
+            <option value="private">Privé (Propre uniquement à ce serveur)</option>
+          </select>
+        </div>
+        <div class="col-half">
+          <label class="form-label">Heure de l'annonce (Fuseau: {{ config.announce?.timezone || 'Europe/Paris' }})</label>
           <input
-            v-model="config.announce_time"
-            type="text"
+            v-if="config.announce"
+            v-model.number="config.announce.hour"
+            type="number"
+            min="0"
+            max="23"
             class="discord-input"
-            placeholder="09:00"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Salon d'Annonce et Message -->
+    <div class="config-card">
+      <div class="card-subtitle">📢 Salon &amp; Message d'Annonce</div>
+      <p class="config-desc">
+        Salon et format du message festif diffusé automatiquement le jour de l'anniversaire du membre.
+      </p>
+
+      <div class="form-row">
+        <div class="col-half">
+          <label class="form-label">Salon d'Annonce</label>
+          <DiscordChannelSelect
+            v-if="config.announce"
+            v-model="config.announce.channel_id"
+            :allow-null="true"
+            null-label="— Aucun salon (désactiver l'annonce publique) —"
+            :filter-text-only="true"
           />
         </div>
         <div class="col-half">
-          <label class="form-label">Cadeau en Monnaie (Coins)</label>
-          <input
-            v-model.number="config.reward_coins"
-            type="number"
-            class="discord-input"
-            placeholder="500"
+          <label class="form-label">Rôle à mentionner le jour J (Optionnel)</label>
+          <DiscordRoleSelect
+            v-if="config.announce"
+            v-model="config.announce.ping_role_id"
+            :allow-null="true"
+            null-label="— Aucun ping —"
           />
         </div>
       </div>
 
-      <div style="margin-top: 12px;">
-        <label class="form-label">Modèle de Message de Souhait</label>
-        <textarea
-          v-model="config.message_template"
-          rows="3"
+      <div style="margin-top: 14px;">
+        <label class="form-label">Template du message ({user}, {age})</label>
+        <input
+          v-if="config.announce"
+          v-model="config.announce.message_template"
+          type="text"
           class="discord-input"
-          style="width: 100%; resize: vertical;"
-          placeholder="Joyeux anniversaire à {user} qui fête ses {age} ans aujourd'hui ! 🎂🎉"
-        ></textarea>
+          placeholder="🎂 Joyeux anniversaire {user} ! Tu fêtes tes **{age} ans** aujourd'hui ! 🎉"
+        />
+      </div>
+    </div>
+
+    <!-- Rôle temporaire & Cadeaux XP -->
+    <div class="config-card">
+      <div class="card-subtitle">🎁 Rôle Temporaire &amp; Cadeaux</div>
+      <p class="config-desc">
+        Attribuez un rôle exclusif pendant 24h et offrez des points d'XP en cadeau d'anniversaire.
+      </p>
+
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Rôle Temporaire le Jour J</label>
+          <span class="config-hint">Attribue un rôle festif le jour de l'anniversaire et le retire automatiquement à minuit.</span>
+        </div>
+        <label class="switch">
+          <input
+            v-if="config.temp_role"
+            v-model="config.temp_role.enabled"
+            type="checkbox"
+          />
+          <span class="slider"></span>
+        </label>
       </div>
 
-      <div class="config-actions-bar">
-        <button class="btn-primary" :disabled="isSaving" @click="saveConfig">
-          {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Anniversaires' }}
-        </button>
+      <div v-if="config.temp_role && config.temp_role.enabled" style="margin-top: 14px;">
+        <label class="form-label">Rôle festif à attribuer</label>
+        <DiscordRoleSelect
+          v-model="config.temp_role.role_id"
+          :allow-null="true"
+          null-label="— Sélectionner le rôle festif —"
+        />
       </div>
+
+      <div class="form-row" style="margin-top: 16px;">
+        <div class="col-half">
+          <label class="form-label">Bonus XP d'anniversaire offert</label>
+          <input
+            v-if="config.gifts"
+            v-model.number="config.gifts.xp_per_birthday"
+            type="number"
+            min="0"
+            step="50"
+            class="discord-input"
+          />
+        </div>
+        <div class="col-half">
+          <label class="form-label">Nombre max de cadeaux par membre</label>
+          <input
+            v-if="config.gifts"
+            v-model.number="config.gifts.max_per_user"
+            type="number"
+            min="1"
+            max="10"
+            class="discord-input"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="config-actions-bar">
+      <button class="btn-primary" :disabled="isSaving" @click="saveModuleConfig">
+        {{ isSaving ? 'Enregistrement…' : '💾 Sauvegarder Configuration Anniversaires' }}
+      </button>
     </div>
   </div>
 </template>
@@ -105,7 +164,7 @@ definePageMeta({
 
 useSeoMeta({
   title: 'Anniversaires - Configuration',
-  description: 'Configuration du module des anniversaires'
+  description: 'Configuration du salon d\'annonce, rôles festifs et cadeaux XP'
 });
 
 const route = useRoute();
@@ -114,15 +173,32 @@ const guildId = (route.params.guild as string) || 'default';
 const { config, isLoading, isSaving, load, save } = useConfigFeature('birthdays', {
   defaultConfig: {
     enabled: true,
-    channel_id: null,
-    role_id: null,
-    announce_time: '09:00',
-    reward_coins: 500,
-    message_template: 'Joyeux anniversaire à {user} qui fête ses {age} ans aujourd\'hui ! 🎂🎉'
+    mode: 'public',
+    announce: {
+      channel_id: null,
+      hour: 9,
+      timezone: 'Europe/Paris',
+      ping_role_id: null,
+      message_template: "🎂 Joyeux anniversaire {user} ! Tu fêtes tes **{age} ans** aujourd'hui ! 🎉"
+    },
+    temp_role: {
+      enabled: true,
+      role_id: null
+    },
+    gifts: {
+      max_per_user: 2,
+      xp_per_birthday: 500
+    },
+    cooldown: {
+      first_change_days: 1,
+      second_change_days: 2,
+      third_change_days: 180,
+      default_change_days: 365
+    }
   }
 });
 
-async function saveConfig() {
+async function saveModuleConfig() {
   await save(config.value, guildId);
 }
 

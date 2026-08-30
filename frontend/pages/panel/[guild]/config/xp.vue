@@ -7,13 +7,13 @@
     <div class="config-card">
       <div class="card-subtitle">⭐ Système d'XP, Niveaux &amp; Multiplicateurs</div>
       <p class="config-desc">
-        Gains d'expérience par message ou temps passé en vocal, cooldowns et salons d'annonces de niveau.
+        Configurez les taux d'attribution d'expérience par message textuel, temps passé en vocal et calcul des niveaux.
       </p>
 
       <div class="config-item">
         <div class="config-label-group">
-          <label class="config-label">Activer le Système d'XP</label>
-          <span class="config-hint">Permet aux membres de monter de niveau en discutant et d'obtenir des rôles.</span>
+          <label class="config-label">Activation du Système d'XP</label>
+          <span class="config-hint">Permet aux membres de gagner de l'expérience en discutant dans les salons et en vocal.</span>
         </div>
         <label class="switch">
           <input v-model="config.enabled" type="checkbox" />
@@ -37,55 +37,87 @@
         </div>
       </div>
 
-      <div class="form-divider" style="margin: 16px 0; border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.06));"></div>
-
-      <div class="card-subtitle" style="font-size: 14px; margin-bottom: 10px;">📊 Paramètres de Gains &amp; Cooldowns</div>
-
+      <div class="card-subtitle" style="margin-top: 20px; font-size: 14px;">💬 Gains d'XP par Message Textuel</div>
       <div class="form-row">
         <div class="col-half">
-          <label class="form-label">XP Minimum par Message</label>
+          <label class="form-label">XP Minimum par message</label>
           <input
-            v-model.number="config.xp_per_message_min"
+            v-if="config.message_xp"
+            v-model.number="config.message_xp.min"
             type="number"
             class="discord-input"
-            placeholder="15"
           />
         </div>
         <div class="col-half">
-          <label class="form-label">XP Maximum par Message</label>
+          <label class="form-label">XP Maximum par message</label>
           <input
-            v-model.number="config.xp_per_message_max"
+            v-if="config.message_xp"
+            v-model.number="config.message_xp.max"
             type="number"
             class="discord-input"
-            placeholder="25"
+          />
+        </div>
+      </div>
+      <div class="form-row" style="margin-top: 10px;">
+        <div class="col-half">
+          <label class="form-label">Délai de rechargement / Cooldown (secondes)</label>
+          <input
+            v-if="config.message_xp"
+            v-model.number="config.message_xp.cooldown"
+            type="number"
+            class="discord-input"
           />
         </div>
       </div>
 
+      <div class="card-subtitle" style="margin-top: 20px; font-size: 14px;">🎙️ Gains d'XP Vocal</div>
       <div class="form-row">
         <div class="col-half">
-          <label class="form-label">Cooldown entre Messages (secondes)</label>
+          <label class="form-label">XP par Minute en salon vocal</label>
           <input
-            v-model.number="config.message_cooldown_seconds"
+            v-if="config.voice_xp"
+            v-model.number="config.voice_xp.per_minute"
             type="number"
             class="discord-input"
-            placeholder="60"
           />
         </div>
         <div class="col-half">
-          <label class="form-label">XP Vocal par Minute</label>
+          <label class="form-label">Intervalle de vérification (secondes)</label>
           <input
-            v-model.number="config.voice_xp_per_minute"
+            v-if="config.voice_xp"
+            v-model.number="config.voice_xp.check_interval"
             type="number"
             class="discord-input"
-            placeholder="10"
           />
         </div>
       </div>
 
-      <div class="config-actions-bar">
+      <div class="card-subtitle" style="margin-top: 20px; font-size: 14px;">📈 Calcul des Niveaux</div>
+      <div class="form-row">
+        <div class="col-half">
+          <label class="form-label">XP de Base (Niveau 1)</label>
+          <input
+            v-if="config.level"
+            v-model.number="config.level.base_xp"
+            type="number"
+            class="discord-input"
+          />
+        </div>
+        <div class="col-half">
+          <label class="form-label">Multiplicateur par Niveau</label>
+          <input
+            v-if="config.level"
+            v-model.number="config.level.multiplier"
+            type="number"
+            step="0.1"
+            class="discord-input"
+          />
+        </div>
+      </div>
+
+      <div class="config-actions-bar" style="margin-top: 20px;">
         <button class="btn-primary" :disabled="isSaving" @click="saveConfig">
-          {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Paramètres XP' }}
+          {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Configuration XP' }}
         </button>
       </div>
     </div>
@@ -105,7 +137,7 @@ definePageMeta({
 
 useSeoMeta({
   title: 'Système XP & Niveaux - Configuration',
-  description: 'Configuration des gains d\'XP et niveaux'
+  description: 'Configuration du calcul d\'XP et des paliers de niveaux'
 });
 
 const route = useRoute();
@@ -115,10 +147,9 @@ const { config, isLoading, isSaving, load, save } = useConfigFeature('xp', {
   defaultConfig: {
     enabled: true,
     level_up_channel_id: null,
-    xp_per_message_min: 15,
-    xp_per_message_max: 25,
-    message_cooldown_seconds: 60,
-    voice_xp_per_minute: 10
+    message_xp: { min: 15, max: 25, cooldown: 10 },
+    voice_xp: { per_minute: 2, check_interval: 5, min_duration: 1 },
+    level: { base_xp: 100, multiplier: 1.5 }
   }
 });
 

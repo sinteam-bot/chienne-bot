@@ -4,16 +4,17 @@
   </div>
 
   <div v-else class="config-page-wrapper">
+    <!-- Activation & Règles -->
     <div class="config-card">
-      <div class="card-subtitle">🎭 Rôles à Réaction, Menus &amp; Boutons</div>
+      <div class="card-subtitle">⚙️ Paramètres Généraux des Rôles à Réaction</div>
       <p class="config-desc">
-        Attribution automatique de rôles via interactions Discord (boutons, sélecteurs déroulants ou réactions emojis).
+        Configurez l'auto-assignation, les limites par message et l'attribution des rôles.
       </p>
 
       <div class="config-item">
         <div class="config-label-group">
-          <label class="config-label">Activer les Rôles à Réaction</label>
-          <span class="config-hint">Active la détection des interactions sur les messages configurés.</span>
+          <label class="config-label">Activer le module Rôles à Réaction</label>
+          <span class="config-hint">Active l'attribution automatique de rôles via réactions et composants.</span>
         </div>
         <label class="switch">
           <input v-model="config.enabled" type="checkbox" />
@@ -23,21 +24,64 @@
 
       <div class="config-item">
         <div class="config-label-group">
-          <label class="config-label">Mode d'Attribution par Défaut</label>
-          <span class="config-hint">Normal (toggle), Unique (un seul rôle parmi la liste) ou Permanent.</span>
+          <label class="config-label">Auto-assignation par les membres</label>
+          <span class="config-hint">
+            Si activé, n'importe quel membre peut s'attribuer le rôle en cliquant sur la réaction.
+          </span>
         </div>
-        <select v-model="config.default_mode" class="discord-input" style="width: 200px;">
-          <option value="toggle">Bascule (Toggle)</option>
-          <option value="unique">Exclusif (1 seul)</option>
-          <option value="permanent">Permanent (Add only)</option>
-        </select>
+        <label class="switch">
+          <input v-model="config.self_assignable" type="checkbox" />
+          <span class="slider"></span>
+        </label>
       </div>
 
-      <div class="config-actions-bar">
-        <button class="btn-primary" :disabled="isSaving" @click="saveConfig">
-          {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Rôles à Réaction' }}
-        </button>
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Limite par message</label>
+          <span class="config-hint">Nombre maximum de paires emoji↔rôle par message (sécurité anti-spam).</span>
+        </div>
+        <input
+          v-model.number="config.max_per_message"
+          type="number"
+          min="1"
+          max="50"
+          class="discord-input"
+          style="width: 80px; text-align: center;"
+        />
       </div>
+    </div>
+
+    <!-- Rôles autorisés (admin) -->
+    <div class="config-card">
+      <div class="card-subtitle">🛡️ Rôles autorisés (Administration)</div>
+      <p class="config-desc">
+        Seuls les membres avec l'un de ces rôles (ou la permission ManageRoles) peuvent utiliser les commandes <code>/reactionrole-*</code>.
+      </p>
+      <div style="margin-top: 12px;">
+        <DiscordRoleSelect
+          v-model="config.allowed_roles"
+          :multiple="true"
+          placeholder="Aucun (tous les modérateurs ManageRoles)"
+        />
+      </div>
+    </div>
+
+    <!-- Aide & Astuces -->
+    <div class="config-card">
+      <div class="card-subtitle">💡 Astuces &amp; Fonctionnement</div>
+      <ul style="margin: 8px 0 0 20px; color: var(--text-muted, #949ba4); font-size: 13px; line-height: 1.7;">
+        <li>Les <strong>réactions existantes</strong> sur un message sont automatiquement synchronisées : si un membre retire sa réaction, le rôle est automatiquement enlevé.</li>
+        <li>Vous pouvez utiliser des <strong>emojis custom</strong> du serveur ou des <strong>emojis unicode</strong> standard (🎉, ✅, etc.).</li>
+        <li>Quand un message de rôles à réaction est <strong>supprimé</strong>, les écouteurs sont automatiquement nettoyés.</li>
+        <li>Le bot Discord ne peut pas attribuer des rôles <strong>placés au-dessus de son propre rôle</strong> dans la hiérarchie Discord.</li>
+      </ul>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="config-actions-bar">
+      <button class="btn-primary" :disabled="isSaving" @click="saveConfig">
+        {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Rôles à Réaction' }}
+      </button>
     </div>
   </div>
 </template>
@@ -46,6 +90,7 @@
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useConfigFeature } from '~/composables/useConfigFeature.ts';
+import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 
 definePageMeta({
   title: 'Configuration Rôles à Réaction',
@@ -63,7 +108,9 @@ const guildId = (route.params.guild as string) || 'default';
 const { config, isLoading, isSaving, load, save } = useConfigFeature('reaction_roles', {
   defaultConfig: {
     enabled: true,
-    default_mode: 'toggle'
+    self_assignable: true,
+    max_per_message: 25,
+    allowed_roles: [] as string[]
   }
 });
 

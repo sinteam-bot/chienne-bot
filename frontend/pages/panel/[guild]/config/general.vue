@@ -4,10 +4,11 @@
   </div>
 
   <div v-else class="config-page-wrapper">
+    <!-- 1. Paramètres Discord Généraux -->
     <div class="config-card">
-      <div class="card-subtitle">🤖 Identifiants &amp; Apparence Discord</div>
+      <div class="card-subtitle">🤖 Identifiants &amp; Couleur Discord</div>
       <p class="config-desc">
-        Configurez les identifiants Discord principaux, le préfixe textuel et la couleur par défaut du bot.
+        Configurez les identifiants principaux du bot Discord et la couleur par défaut des embeds.
       </p>
 
       <div class="form-row">
@@ -31,7 +32,7 @@
         </div>
       </div>
 
-      <div class="form-row">
+      <div class="form-row" style="margin-top: 14px;">
         <div class="col-half">
           <label class="form-label">Couleur par défaut du Bot (Embeds)</label>
           <div style="display: flex; gap: 8px; align-items: center;">
@@ -60,7 +61,7 @@
         </div>
       </div>
 
-      <div class="config-actions-bar">
+      <div class="config-actions-bar" style="margin-top: 20px;">
         <button class="btn-primary" :disabled="isSaving" @click="saveConfig">
           {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Paramètres Discord' }}
         </button>
@@ -81,7 +82,7 @@ definePageMeta({
 
 useSeoMeta({
   title: 'Général & Discord - Configuration',
-  description: 'Configuration générale du bot Discord'
+  description: 'Paramètres généraux du bot Discord'
 });
 
 const route = useRoute();
@@ -136,7 +137,6 @@ onMounted(() => {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
 }
 
 .col-half {

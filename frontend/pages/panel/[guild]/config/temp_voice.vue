@@ -5,15 +5,15 @@
 
   <div v-else class="config-page-wrapper">
     <div class="config-card">
-      <div class="card-subtitle">🔊 Salons Vocaux Temporaires (Join-to-Create)</div>
+      <div class="card-subtitle">🔊 Configuration des Vocaux Temporaires (Join-to-Create)</div>
       <p class="config-desc">
-        Création instantanée d'un salon vocal privé lorsqu'un membre rejoint le salon maître, et suppression automatique une fois vide.
+        Sélectionnez les salons vocaux qui serviront de "Join-to-Trigger" : un membre qui y entre déclenche la création d'un salon vocal privé éphémère.
       </p>
 
       <div class="config-item">
         <div class="config-label-group">
-          <label class="config-label">Activer les Salons Vocaux Temporaires</label>
-          <span class="config-hint">Active l'écoute des connexions sur le salon vocal maître.</span>
+          <label class="config-label">Activer le module Vocaux Temporaires</label>
+          <span class="config-hint">Active l'écoute des connexions sur les salons maîtres configurés.</span>
         </div>
         <label class="switch">
           <input v-model="config.enabled" type="checkbox" />
@@ -23,44 +23,79 @@
 
       <div class="config-item">
         <div class="config-label-group">
-          <label class="config-label">🎙️ Salon Vocal Maître (Join-to-Create)</label>
-          <span class="config-hint">Le salon vocal sur lequel cliquer pour déclencher la création.</span>
+          <label class="config-label">Salons Déclencheurs (Join-to-Trigger)</label>
+          <span class="config-hint">Salons vocaux sur lesquels cliquer pour créer automatiquement un vocal privé.</span>
         </div>
-        <div style="min-width: 260px;">
+        <div style="flex: 1; max-width: 400px;">
           <DiscordChannelSelect
-            v-model="config.creator_channel_id"
-            :filter-text-only="false"
-            placeholder="Sélectionner le salon vocal…"
+            v-model="config.joinChannels"
+            :multiple="true"
+            channel-type="guild-voice"
+            placeholder="Sélectionner un ou plusieurs salons vocaux"
           />
         </div>
       </div>
 
-      <div class="form-row" style="margin-top: 14px;">
-        <div class="col-half">
-          <label class="form-label">Modèle de Nom du Salon Éphémère</label>
-          <input
-            v-model="config.channel_name_template"
-            type="text"
-            class="discord-input"
-            placeholder="🔊 Salon de {user}"
-          />
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Catégorie Parente des Salons Créés</label>
+          <span class="config-hint">Catégorie Discord où les salons éphémères seront créés.</span>
         </div>
-        <div class="col-half">
-          <label class="form-label">Limite d'Utilisateurs par Défaut</label>
-          <input
-            v-model.number="config.user_limit"
-            type="number"
-            min="0"
-            max="99"
-            class="discord-input"
-            placeholder="0 (Illimité)"
+        <div style="flex: 1; max-width: 400px;">
+          <DiscordChannelSelect
+            v-model="config.categoryId"
+            channel-type="guild-category"
+            placeholder="Aucune (racine du serveur)"
           />
         </div>
       </div>
 
-      <div class="config-actions-bar">
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Template du Nom du Salon</label>
+          <span class="config-hint">Variables : <code>{user}</code> = surnom, <code>{username}</code> = pseudo Discord</span>
+        </div>
+        <input
+          v-model="config.format"
+          class="discord-input"
+          placeholder="{user}'s game"
+          style="width: 260px;"
+        />
+      </div>
+
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Délai de suppression (secondes)</label>
+          <span class="config-hint">Délai avant suppression une fois le salon vide (0 = suppression immédiate).</span>
+        </div>
+        <input
+          v-model.number="config.deleteDelaySeconds"
+          type="number"
+          min="0"
+          max="300"
+          class="discord-input"
+          style="width: 100px; text-align: center;"
+        />
+      </div>
+
+      <div class="config-item">
+        <div class="config-label-group">
+          <label class="config-label">Max vocaux simultanés par serveur</label>
+          <span class="config-hint">Limite anti-spam (0 = illimité).</span>
+        </div>
+        <input
+          v-model.number="config.maxPerGuild"
+          type="number"
+          min="0"
+          max="50"
+          class="discord-input"
+          style="width: 100px; text-align: center;"
+        />
+      </div>
+
+      <div class="config-actions-bar" style="margin-top: 20px;">
         <button class="btn-primary" :disabled="isSaving" @click="saveConfig">
-          {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Salons Vocaux' }}
+          {{ isSaving ? 'Enregistrement...' : '💾 Sauvegarder Vocaux Temporaires' }}
         </button>
       </div>
     </div>
@@ -89,9 +124,11 @@ const guildId = (route.params.guild as string) || 'default';
 const { config, isLoading, isSaving, load, save } = useConfigFeature('temp_voice', {
   defaultConfig: {
     enabled: true,
-    creator_channel_id: null,
-    channel_name_template: '🔊 Salon de {user}',
-    user_limit: 0
+    joinChannels: [] as string[],
+    categoryId: null as string | null,
+    format: "{user}'s game",
+    deleteDelaySeconds: 5,
+    maxPerGuild: 0
   }
 });
 
@@ -160,26 +197,6 @@ onMounted(() => {
 .config-hint {
   font-size: 12px;
   color: var(--text-muted, #949ba4);
-}
-
-.form-row {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.col-half {
-  flex: 1;
-  min-width: 240px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-normal, #dbdee1);
 }
 
 .discord-input {
