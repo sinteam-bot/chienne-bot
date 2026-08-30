@@ -209,8 +209,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useDiscordApi } from '~/composables/useDiscordApi';
-import { useToast } from '~/composables/useToast';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 import DiscordRole from '~/components/common/DiscordRole.vue';
@@ -230,44 +229,42 @@ useSeoMeta({
   ogDescription: 'Configuration avancée de la bienvenue, rôles automatiques, messages DM et paliers'
 });
 
-const { apiFetch } = useDiscordApi();
-const { showToast } = useToast();
-
-const isSaving = ref(false);
 const newRoleToAdd = ref<string>('');
 
-const config = ref<any>({
-  enabled: true,
-  channel_id: null,
-  welcome_color: '#f2c7ce',
-  AUTO_ROLES: [] as string[],
-  welcome_message: {
+const { config, isSaving, load, save } = useConfigFeature('welcome', {
+  defaultConfig: {
     enabled: true,
-    title: '🎉 Bienvenue sur {server} !',
-    description: 'Bienvenue {user} !\n\nNous sommes ravis de t\'accueillir parmi nous ! 🎊',
-    color: '#f2c7ce',
-    footer: 'Membre #{memberCount}',
-    thumbnail: 'user',
-    image: null
-  },
-  dm_message: {
-    enabled: true,
-    title: '👋 Bienvenue !',
-    description: 'Salut {username} !\n\nBienvenue sur **{server}** !',
-    color: '#f2c7ce'
-  },
-  card: {
-    template: 'welcome'
-  },
-  milestones: {
-    enabled: false,
     channel_id: null,
-    thresholds: [10, 50, 100, 500, 1000, 5000],
-    template: '🎯 Le serveur passe à {count} membres !'
-  },
-  leave: {
-    enabled: false,
-    template: 'leave'
+    welcome_color: '#f2c7ce',
+    AUTO_ROLES: [] as string[],
+    welcome_message: {
+      enabled: true,
+      title: '🎉 Bienvenue sur {server} !',
+      description: "Bienvenue {user} !\n\nNous sommes ravis de t'accueillir parmi nous ! 🎊",
+      color: '#f2c7ce',
+      footer: 'Membre #{memberCount}',
+      thumbnail: 'user',
+      image: null
+    },
+    dm_message: {
+      enabled: true,
+      title: '👋 Bienvenue !',
+      description: 'Salut {username} !\n\nBienvenue sur **{server}** !',
+      color: '#f2c7ce'
+    },
+    card: {
+      template: 'welcome'
+    },
+    milestones: {
+      enabled: false,
+      channel_id: null,
+      thresholds: [10, 50, 100, 500, 1000, 5000],
+      template: '🎯 Le serveur passe à {count} membres !'
+    },
+    leave: {
+      enabled: false,
+      template: 'leave'
+    }
   }
 });
 
@@ -289,80 +286,20 @@ function removeAutoRole(roleId: string) {
 
 function onThresholdsInput(e: any) {
   const val = e.target.value;
+  config.value.milestones = config.value.milestones || {};
   config.value.milestones.thresholds = val
     .split(',')
     .map((s: string) => parseInt(s.trim(), 10))
     .filter((n: number) => !isNaN(n) && n > 0);
 }
 
-async function loadConfig() {
-  try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.welcome) {
-      const w = res.data.welcome;
-      config.value = {
-        enabled: w.enabled ?? true,
-        channel_id: w.channel_id || null,
-        welcome_color: w.welcome_color || '#f2c7ce',
-        AUTO_ROLES: Array.isArray(w.AUTO_ROLES) ? w.AUTO_ROLES : [],
-        welcome_message: {
-          enabled: w.welcome_message?.enabled ?? true,
-          title: w.welcome_message?.title || '🎉 Bienvenue sur {server} !',
-          description: w.welcome_message?.description || 'Bienvenue {user} !\n\nNous sommes ravis de t\'accueillir parmi nous ! 🎊',
-          color: w.welcome_message?.color || '#f2c7ce',
-          footer: w.welcome_message?.footer || 'Membre #{memberCount}',
-          thumbnail: w.welcome_message?.thumbnail || 'user',
-          image: w.welcome_message?.image || null
-        },
-        dm_message: {
-          enabled: w.dm_message?.enabled ?? true,
-          title: w.dm_message?.title || '👋 Bienvenue !',
-          description: w.dm_message?.description || 'Salut {username} !\n\nBienvenue sur **{server}** !',
-          color: w.dm_message?.color || '#f2c7ce'
-        },
-        card: {
-          template: w.card?.template || 'welcome'
-        },
-        milestones: {
-          enabled: w.milestones?.enabled ?? false,
-          channel_id: w.milestones?.channel_id || null,
-          thresholds: w.milestones?.thresholds || [10, 50, 100, 500, 1000, 5000],
-          template: w.milestones?.template || '🎯 Le serveur passe à {count} membres !'
-        },
-        leave: {
-          enabled: w.leave?.enabled ?? false,
-          template: w.leave?.template || 'leave'
-        }
-      };
-    }
-  } catch (err) {
-    console.error('Erreur chargement config welcome:', err);
-  }
-}
-
 async function saveModuleConfig() {
-  isSaving.value = true;
-  try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: {
-        module: 'welcome',
-        config: config.value
-      }
-    });
-    if (res.success) {
-      showToast('Configuration Bienvenue enregistrée avec succès !', 'success');
-    } else {
-      showToast('Erreur lors de l\'enregistrement', 'error');
-    }
-  } catch (err: any) {
-    showToast('Erreur: ' + err.message, 'error');
-  } finally {
-    isSaving.value = false;
-  }
+  await save();
 }
 
-onMounted(loadConfig);
+onMounted(() => {
+  load();
+});
 </script>
 
 <style scoped>

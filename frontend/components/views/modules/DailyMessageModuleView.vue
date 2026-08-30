@@ -238,6 +238,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 import OpenRouterModelSelect from '~/components/common/OpenRouterModelSelect.vue';
 import OpenRouterFallbackManager from '~/components/common/OpenRouterFallbackManager.vue';
@@ -247,13 +248,15 @@ const { showToast } = useToast();
 const { discordChannels } = useAppState();
 
 const activeSubTab = ref<'stats' | 'config'>('stats');
-const config = ref<any>({
-  enabled: true,
-  channel_id: '',
-  preview_channel_id: '',
-  color: '#F2C7CE',
-  ai_config: {
-    model: 'nvidia/nemotron-3-ultra-550b-a55b:free'
+const { config, isSaving, load: loadModuleConfig, save: saveDailyConfig } = useConfigFeature('daily_message', {
+  defaultConfig: {
+    enabled: true,
+    channel_id: '',
+    preview_channel_id: '',
+    color: '#F2C7CE',
+    ai_config: {
+      model: 'nvidia/nemotron-3-ultra-550b-a55b:free'
+    }
   }
 });
 
@@ -263,7 +266,6 @@ const envInfo = ref<any>({});
 const isLoading = ref(true);
 const isGenerating = ref(false);
 const isActionRunning = ref(false);
-const isSaving = ref(false);
 
 const currentModel = computed(() => {
   return config.value?.ai_config?.model || envInfo.value?.configuredModel || envInfo.value?.openaiModel || 'nvidia/nemotron-3-ultra-550b-a55b:free';
@@ -309,38 +311,12 @@ async function loadDailyData() {
   }
 }
 
-async function loadModuleConfig() {
-  try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.daily_message) {
-      config.value = {
-        ...config.value,
-        ...res.data.daily_message
-      };
-    }
-  } catch (err) {
-    console.error('Erreur chargement config daily:', err);
-  }
-}
-
 async function saveModuleConfig() {
-  isSaving.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: JSON.stringify({
-        module: 'daily_message',
-        config: config.value
-      })
-    });
-    if (res.success) {
-      showToast('Configuration Daily Message enregistrée dans config.yml !', 'success');
-      await loadDailyData();
-    }
+    await saveDailyConfig();
+    await loadDailyData();
   } catch (err: any) {
     showToast(`Erreur d'enregistrement: ${err.message}`, 'error');
-  } finally {
-    isSaving.value = false;
   }
 }
 

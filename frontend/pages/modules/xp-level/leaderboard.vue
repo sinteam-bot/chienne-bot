@@ -97,6 +97,8 @@ import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import DiscordPagination from '~/components/common/DiscordPagination.vue';
 import DiscordUser from '~/components/common/DiscordUser.vue';
 
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
+
 definePageMeta({
   title: 'Classement XP',
   icon: '🏆',
@@ -113,12 +115,12 @@ useSeoMeta({
 });
 
 const { users } = useAppState();
-const { apiFetch } = useDiscordApi();
-
 const inspectUser = inject<(user: any) => void>('inspectUser', () => {});
 
-const config = ref<any>({
-  enabled: true
+const { config, load: loadConfig } = useConfigFeature('xp', {
+  defaultConfig: {
+    enabled: true
+  }
 });
 
 const currentPage = ref(1);
@@ -134,20 +136,6 @@ const paginatedUsers = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
   return rankedUsers.value.slice(start, start + pageSize.value);
 });
-
-async function loadConfig() {
-  try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.xp_level) {
-      config.value = {
-        ...config.value,
-        ...res.data.xp_level
-      };
-    }
-  } catch (err) {
-    console.error('Erreur chargement config xp:', err);
-  }
-}
 
 onMounted(() => {
   loadConfig();

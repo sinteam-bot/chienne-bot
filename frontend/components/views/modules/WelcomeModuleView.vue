@@ -134,59 +134,36 @@
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 import DiscordEmbed from '~/components/common/DiscordEmbed.vue';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 
-const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 const { discordChannels, guild } = useAppState();
 
 const activeSubTab = ref<'preview' | 'config'>('preview');
-const config = ref<any>({
-  enabled: true,
-  welcome_channel_id: '',
-  presentation_channel_id: '',
-  embed: {
-    title: 'Bienvenue sur le serveur !',
-    description: 'Salut {username} ! Bienvenue sur **{server}** !',
-    color: '#f2c7ce'
+const { config, isSaving, load: loadModuleConfig, save: saveWelcomeConfig } = useConfigFeature('welcome', {
+  defaultConfig: {
+    enabled: true,
+    welcome_channel_id: '',
+    presentation_channel_id: '',
+    embed: {
+      title: 'Bienvenue sur le serveur !',
+      description: 'Salut {username} ! Bienvenue sur **{server}** !',
+      color: '#f2c7ce'
+    }
   }
 });
-const isSaving = ref(false);
 
 onMounted(() => {
   loadModuleConfig();
 });
 
-async function loadModuleConfig() {
-  try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.welcome) {
-      config.value = res.data.welcome;
-      config.value.embed = config.value.embed || {};
-    }
-  } catch (err) {
-    console.error('Erreur config welcome:', err);
-  }
-}
-
 async function saveModuleConfig() {
-  isSaving.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: JSON.stringify({
-        module: 'welcome',
-        config: config.value
-      })
-    });
-    if (res.success) {
-      showToast('Configuration Bienvenue enregistrée dans config.yml !', 'success');
-    }
+    await saveWelcomeConfig();
   } catch (err: any) {
     showToast(`Erreur d'enregistrement: ${err.message}`, 'error');
-  } finally {
-    isSaving.value = false;
   }
 }
 

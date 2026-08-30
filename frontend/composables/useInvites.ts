@@ -1,4 +1,5 @@
-import { useDiscordApi } from './useDiscordApi';
+import { useDiscordApi } from './useDiscordApi.ts';
+import { useConfigFeature } from './useConfigFeature.ts';
 
 export interface InviteStats {
   stats: {
@@ -62,44 +63,36 @@ export interface InviteFeatureConfig {
 
 export const useInvites = () => {
   const api = useDiscordApi();
-  let cachedDefaultGuild: string | null = null;
-
-  /**
-   * Récupère le guild_id depuis, par ordre de priorité :
-   *   1. Query string de l'URL (?guild_id=...)
-   *   2. localStorage (sélection UI)
-   *   3. /api/config → discord.guild_id (fallback depuis le bot)
-   *
-   * Le cache évite de re-fetcher la config à chaque appel.
-   */
-  async function getGuildId(): Promise<string> {
-    if (typeof window === 'undefined') return '';
-    const params = new URLSearchParams(window.location.search);
-    const fromUrl = params.get('guild_id');
-    if (fromUrl) return fromUrl;
-    const fromStorage = window.localStorage.getItem('guild_id');
-    if (fromStorage) return fromStorage;
-    if (cachedDefaultGuild) return cachedDefaultGuild;
-    try {
-      const res = await api.apiFetch<{ success: boolean; data: any }>('/api/config');
-      const gid = res.data?.discord?.guild_id;
-      if (gid) {
-        cachedDefaultGuild = gid;
-        return gid;
+  const featureConfig = useConfigFeature<InviteFeatureConfig>('invites', {
+    defaultConfig: {
+      enabled: true,
+      join_log_channel_id: '',
+      leave_log_channel_id: '',
+      join_message: ':incoming_envelope: {member} a rejoint le serveur via l\'invitation de **{inviter}** ({invite_uses} utilisation{plural}).',
+      leave_message: ':outbox_tray: {member} a quitté le serveur (était invité par **{inviter}**).',
+      embed_color: '#2F3136',
+      show_account_age: true,
+      track_bots: false,
+      fake_account_threshold_days: 7,
+      fake_no_avatar: true,
+      leaderboard: {
+        enabled: true,
+        page_size: 25,
+        show_avatars: true
       }
-    } catch {
-      // ignore
     }
-    return '';
+  });
+
+  async function getGuildId(): Promise<string> {
+    return featureConfig.resolveGuildId();
   }
 
-  /** Version synchrone : localStorage + URL uniquement (pas d'API). */
   function getGuildIdSync(): string {
-    if (typeof window === 'undefined') return '';
+    if (typeof window === 'undefined') return 'default';
     const params = new URLSearchParams(window.location.search);
-    const fromUrl = params.get('guild_id');
+    const fromUrl = params.get('guild_id') || params.get('guildId');
     if (fromUrl) return fromUrl;
-    return window.localStorage.getItem('guild_id') || '';
+    return window.localStorage.getItem('guild_id') || 'default';
   }
 
   async function getUserStats(guildId: string, userId: string): Promise<InviteStats> {
@@ -124,47 +117,22 @@ export const useInvites = () => {
     return res.data || [];
   }
 
-  async function getConfig(guildId: string): Promise<InviteFeatureConfig | null> {
-    // /api/features/invites passe par featureRegistry.get() qui consulte
-    // la DB en priorité (donc reflète les modifs faites par PATCH).
-    // À la différence de /api/config qui ne lit que config.yml.
-    const res = await api.apiFetch<{ success: boolean; data: any }>(
-      `/api/features/invites?guild_id=${encodeURIComponent(guildId)}`
-    );
-    const f = res.data;
-    if (!f) return null;
-    return {
-      enabled: !!f.enabled,
-      join_log_channel_id: f.config?.join_log_channel_id ?? null,
-      leave_log_channel_id: f.config?.leave_log_channel_id ?? null,
-      join_message: f.config?.join_message ?? '',
-      leave_message: f.config?.leave_message ?? '',
-      embed_color: f.config?.embed_color ?? '#2F3136',
-      show_account_age: f.config?.show_account_age ?? true,
-      track_bots: f.config?.track_bots ?? false,
-      fake_account_threshold_days: f.config?.fake_account_threshold_days ?? 7,
-      fake_no_avatar: f.config?.fake_no_avatar ?? true,
-      leaderboard: {
-        enabled: f.config?.leaderboard?.enabled ?? true,
-        page_size: f.config?.leaderboard?.page_size ?? 25,
-        show_avatars: f.config?.leaderboard?.show_avatars ?? true
-      }
-    };
+  async function getConfig(guildId?: string): Promise<InviteFeatureConfig | null> {
+    return featureConfig.getFeatureConfig('invites', guildId);
   }
 
-  /**
-   * Met à jour la configuration du feature invites via PATCH /api/features/invites.
-   * Accepte un patch partiel (les champs non fournis sont préservés par le backend).
-   */
-  async function updateConfig(guildId: string, patch: Partial<InviteFeatureConfig> & { enabled?: boolean }): Promise<void> {
-    await api.apiFetch<{ success: boolean; data: any }>(
-      `/api/features/invites`,
-      {
-        method: 'PATCH',
-        body: { guildId, ...patch }
-      }
-    );
+  async function updateConfig(guildId?: string, patch?: Partial<InviteFeatureConfig> & { enabled?: boolean }): Promise<void> {
+    await featureConfig.saveFeatureConfig('invites', patch, guildId);
   }
 
-  return { getUserStats, getLeaderboard, getBlacklist, getConfig, getGuildId, getGuildIdSync, updateConfig };
+  return {
+    getUserStats,
+    getLeaderboard,
+    getBlacklist,
+    getConfig,
+    getGuildId,
+    getGuildIdSync,
+    updateConfig,
+    featureConfig
+  };
 };

@@ -79,9 +79,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useDiscordApi } from '~/composables/useDiscordApi.ts';
-import { useToast } from '~/composables/useToast.ts';
+import { onMounted } from 'vue';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 import OpenRouterModelSelect from '~/components/common/OpenRouterModelSelect.vue';
 
@@ -100,65 +99,23 @@ useSeoMeta({
   ogDescription: 'Configuration du canal, du prompt et du modèle IA pour la pensée du jour'
 });
 
-const { apiFetch } = useDiscordApi();
-const { showToast } = useToast();
-
-const isSaving = ref(false);
-
-const config = ref<any>({
-  enabled: true,
-  channel_id: '',
-  preview_channel_id: '',
-  prompt: '',
-  ai_config: {
-    model: 'nvidia/nemotron-3-ultra-550b-a55b:free'
+const { config, isSaving, load, save } = useConfigFeature('daily_message', {
+  defaultConfig: {
+    enabled: true,
+    channel_id: '',
+    preview_channel_id: '',
+    prompt: '',
+    ai_config: {
+      model: 'nvidia/nemotron-3-ultra-550b-a55b:free'
+    }
   }
 });
 
-async function loadConfig() {
-  try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data) {
-      if (res.data.daily_message) {
-        config.value = {
-          ...config.value,
-          ...res.data.daily_message,
-          ai_config: {
-            ...config.value.ai_config,
-            ...(res.data.daily_message.ai_config || {})
-          }
-        };
-      }
-    }
-  } catch (err) {
-    console.error('Erreur chargement config daily message:', err);
-  }
-}
-
 async function saveModuleConfig() {
-  isSaving.value = true;
-  try {
-    const resDaily = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: {
-        module: 'daily_message',
-        config: config.value
-      }
-    });
-
-    if (resDaily.success) {
-      showToast('Configuration Daily Message sauvegardée !', 'success');
-    } else {
-      showToast('Erreur de sauvegarde', 'error');
-    }
-  } catch (err: any) {
-    showToast('Erreur: ' + err.message, 'error');
-  } finally {
-    isSaving.value = false;
-  }
+  await save();
 }
 
 onMounted(() => {
-  loadConfig();
+  load();
 });
 </script>

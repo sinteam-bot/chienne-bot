@@ -1,15 +1,16 @@
-import { useDiscordApi } from './useDiscordApi';
+import { useDiscordApi } from './useDiscordApi.ts';
+import { useConfigFeature } from './useConfigFeature.ts';
 
 export interface TempVoiceConfig {
-  guildId: string;
+  guildId?: string;
   categoryId: string | null;
   format: string;
   deleteDelaySeconds: number;
   maxPerGuild: number;
-  lockedRoleId: string | null;
+  lockedRoleId?: string | null;
   joinChannels: string[];
   enabled: boolean;
-  updatedAt: number;
+  updatedAt?: number;
 }
 
 export interface TempVoiceChannel {
@@ -22,18 +23,23 @@ export interface TempVoiceChannel {
 
 export const useTempVoice = () => {
   const api = useDiscordApi();
+  const featureConfig = useConfigFeature<TempVoiceConfig>('temp_voice', {
+    defaultConfig: {
+      enabled: true,
+      joinChannels: [],
+      categoryId: null,
+      format: "{user}'s game",
+      deleteDelaySeconds: 5,
+      maxPerGuild: 0
+    }
+  });
 
   async function getConfig(guildId?: string): Promise<TempVoiceConfig> {
-    const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
-    const res = await api.apiFetch<{ success: boolean; data: TempVoiceConfig }>(`/api/temp-voice/config${qs}`);
-    return res.data;
+    return (await featureConfig.getFeatureConfig('temp_voice', guildId)) as TempVoiceConfig;
   }
 
-  async function updateConfig(payload: Partial<TempVoiceConfig> & { guildId: string }): Promise<TempVoiceConfig> {
-    const res = await api.apiFetch<{ success: boolean; data: TempVoiceConfig }>('/api/temp-voice/config', {
-      method: 'PATCH', body: payload
-    });
-    return res.data;
+  async function updateConfig(payload: Partial<TempVoiceConfig> & { guildId?: string }): Promise<any> {
+    return featureConfig.saveFeatureConfig('temp_voice', payload, payload.guildId);
   }
 
   async function listActive(guildId?: string): Promise<TempVoiceChannel[]> {
@@ -48,5 +54,5 @@ export const useTempVoice = () => {
     return res.data.count;
   }
 
-  return { getConfig, updateConfig, listActive, count };
+  return { getConfig, updateConfig, listActive, count, featureConfig };
 };

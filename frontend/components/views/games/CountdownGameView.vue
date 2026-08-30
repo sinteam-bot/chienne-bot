@@ -215,40 +215,43 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
 import { useDiscordApi } from '~/composables/useDiscordApi.ts';
 import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 
 const { apiFetch } = useDiscordApi();
 const { showToast } = useToast();
 const { discordChannels } = useAppState();
+const { config, isSaving, load: loadCountdownConfig, save: saveCountdownConfig } = useConfigFeature('countdown', {
+  defaultConfig: {
+    enabled: true,
+    channel_id: '1533492760697503805',
+    start_number: 900,
+    max_errors: 1,
+    trap_chance: 0.15,
+    emojis: { obsybon_id: '1524104068514189422', obsydemon_id: '1488145689916473544' },
+    messages: {
+      start_message: '',
+      double_post_message: '',
+      trap_dodge_message: '',
+      trap_failed_message: '',
+      finish_message: '',
+      warning_message: '',
+      error_message: '',
+      no_participation: '',
+      embed_title: '🏆 **Classement de la partie**',
+      embed_color: '#F2C7CE'
+    }
+  }
+});
 
 const activeSubTab = ref<'stats' | 'config'>('stats');
 const gameState = ref<any>({ current_number: 900, is_trap_active: 0, error_count: 0 });
 const scores = ref<any[]>([]);
-const config = ref<any>({
-  enabled: true,
-  channel_id: '1533492760697503805',
-  start_number: 900,
-  max_errors: 1,
-  trap_chance: 0.15,
-  emojis: { obsybon_id: '1524104068514189422', obsydemon_id: '1488145689916473544' },
-  messages: {
-    start_message: '',
-    double_post_message: '',
-    trap_dodge_message: '',
-    trap_failed_message: '',
-    finish_message: '',
-    warning_message: '',
-    error_message: '',
-    no_participation: '',
-    embed_title: '🏆 **Classement de la partie**',
-    embed_color: '#F2C7CE'
-  }
-});
 const isLoading = ref(true);
-const isSaving = ref(false);
 
 const channelName = computed(() => {
   const chId = config.value?.channel_id;
@@ -276,14 +279,8 @@ async function loadGameData() {
     if (res.success && res.data) {
       gameState.value = res.data.state || { current_number: 900 };
       scores.value = res.data.scores || [];
-      if (res.data.config) {
-        config.value = {
-          ...config.value,
-          ...res.data.config,
-          messages: { ...config.value.messages, ...(res.data.config.messages || {}) }
-        };
-      }
     }
+    await loadCountdownConfig();
   } catch (err) {
     console.error('Erreur chargement countdown game:', err);
   } finally {
@@ -292,22 +289,11 @@ async function loadGameData() {
 }
 
 async function saveGameConfig() {
-  isSaving.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: JSON.stringify({
-        module: 'countdown',
-        config: config.value
-      })
-    });
-    if (res.success) {
-      showToast('Configuration Countdown enregistrée dans config.yml !', 'success');
-    }
+    await saveCountdownConfig();
+    showToast('Configuration Countdown enregistrée !', 'success');
   } catch (err: any) {
     showToast(`Erreur d'enregistrement: ${err.message}`, 'error');
-  } finally {
-    isSaving.value = false;
   }
 }
 </script>

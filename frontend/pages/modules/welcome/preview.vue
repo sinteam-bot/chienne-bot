@@ -14,9 +14,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
-import { useDiscordApi } from '~/composables/useDiscordApi.ts';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 import DiscordEmbed from '~/components/common/DiscordEmbed.vue';
 
 definePageMeta({
@@ -35,13 +35,13 @@ useSeoMeta({
 });
 
 const { guild } = useAppState();
-const { apiFetch } = useDiscordApi();
-
-const config = ref<any>({
-  embed: {
-    title: 'Bienvenue sur le serveur !',
-    description: 'Bienvenue {username} sur **{server}** !\n\nN\'hésite pas à te présenter dans le salon dédié.',
-    color: '#5865F2'
+const { config, load: loadConfig } = useConfigFeature('welcome', {
+  defaultConfig: {
+    embed: {
+      title: 'Bienvenue sur le serveur !',
+      description: 'Bienvenue {username} sur **{server}** !\n\nN\'hésite pas à te présenter dans le salon dédié.',
+      color: '#5865F2'
+    }
   }
 });
 
@@ -66,20 +66,6 @@ const previewEmbed = computed(() => {
     }
   };
 });
-
-async function loadConfig() {
-  try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.welcome) {
-      config.value = {
-        ...config.value,
-        ...res.data.welcome
-      };
-    }
-  } catch (err) {
-    console.error('Erreur chargement config welcome:', err);
-  }
-}
 
 onMounted(() => {
   loadConfig();

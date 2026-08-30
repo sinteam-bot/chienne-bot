@@ -165,54 +165,32 @@ import { useToast } from '~/composables/useToast.ts';
 import { useAppState } from '~/composables/useAppState.ts';
 import { getProxiedImageUrl } from '~/composables/useDiscordImageProxy.ts';
 
-const { apiFetch } = useDiscordApi();
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
+
 const { showToast } = useToast();
 const { users, fetchUsersAndRoles } = useAppState();
 
 const activeSubTab = ref<'stats' | 'config'>('stats');
-const config = ref<any>({
-  enabled: false,
-  message_xp: { min: 15, max: 25, cooldown: 10 },
-  voice_xp: { per_minute: 2, check_interval: 5, min_duration: 1 },
-  level: { base_xp: 100, multiplier: 1.5 }
+const { config, isSaving, load: loadModuleConfig, save: saveXpConfig } = useConfigFeature('xp', {
+  defaultConfig: {
+    enabled: true,
+    message_xp: { min: 15, max: 25, cooldown: 10 },
+    voice_xp: { per_minute: 2, check_interval: 5, min_duration: 1 },
+    level: { base_xp: 100, multiplier: 1.5 }
+  }
 });
-const isSaving = ref(false);
 
 onMounted(async () => {
   if (users.value.length === 0) fetchUsersAndRoles();
   loadModuleConfig();
 });
 
-async function loadModuleConfig() {
-  try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.xp) {
-      config.value = res.data.xp;
-      config.value.message_xp = config.value.message_xp || { min: 15, max: 25, cooldown: 10 };
-      config.value.level = config.value.level || { base_xp: 100, multiplier: 1.5 };
-    }
-  } catch (err) {
-    console.error('Erreur config xp:', err);
-  }
-}
-
 async function saveModuleConfig() {
-  isSaving.value = true;
   try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: JSON.stringify({
-        module: 'xp',
-        config: config.value
-      })
-    });
-    if (res.success) {
-      showToast('Configuration XP & Niveaux enregistrée dans config.yml !', 'success');
-    }
+    await saveXpConfig();
+    showToast('Configuration XP & Niveaux enregistrée !', 'success');
   } catch (err: any) {
     showToast(`Erreur d'enregistrement: ${err.message}`, 'error');
-  } finally {
-    isSaving.value = false;
   }
 }
 

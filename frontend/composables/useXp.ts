@@ -1,4 +1,5 @@
-import { useDiscordApi } from './useDiscordApi';
+import { useDiscordApi } from './useDiscordApi.ts';
+import { useConfigFeature } from './useConfigFeature.ts';
 
 export interface LeaderboardEntry {
   rank: number;
@@ -41,6 +42,14 @@ export interface UserProfile {
 
 export const useXp = () => {
   const api = useDiscordApi();
+  const featureConfig = useConfigFeature('xp', {
+    defaultConfig: {
+      enabled: true,
+      message_xp: { min: 15, max: 25, cooldown: 10 },
+      voice_xp: { per_minute: 2, check_interval: 5, min_duration: 1 },
+      level: { base_xp: 100, multiplier: 1.5 }
+    }
+  });
 
   async function getLeaderboard(limit = 25, offset = 0): Promise<LeaderboardResponse['data']> {
     const res = await api.apiFetch<LeaderboardResponse>(`/api/xp/leaderboard?limit=${limit}&offset=${offset}`);
@@ -52,17 +61,12 @@ export const useXp = () => {
     return res.data;
   }
 
-  async function getConfig(): Promise<any> {
-    const res = await api.apiFetch<{ success: boolean; data: any }>('/api/xp/config');
-    return res.data;
+  async function getConfig(guildId?: string): Promise<any> {
+    return featureConfig.getFeatureConfig('xp', guildId);
   }
 
-  async function updateConfig(patch: any): Promise<any> {
-    const res = await api.apiFetch<{ success: boolean; data: any }>('/api/xp/config', {
-      method: 'PUT',
-      body: patch
-    });
-    return res.data;
+  async function updateConfig(patch: any, guildId?: string): Promise<any> {
+    return featureConfig.saveFeatureConfig('xp', patch, guildId);
   }
 
   async function adjustXp(userId: string, delta: number, reason?: string): Promise<any> {
@@ -81,5 +85,5 @@ export const useXp = () => {
     return res.data;
   }
 
-  return { getLeaderboard, getUserProfile, getConfig, updateConfig, adjustXp, resetXp };
+  return { getLeaderboard, getUserProfile, getConfig, updateConfig, adjustXp, resetXp, featureConfig };
 };

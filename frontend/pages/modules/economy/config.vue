@@ -207,41 +207,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { useFeatures } from '~/composables/useFeatures';
-
-const features = useFeatures();
-
-const form = reactive({
-  enabled: false,
-  daily_reward: 100,
-  cooldown_hours: 22,
-  starting_balance: 0,
-  tax_percent: 0,
-  max_balance: 999999999,
-  drops: { default_duration_min: 2, max_duration_min: 10, require_button: true },
-  inventory: { max_per_user: 200, max_quantity_per_item: 999 },
-  history_retention_days: 90
-});
+import { ref, onMounted } from 'vue';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 
 const dirty = ref(false);
-const saving = ref(false);
 const saveOk = ref(false);
 const saveError = ref<string | null>(null);
 
+const { config: form, isSaving: saving, load: loadFeature, save: saveFeature } = useConfigFeature('economy', {
+  defaultConfig: {
+    enabled: true,
+    daily_reward: 100,
+    cooldown_hours: 22,
+    starting_balance: 0,
+    tax_percent: 0,
+    max_balance: 999999999,
+    drops: { default_duration_min: 2, max_duration_min: 10, require_button: true },
+    inventory: { max_per_user: 200, max_quantity_per_item: 999 },
+    history_retention_days: 90
+  }
+});
+
 async function load() {
   try {
-    const state: any = await features.get('economy');
-    const cfg = state?.state?.config || state?.config || {};
-    form.enabled = !!cfg.enabled;
-    form.daily_reward = cfg.daily_reward ?? 100;
-    form.cooldown_hours = cfg.cooldown_hours ?? 22;
-    form.starting_balance = cfg.starting_balance ?? 0;
-    form.tax_percent = cfg.tax_percent ?? 0;
-    form.max_balance = cfg.max_balance ?? 999999999;
-    form.drops = { ...form.drops, ...(cfg.drops || {}) };
-    form.inventory = { ...form.inventory, ...(cfg.inventory || {}) };
-    form.history_retention_days = cfg.history_retention_days ?? 90;
+    await loadFeature();
     dirty.value = false;
   } catch (e: any) {
     saveError.value = e.message;
@@ -249,17 +238,14 @@ async function load() {
 }
 
 async function save() {
-  saving.value = true;
   saveError.value = null;
   try {
-    await features.update('economy', { ...form });
+    await saveFeature();
     dirty.value = false;
     saveOk.value = true;
     setTimeout(() => (saveOk.value = false), 3000);
   } catch (e: any) {
     saveError.value = e.message;
-  } finally {
-    saving.value = false;
   }
 }
 

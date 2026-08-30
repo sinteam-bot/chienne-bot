@@ -236,8 +236,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, inject, type Ref } from 'vue';
 import { useAppState } from '~/composables/useAppState.ts';
-import { useDiscordApi } from '~/composables/useDiscordApi.ts';
-import { useToast } from '~/composables/useToast.ts';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 import DiscordChannelSelect from '~/components/ui/DiscordChannelSelect.vue';
 import DiscordRoleSelect from '~/components/ui/DiscordRoleSelect.vue';
 import DiscordEmbed from '~/components/common/DiscordEmbed.vue';
@@ -258,30 +257,28 @@ useSeoMeta({
 });
 
 const { discordChannels, roles } = useAppState();
-const { apiFetch } = useDiscordApi();
-const { showToast } = useToast();
 
 const bumpStatus = inject<Ref<any>>('bumpStatus', ref({}));
 const loadBumpStatus = inject<() => Promise<void>>('loadBumpStatus', async () => {});
 
-const saving = ref(false);
-
-const configForm = ref<any>({
-  enabled: true,
-  channel_id: '',
-  role_id: '',
-  reminder_cooldown_hours: 2,
-  mention_here: true,
-  use_embed: false,
-  message: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})",
-  messages: {
-    content: '{role}',
-    title: "⏰ C'est l'heure du Bump !",
-    description: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})",
-    color: "#f2c7ce",
-    thumbnail: '',
-    image: '',
-    footer: 'Disboard Auto-Reminder'
+const { config: configForm, isSaving: saving, load: loadFeatureConfig, save: saveFeatureConfig } = useConfigFeature('bump_reminder', {
+  defaultConfig: {
+    enabled: true,
+    channel_id: '',
+    role_id: '',
+    reminder_cooldown_hours: 2,
+    mention_here: true,
+    use_embed: false,
+    message: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})",
+    messages: {
+      content: '{role}',
+      title: "⏰ C'est l'heure du Bump !",
+      description: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})",
+      color: "#f2c7ce",
+      thumbnail: '',
+      image: '',
+      footer: 'Disboard Auto-Reminder'
+    }
   }
 });
 
@@ -340,38 +337,15 @@ const liveEmbedPreview = computed(() => {
 });
 
 async function loadConfig() {
-  await loadBumpStatus();
-  if (bumpStatus.value.config) {
-    configForm.value = {
-      ...configForm.value,
-      ...bumpStatus.value.config,
-      messages: {
-        ...configForm.value.messages,
-        ...(bumpStatus.value.config.messages || {})
-      }
-    };
-  }
+  await Promise.all([
+    loadBumpStatus(),
+    loadFeatureConfig()
+  ]);
 }
 
 async function saveConfig() {
-  saving.value = true;
-  try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/bump/config', {
-      method: 'POST',
-      body: configForm.value
-    });
-
-    if (res.success) {
-      showToast(res.message || 'Configuration sauvegardée !', 'success');
-      await loadBumpStatus();
-    } else {
-      showToast('Erreur de sauvegarde', 'error');
-    }
-  } catch (err: any) {
-    showToast('Erreur: ' + err.message, 'error');
-  } finally {
-    saving.value = false;
-  }
+  await saveFeatureConfig();
+  await loadBumpStatus();
 }
 
 onMounted(() => {

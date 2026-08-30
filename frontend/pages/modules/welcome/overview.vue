@@ -72,16 +72,16 @@ useSeoMeta({
 });
 
 const { discordChannels } = useAppState();
-const { apiFetch } = useDiscordApi();
-
-const config = ref<any>({
-  enabled: true,
-  welcome_channel_id: null,
-  presentation_channel_id: null,
-  embed: {
-    title: 'Bienvenue sur le serveur !',
-    description: 'Bienvenue {username} sur **{server}** !',
-    color: '#5865F2'
+const { config, load: loadConfig } = useConfigFeature('welcome', {
+  defaultConfig: {
+    enabled: true,
+    welcome_channel_id: null,
+    presentation_channel_id: null,
+    embed: {
+      title: 'Bienvenue sur le serveur !',
+      description: 'Bienvenue {username} sur **{server}** !',
+      color: '#5865F2'
+    }
   }
 });
 
@@ -96,20 +96,6 @@ const presentationChannelName = computed(() => {
   const ch = discordChannels.value.find(c => c.id === config.value.presentation_channel_id);
   return ch ? ch.name : config.value.presentation_channel_id;
 });
-
-async function loadConfig() {
-  try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.welcome) {
-      config.value = {
-        ...config.value,
-        ...res.data.welcome
-      };
-    }
-  } catch (err) {
-    console.error('Erreur chargement config welcome:', err);
-  }
-}
 
 onMounted(() => {
   loadConfig();

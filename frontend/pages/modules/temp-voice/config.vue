@@ -65,56 +65,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { useTempVoice } from '~/composables/useTempVoice';
+import { ref, onMounted } from 'vue';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 
-const api = useTempVoice();
-const form = reactive({
-  enabled: false,
-  joinChannels: [] as string[],
-  categoryId: null as string | null,
-  format: "{user}'s game",
-  deleteDelaySeconds: 5,
-  maxPerGuild: 0
-});
-const saving = ref(false);
 const error = ref<string | null>(null);
 const ok = ref<string | null>(null);
 
+const { config: form, isSaving: saving, load: loadFeature, save: saveFeature } = useConfigFeature('temp_voice', {
+  defaultConfig: {
+    enabled: true,
+    joinChannels: [] as string[],
+    categoryId: null as string | null,
+    format: "{user}'s game",
+    deleteDelaySeconds: 5,
+    maxPerGuild: 0
+  }
+});
+
 async function load() {
   try {
-    const c = await api.getConfig();
-    form.enabled = c.enabled;
-    form.joinChannels = c.joinChannels || [];
-    form.categoryId = c.categoryId;
-    form.format = c.format;
-    form.deleteDelaySeconds = c.deleteDelaySeconds;
-    form.maxPerGuild = c.maxPerGuild;
+    await loadFeature();
   } catch (e: any) {
     error.value = e.message;
   }
 }
 
 async function save() {
-  saving.value = true;
   error.value = null;
   ok.value = null;
   try {
-    await api.updateConfig({
-      guildId: process.env.GUILD_ID || 'demo',
-      enabled: form.enabled,
-      joinChannels: form.joinChannels,
-      categoryId: form.categoryId,
-      format: form.format,
-      deleteDelaySeconds: form.deleteDelaySeconds,
-      maxPerGuild: form.maxPerGuild
-    });
+    await saveFeature();
     ok.value = 'Configuration enregistrée';
     setTimeout(() => ok.value = null, 3000);
   } catch (e: any) {
     error.value = e.message;
-  } finally {
-    saving.value = false;
   }
 }
 

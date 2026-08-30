@@ -90,32 +90,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { useFeatures } from '~/composables/useFeatures';
-
-const features = useFeatures();
-
-const form = reactive({
-  enabled: false,
-  self_assignable: true,
-  max_per_message: 25,
-  allowed_roles: [] as string[]
-});
+import { ref, onMounted } from 'vue';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 
 const dirty = ref(false);
-const saving = ref(false);
 const saveOk = ref(false);
 const saveError = ref<string | null>(null);
-let saveTimer: any = null;
+
+const { config: form, isSaving: saving, load: loadFeature, save: saveFeature } = useConfigFeature('reaction_roles', {
+  defaultConfig: {
+    enabled: true,
+    self_assignable: true,
+    max_per_message: 25,
+    allowed_roles: [] as string[]
+  }
+});
 
 async function load() {
   try {
-    const state: any = await features.get('reaction-roles');
-    const cfg = state?.state?.config || state?.config || {};
-    form.enabled = !!cfg.enabled;
-    form.self_assignable = cfg.self_assignable !== false;
-    form.max_per_message = cfg.max_per_message || 25;
-    form.allowed_roles = Array.isArray(cfg.allowed_roles) ? cfg.allowed_roles : [];
+    await loadFeature();
     dirty.value = false;
   } catch (e) {
     saveError.value = (e as any).message;
@@ -126,27 +119,17 @@ function scheduleSave() {
   dirty.value = true;
   saveOk.value = false;
   saveError.value = null;
-  if (saveTimer) clearTimeout(saveTimer);
-  // Pas d'auto-save: l'utilisateur clique "Enregistrer" explicitement
 }
 
 async function save() {
-  saving.value = true;
   saveError.value = null;
   try {
-    await features.update('reaction-roles', {
-      enabled: form.enabled,
-      self_assignable: form.self_assignable,
-      max_per_message: form.max_per_message,
-      allowed_roles: form.allowed_roles
-    });
+    await saveFeature();
     dirty.value = false;
     saveOk.value = true;
     setTimeout(() => (saveOk.value = false), 3000);
   } catch (e: any) {
     saveError.value = e.message;
-  } finally {
-    saving.value = false;
   }
 }
 

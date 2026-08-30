@@ -69,9 +69,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useDiscordApi } from '~/composables/useDiscordApi.ts';
-import { useToast } from '~/composables/useToast.ts';
+import { onMounted } from 'vue';
+import { useConfigFeature } from '~/composables/useConfigFeature.ts';
 
 definePageMeta({
   title: 'Configuration & Paliers',
@@ -88,67 +87,20 @@ useSeoMeta({
   ogDescription: 'Configuration du calcul d\'XP (messages/vocal) et des paliers de niveaux'
 });
 
-const { apiFetch } = useDiscordApi();
-const { showToast } = useToast();
-
-const isSaving = ref(false);
-
-const config = ref<any>({
-  enabled: false,
-  message_xp: { min: 15, max: 25, cooldown: 10 },
-  voice_xp: { per_minute: 2, check_interval: 5, min_duration: 1 },
-  level: { base_xp: 100, multiplier: 1.5 }
+const { config, isSaving, load, save } = useConfigFeature('xp', {
+  defaultConfig: {
+    enabled: true,
+    message_xp: { min: 15, max: 25, cooldown: 10 },
+    voice_xp: { per_minute: 2, check_interval: 5, min_duration: 1 },
+    level: { base_xp: 100, multiplier: 1.5 }
+  }
 });
 
-async function loadConfig() {
-  try {
-    const res = await apiFetch<{ success: boolean; data: any }>('/api/config');
-    if (res.success && res.data?.xp) {
-      config.value = {
-        ...config.value,
-        ...res.data.xp,
-        message_xp: {
-          ...config.value.message_xp,
-          ...(res.data.xp.message_xp || {})
-        },
-        voice_xp: {
-          ...config.value.voice_xp,
-          ...(res.data.xp.voice_xp || {})
-        },
-        level: {
-          ...config.value.level,
-          ...(res.data.xp.level || {})
-        }
-      };
-    }
-  } catch (err) {
-    console.error('Erreur chargement config xp:', err);
-  }
-}
-
 async function saveModuleConfig() {
-  isSaving.value = true;
-  try {
-    const res = await apiFetch<{ success: boolean; message?: string }>('/api/config', {
-      method: 'POST',
-      body: {
-        module: 'xp',
-        config: config.value
-      }
-    });
-    if (res.success) {
-      showToast('Configuration XP & Niveaux enregistrée dans config.yml !', 'success');
-    } else {
-      showToast('Erreur de sauvegarde', 'error');
-    }
-  } catch (err: any) {
-    showToast('Erreur: ' + err.message, 'error');
-  } finally {
-    isSaving.value = false;
-  }
+  await save();
 }
 
 onMounted(() => {
-  loadConfig();
+  load();
 });
 </script>
