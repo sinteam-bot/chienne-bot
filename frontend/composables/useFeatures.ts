@@ -283,13 +283,27 @@ export function useFeatures() {
   }
 
   async function list(guildId?: string): Promise<FeatureEntry[]> {
-    const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
+    let targetGuild = guildId;
+    if (!targetGuild && typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('guild_id');
+      if (stored && stored !== ':guild()' && stored !== ':guild') {
+        targetGuild = stored;
+      }
+    }
+    const qs = targetGuild ? `?guild_id=${encodeURIComponent(targetGuild)}` : '';
     const res = await api.apiFetch<{ success: boolean; data: FeatureEntry[] }>(`/api/features${qs}`);
     return res.data || [];
   }
 
   async function get(name: string, guildId?: string): Promise<{ name: string } & FeatureState> {
-    const qs = guildId ? `?guild_id=${encodeURIComponent(guildId)}` : '';
+    let targetGuild = guildId;
+    if (!targetGuild && typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('guild_id');
+      if (stored && stored !== ':guild()' && stored !== ':guild') {
+        targetGuild = stored;
+      }
+    }
+    const qs = targetGuild ? `?guild_id=${encodeURIComponent(targetGuild)}` : '';
     const res = await api.apiFetch<{ success: boolean; data: { name: string } & FeatureState }>(
       `/api/features/${encodeURIComponent(name)}${qs}`
     );

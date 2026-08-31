@@ -18,6 +18,13 @@ export function useDiscordApi() {
       headers.set('x-api-key', apiKey);
     }
 
+    if (!headers.has('x-guild-id') && typeof window !== 'undefined') {
+      const storedGuild = window.localStorage.getItem('guild_id');
+      if (storedGuild && storedGuild !== ':guild()' && storedGuild !== ':guild') {
+        headers.set('x-guild-id', storedGuild);
+      }
+    }
+
     let reqBody = options.body;
     const isFormData = typeof FormData !== 'undefined' && reqBody instanceof FormData;
     const isBlob = typeof Blob !== 'undefined' && reqBody instanceof Blob;
