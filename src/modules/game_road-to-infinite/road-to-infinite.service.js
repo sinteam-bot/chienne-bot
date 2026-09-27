@@ -147,34 +147,65 @@ class RoadToInfiniteService {
                 }
 
                 // Si le seuil d'erreurs est atteint : Game Over & Réinitialisation
-                const scores = await this.repo.getScores(COUNTER_CHANNEL_ID);
+                const showRanking = counterConfig.show_ranking !== false && counterConfig.ranking_enabled !== false && counterConfig.enable_ranking !== false;
 
-                let rankingText = messages.no_participation || "Aucune participation enregistrée pour cette session.";
-                if (scores.length > 0) {
-                    rankingText = scores.map((s, index) => {
-                        const medal = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : '👤'));
-                        return `${medal} **${s.username}** : ${s.score} point(s)`;
-                    }).join('\n');
-                }
+                let embedDescription = '';
+                const rankingTextFooter = messages.ranking_footer || "Le compteur a été réinitialisé, le prochain nombre est 1.";
+                const footer = rankingTextFooter.startsWith('\n') ? rankingTextFooter : `\n\n${rankingTextFooter}`;
 
-                const rankingTextHeader = this.formatMessage(
-                    messages.ranking_header || "**<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !** \n\n 🏆 **Classement de la Route de l'Infini**\n",
-                    {
-                        userId: message.author.id,
-                        username: message.author.username,
-                        expectedNumber,
-                        postedNumber: message.content,
-                        errorsCount: newErrorCount,
-                        maxErrors
+                if (showRanking) {
+                    const scores = await this.repo.getScores(COUNTER_CHANNEL_ID);
+
+                    let rankingText = messages.no_participation || "Aucune participation enregistrée pour cette session.";
+                    if (scores.length > 0) {
+                        rankingText = scores.map((s, index) => {
+                            const medal = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : '👤'));
+                            return `${medal} **${s.username}** : ${s.score} point(s)`;
+                        }).join('\n');
                     }
-                );
 
-                const rankingTextFooter = messages.ranking_footer || "\n\nLe compteur a été réinitialisé, le prochain nombre est 1.";
+                    const rankingTextHeader = this.formatMessage(
+                        messages.ranking_header || "**<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !** \n\n 🏆 **Classement de la Route de l'Infini**\n",
+                        {
+                            userId: message.author.id,
+                            username: message.author.username,
+                            expectedNumber,
+                            postedNumber: message.content,
+                            errorsCount: newErrorCount,
+                            maxErrors,
+                            emojiObsydemon: EMOJI_OBSYDEMON_ID
+                        }
+                    );
+
+                    embedDescription = `${rankingTextHeader}${rankingText}${footer}`;
+                } else {
+                    // Classement désactivé : message de défaite sans le bloc de classement
+                    const defaultHeader = "**<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !**";
+                    let baseHeader = messages.error_message || defaultHeader;
+                    if (messages.ranking_header && !messages.error_message) {
+                        baseHeader = messages.ranking_header.split(/🏆|Classement/i)[0].trim() || defaultHeader;
+                    }
+
+                    const header = this.formatMessage(
+                        baseHeader,
+                        {
+                            userId: message.author.id,
+                            username: message.author.username,
+                            expectedNumber,
+                            postedNumber: message.content,
+                            errorsCount: newErrorCount,
+                            maxErrors,
+                            emojiObsydemon: EMOJI_OBSYDEMON_ID
+                        }
+                    );
+
+                    embedDescription = `${header}${footer}`;
+                }
 
                 const embed = new EmbedBuilder()
                     .setColor(messages.embed_color || '#F2C7CE')
                     .setTitle(messages.embed_title || '❌ Perdu !')
-                    .setDescription(rankingTextHeader + rankingText + rankingTextFooter)
+                    .setDescription(embedDescription)
                     .setTimestamp();
 
                 await message.channel.send({ embeds: [embed] });
@@ -191,16 +222,19 @@ class RoadToInfiniteService {
     }
 
     async getGameState(channelId = null) {
-        const targetChannel = channelId || this.getConfig().channel_id || '1533492692825276598';
+        const conf = this.getConfig();
+        const targetChannel = channelId || conf.channel_id || '1533492692825276598';
         const state = await this.repo.getState(targetChannel);
+        const showRanking = conf.show_ranking !== false && conf.ranking_enabled !== false && conf.enable_ranking !== false;
         return {
             channelId: targetChannel,
             currentNumber: state?.current_number || 0,
             errorCount: state?.error_count || 0,
-            maxErrors: this.getConfig().max_errors || 1,
+            maxErrors: conf.max_errors || 1,
             lastUserId: state?.last_user_id || null,
             updatedAt: state?.updated_at || null,
-            enabled: this.getConfig().enabled !== false
+            enabled: conf.enabled !== false,
+            showRanking
         };
     }
 

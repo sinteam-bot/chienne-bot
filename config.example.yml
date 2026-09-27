@@ -245,6 +245,7 @@ counter:
   enabled: true
   channel_id: votre_salon_compteur_id
   max_errors: 1
+  show_ranking: true
   emojis:
     obsybon_id: '1524104068514189422'
     obsydemon_id: '1488145689916473544'
@@ -261,8 +262,7 @@ counter:
       **<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !** 
 
        🏆 **Classement de la Route de l'Infini**
-    ranking_footer: |-
-      Le compteur a été réinitialisé, le prochain nombre est 1.
+    ranking_footer: Le compteur a été réinitialisé, le prochain nombre est 1.
     embed_title: ❌ Perdu !
     embed_color: '#F2C7CE'
 countdown:
@@ -271,6 +271,7 @@ countdown:
   start_number: 900
   max_errors: 1
   trap_chance: 0.15
+  show_ranking: true
   emojis:
     obsybon_id: '1524104068514189422'
     obsydemon_id: '1488145689916473544'

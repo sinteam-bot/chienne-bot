@@ -88,4 +88,39 @@ describe('Game: Count Down Module Tests', () => {
         assert.ok(resScores.success);
     });
 
+    test('Service: should omit ranking when show_ranking is false on game over', async () => {
+        const service = container.resolve(CountDownService);
+        const repo = container.resolve(CountDownRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            start_number: 900,
+            max_errors: 1,
+            show_ranking: false
+        });
+
+        await repo.updateState(channelId, 850, 0, null, 'user_alice', 0);
+        await repo.addScore(channelId, 'user_winner', 'WinnerUser', 10);
+
+        let sentEmbed = null;
+        const mockWrongMessage = {
+            id: 'msg_cd_wrong_noranking',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: {
+                id: channelId,
+                send: async (payload) => {
+                    if (payload.embeds?.[0]) sentEmbed = payload.embeds[0];
+                }
+            },
+            author: { id: 'user_bob', username: 'Bob', bot: false },
+            content: '123',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockWrongMessage);
+        assert.ok(sentEmbed, 'Should send Game Over embed');
+        assert.ok(!sentEmbed.data.description.includes('Classement'), 'Should not include Classement');
+        assert.ok(!sentEmbed.data.description.includes('WinnerUser'), 'Should not include WinnerUser');
+    });
+
 });

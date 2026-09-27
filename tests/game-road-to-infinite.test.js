@@ -121,4 +121,39 @@ describe('Game: Road to Infinite Module Tests', () => {
         assert.ok(resScores.success);
     });
 
+    test('Service: should omit ranking when show_ranking is false', async () => {
+        const service = container.resolve(RoadToInfiniteService);
+        const repo = container.resolve(RoadToInfiniteRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            max_errors: 1,
+            show_ranking: false
+        });
+
+        await repo.updateState(channelId, 15, 'user_b', 0);
+        await repo.addScore(channelId, 'user_winner', 'WinnerUser', 10);
+
+        let sentEmbed = null;
+        const mockMessage = {
+            id: 'msg_wrong_noranking',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: {
+                id: channelId,
+                send: async (payload) => {
+                    if (payload.embeds?.[0]) sentEmbed = payload.embeds[0];
+                },
+                messages: { fetch: async () => new Map() }
+            },
+            author: { id: 'user_c', username: 'Charlie', bot: false },
+            content: '999',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+        assert.ok(sentEmbed, 'Should send Game Over embed');
+        assert.ok(!sentEmbed.data.description.includes('Classement'), 'Should not include Classement');
+        assert.ok(!sentEmbed.data.description.includes('WinnerUser'), 'Should not include WinnerUser');
+    });
+
 });

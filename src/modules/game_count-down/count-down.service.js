@@ -210,22 +210,26 @@ class CountDownService {
                     );
                     await message.channel.send(finishMsg);
 
-                    const scores = await this.repo.getScores(COUNTDOWN_CHANNEL_ID);
-                    let rankingText = messages.no_participation || "Aucune participation enregistrée.";
-                    if (scores.length > 0) {
-                        rankingText = scores.map((s, index) => {
-                            const medal = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : '👤'));
-                            return `${medal} **${s.username}** : ${s.score} point(s)`;
-                        }).join('\n');
+                    const showRanking = cdConfig.show_ranking !== false && cdConfig.ranking_enabled !== false && cdConfig.enable_ranking !== false;
+
+                    if (showRanking) {
+                        const scores = await this.repo.getScores(COUNTDOWN_CHANNEL_ID);
+                        let rankingText = messages.no_participation || "Aucune participation enregistrée.";
+                        if (scores.length > 0) {
+                            rankingText = scores.map((s, index) => {
+                                const medal = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : '👤'));
+                                return `${medal} **${s.username}** : ${s.score} point(s)`;
+                            }).join('\n');
+                        }
+
+                        const embed = new EmbedBuilder()
+                            .setColor(messages.embed_color || '#F2C7CE')
+                            .setTitle(messages.embed_title || '🏆 **Classement de la partie**')
+                            .setDescription(rankingText)
+                            .setTimestamp();
+
+                        await message.channel.send({ embeds: [embed] });
                     }
-
-                    const embed = new EmbedBuilder()
-                        .setColor(messages.embed_color || '#F2C7CE')
-                        .setTitle(messages.embed_title || '🏆 **Classement de la partie**')
-                        .setDescription(rankingText)
-                        .setTimestamp();
-
-                    await message.channel.send({ embeds: [embed] });
 
                     await this.repo.resetScores(COUNTDOWN_CHANNEL_ID);
                     await this.repo.updateState(COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, 0, null, null, 0);
@@ -295,19 +299,63 @@ class CountDownService {
     }
 
     async handleGameOver(message, channelId, startNumber, messages, errorsCount, maxErrors) {
-        const scores = await this.repo.getScores(channelId);
-        let rankingText = messages.no_participation || "Aucune participation enregistrée.";
-        if (scores.length > 0) {
-            rankingText = scores.map((s, index) => {
-                const medal = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : '👤'));
-                return `${medal} **${s.username}** : ${s.score} point(s)`;
-            }).join('\n');
+        const cdConfig = this.getConfig();
+        const showRanking = cdConfig.show_ranking !== false && cdConfig.ranking_enabled !== false && cdConfig.enable_ranking !== false;
+
+        let description = '';
+        const defaultFooter = `Le compte à rebours a été réinitialisé à **${startNumber}**.`;
+        const footer = messages.ranking_footer || defaultFooter;
+        const cleanFooter = footer.startsWith('\n') ? footer : `\n\n${footer}`;
+
+        if (showRanking) {
+            const scores = await this.repo.getScores(channelId);
+            let rankingText = messages.no_participation || "Aucune participation enregistrée.";
+            if (scores.length > 0) {
+                rankingText = scores.map((s, index) => {
+                    const medal = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : '👤'));
+                    return `${medal} **${s.username}** : ${s.score} point(s)`;
+                }).join('\n');
+            }
+
+            const defaultHeader = `**La limite de ${maxErrors} erreur(s) a été atteinte.**\n\n🏆 **Classement de la partie :**\n`;
+            const header = this.formatMessage(
+                messages.ranking_header || defaultHeader,
+                {
+                    errorsCount,
+                    maxErrors,
+                    startNumber,
+                    userId: message.author.id,
+                    username: message.author.username
+                }
+            );
+
+            description = `${header}${rankingText}${cleanFooter}`;
+        } else {
+            const defaultHeader = `**La limite de ${maxErrors} erreur(s) a été atteinte.**`;
+            let baseHeader = messages.error_message || defaultHeader;
+            if (messages.ranking_header && !messages.error_message) {
+                baseHeader = messages.ranking_header.split(/🏆|Classement/i)[0].trim() || defaultHeader;
+            }
+
+            const header = this.formatMessage(
+                baseHeader,
+                {
+                    errorsCount,
+                    maxErrors,
+                    startNumber,
+                    userId: message.author.id,
+                    username: message.author.username,
+                    emojiObsydemon: cdConfig.emojis?.obsydemon_id || '1488145689916473544'
+                }
+            );
+
+            description = `${header}${cleanFooter}`;
         }
 
         const embed = new EmbedBuilder()
             .setColor(messages.embed_color || '#F2C7CE')
             .setTitle(messages.embed_title || '❌ **Partie terminée !**')
-            .setDescription(`**La limite de ${maxErrors} erreur(s) a été atteinte.**\n\n🏆 **Classement de la partie :**\n${rankingText}\n\nLe compte à rebours a été réinitialisé à **${startNumber}**.`)
+            .setDescription(description)
             .setTimestamp();
 
         await message.channel.send({ embeds: [embed] });
@@ -324,18 +372,21 @@ class CountDownService {
     }
 
     async getGameState(channelId = null) {
-        const targetChannel = channelId || this.getConfig().channel_id || '1533492760697503805';
+        const conf = this.getConfig();
+        const targetChannel = channelId || conf.channel_id || '1533492760697503805';
         const state = await this.repo.getState(targetChannel);
+        const showRanking = conf.show_ranking !== false && conf.ranking_enabled !== false && conf.enable_ranking !== false;
         return {
             channelId: targetChannel,
-            currentNumber: state?.current_number ?? (this.getConfig().start_number || 900),
+            currentNumber: state?.current_number ?? (conf.start_number || 900),
             errorCount: state?.error_count || 0,
-            maxErrors: this.getConfig().max_errors || 1,
+            maxErrors: conf.max_errors || 1,
             isTrapActive: state?.is_trap_active === 1,
             trapNumber: state?.trap_number || null,
             lastUserId: state?.last_user_id || null,
             updatedAt: state?.updated_at || null,
-            enabled: this.getConfig().enabled !== false
+            enabled: conf.enabled !== false,
+            showRanking
         };
     }
 
