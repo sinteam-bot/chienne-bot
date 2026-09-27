@@ -9,6 +9,19 @@ class BumpReminderService {
 
     constructor(repository) {
         this.repo = repository;
+        this.activeScheduledBumpIds = new Set();
+        this.activeTimers = new Map();
+    }
+
+    /**
+     * Nettoie les timers en cours de planification
+     */
+    clearActiveTimers() {
+        for (const [id, timer] of this.activeTimers.entries()) {
+            clearTimeout(timer);
+        }
+        this.activeTimers.clear();
+        this.activeScheduledBumpIds.clear();
     }
 
     getConfig() {
@@ -126,10 +139,19 @@ class BumpReminderService {
             // pendingList est trié par id DESC (le plus récent en premier)
             const latestBump = pendingList[0];
 
+            // Si déjà planifié en mémoire pour s'exécuter dans quelques secondes
+            if (this.activeScheduledBumpIds.has(latestBump.id)) {
+                return;
+            }
+
             // Marquer tous les anciens bumps non rappelés comme traités pour éviter le spam
             if (pendingList.length > 1) {
                 for (let i = 1; i < pendingList.length; i++) {
                     await this.repo.markReminderSent(pendingList[i].id);
+                    const oldTimer = this.activeTimers.get(pendingList[i].id);
+                    if (oldTimer) clearTimeout(oldTimer);
+                    this.activeTimers.delete(pendingList[i].id);
+                    this.activeScheduledBumpIds.delete(pendingList[i].id);
                 }
             }
 
@@ -144,7 +166,7 @@ class BumpReminderService {
             const targetTimestamp = bumpDate.getTime() + (cooldownHours * 60 * 60 * 1000);
             const remainingMs = targetTimestamp - now;
 
-            // Si le rappel est dû
+            // Cas 1 : 2 heures ou plus se sont déjà écoulées (ex: redémarrage après l'heure)
             if (remainingMs <= 0) {
                 // Si le bump est trop ancien (> 24h), on l'acquitte sans spammer
                 const isTooOld = (now - targetTimestamp) > (24 * 60 * 60 * 1000);
@@ -155,6 +177,26 @@ class BumpReminderService {
 
                 await this.sendBumpReminder(client, latestBump);
             }
+            // Cas 2 : Moins d'une minute restante avant l'échéance des 2 heures
+            else if (remainingMs <= 60 * 1000) {
+                this.activeScheduledBumpIds.add(latestBump.id);
+                const secondsLeft = Math.ceil(remainingMs / 1000);
+                console.log(`[BUMP] Bientôt ${cooldownHours} heures écoulées depuis le bump (ID: ${latestBump.id}), envoi dans ${secondsLeft}s.`);
+
+                const timer = setTimeout(async () => {
+                    try {
+                        await this.sendBumpReminder(client, latestBump);
+                    } catch (err) {
+                        console.error(`❌ [BUMP Service] Erreur lors de l'envoi planifié (Bump ID: ${latestBump.id}):`, err);
+                    } finally {
+                        this.activeScheduledBumpIds.delete(latestBump.id);
+                        this.activeTimers.delete(latestBump.id);
+                    }
+                }, Math.max(0, remainingMs));
+
+                this.activeTimers.set(latestBump.id, timer);
+            }
+            // Cas 3 : Plus d'une minute restante, la prochaine exécution du cron (chaque minute) s'en chargera
         } catch (error) {
             console.error('❌ [BUMP Service] Erreur checkAndSendReminders:', error);
         }
@@ -245,6 +287,11 @@ class BumpReminderService {
             }
 
             await this.repo.markReminderSent(bump.id);
+            const timer = this.activeTimers.get(bump.id);
+            if (timer) clearTimeout(timer);
+            this.activeTimers.delete(bump.id);
+            this.activeScheduledBumpIds.delete(bump.id);
+
             const dateStr = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
             console.log(`[BUMP] ${cooldownHours} heures se sont écoulées, rappel envoyé à ${dateStr} (Bump ID: ${bump.id}) !`);
 
@@ -252,6 +299,10 @@ class BumpReminderService {
             console.error(`❌ [BUMP Service] Erreur envoi rappel (Bump ID: ${bump.id}):`, error);
             if (error.code === 50035 || error.code === 10003 || error.status === 400 || error.status === 404) {
                 await this.repo.markReminderSent(bump.id);
+                const timer = this.activeTimers.get(bump.id);
+                if (timer) clearTimeout(timer);
+                this.activeTimers.delete(bump.id);
+                this.activeScheduledBumpIds.delete(bump.id);
             }
         }
     }

@@ -1,372 +1,323 @@
-# Database Configuration (SQLite)
 db_path: ./data/bot.db
-
-# ==============================================================================
-# CONFIGURATION DU SERVEUR WEB & PROTECTION API / DASHBOARD
-# ==============================================================================
 web:
   port: 3000
   node_env: production
-  # Protection de l'accès à l'API et au Webhook
   auth:
-    enabled: false # Passer à true pour activer la protection par clé secrète
-    api_key: "changez_cette_cle_secrete" # Clé API acceptée via header 'x-api-key', 'Authorization: Bearer <key>' ou '?api_key='
-    protect_static: false # Si true, protège également l'accès aux pages HTML/statiques
-    allowed_ips: [] # Liste blanche d'adresses IP autorisées (vide = toutes les adresses)
-
-# Server Configuration (compatibilité directe)
+    enabled: false
+    api_key: changez_cette_cle_secrete
+    protect_static: false
+    allowed_ips: []
 port: 3000
 node_env: production
-
-# ==============================================================================
-# CONFIGURATION DU PLANIFICATEUR DE TÂCHES (SCHEDULER / CRON)
-# ==============================================================================
 scheduler:
-  enabled: true # Activer ou désactiver globalement le planificateur de tâches
-  timezone: "Europe/Paris" # Fuseau horaire pour l'exécution des tâches cron
+  enabled: true
+  timezone: Europe/Paris
   tasks:
-    # Tâche 1 : Vérification des rappels de bump Obsydian
     bump_reminders:
       enabled: true
-      cron: "* * * * *" # Toutes les minutes
-    # Tâche 2 : Prévisualisation du message du jour (envoyé la veille au soir à 21h)
+      cron: '* * * * *'
     daily_preview:
       enabled: true
-      cron: "0 21 * * *"
-    # Tâche 3 : Publication automatique du message validé à 09h00
+      cron: 0 21 * * *
     daily_publish:
       enabled: true
-      cron: "0 9 * * *"
-    # Tâche 4 : Validation et publication automatique à 11h00 si non validé manuellement
+      cron: 0 9 * * *
     daily_autovalidate:
       enabled: true
-      cron: "0 11 * * *"
-
-# OpenRouter API Configuration
+      cron: 0 11 * * *
 openrouter:
-  api_key: "votre_cle_openrouter_ici"
-  default_model: "openai/gpt-oss-20b:free"
+  api_key: votre_cle_openrouter_ici
+  default_model: openai/gpt-oss-20b:free
   max_tokens: 500
   temperature: 0.7
-  # Liste ordonnée de déclassement / fallback si le modèle principal échoue
   fallback_models:
-    - "openai/gpt-oss-20b:free"
-    - "meta-llama/llama-3.3-70b-instruct:free"
-    - "google/gemini-2.0-flash-exp:free"
-    - "mistralai/mistral-7b-instruct:free"
-    - "qwen/qwen-2.5-72b-instruct:free"
-    - "deepseek/deepseek-chat:free"
-    - "nvidia/nemotron-3-ultra-550b-a55b:free"
-  # Politique de retry avancée style Polly (.NET)
+    - openai/gpt-oss-20b:free
+    - meta-llama/llama-3.3-70b-instruct:free
+    - google/gemini-2.0-flash-exp:free
+    - mistralai/mistral-7b-instruct:free
+    - qwen/qwen-2.5-72b-instruct:free
+    - deepseek/deepseek-chat:free
+    - nvidia/nemotron-3-ultra-550b-a55b:free
   retry_policy:
     enabled: true
-    max_retries: 3           # Nombre de tentatives par modèle avant bascule sur le modèle de secours
-    initial_delay_ms: 1000   # Délai initial en millisecondes
-    backoff_factor: 2.0      # Facteur multiplicateur exponentiel
-    max_delay_ms: 8000       # Délai maximal d'attente
-    jitter: true             # Gigue aléatoire pour éviter les tempêtes de requêtes
-    timeout_ms: 25000        # Timeout strict par requête
-    retryable_statuses: [408, 429, 500, 502, 503, 504]
-
-# ==============================================================================
-# CONFIGURATION DISCORD & COMMANDES
-# ==============================================================================
+    max_retries: 3
+    initial_delay_ms: 1000
+    backoff_factor: 2
+    max_delay_ms: 8000
+    jitter: true
+    timeout_ms: 25000
+    retryable_statuses:
+      - 408
+      - 429
+      - 500
+      - 502
+      - 503
+      - 504
 discord:
-  token: "votre_discord_token_ici"
-  client_id: "votre_client_id_ici"
-  guild_id: "votre_guild_id_ici"
-  default_color: "couleur_du_bot_dans_le_salon"
-
-  # Protection & Permissions des Commandes Discord
+  token: votre_discord_token_ici
+  client_id: votre_client_id_ici
+  guild_id: votre_guild_id_ici
+  default_color: couleur_du_bot_dans_le_salon
   commands:
-    enabled: true # Activer ou désactiver l'exécution des commandes
-    # Rôles autorisés à exécuter des commandes (vide = tous les membres)
+    enabled: true
     allowed_roles: []
-    # Utilisateurs autorisés à exécuter des commandes (IDs Discord, vide = tous)
     allowed_users: []
-    # Salons autorisés pour exécuter des commandes (IDs Discord, vide = tous)
     allowed_channels: []
-    # Permissions spécifiques par commande
     permissions:
       config:
         allowed_roles: []
         allowed_users: []
-        allowed_channels: ["votre_salon_reserver"]
+        allowed_channels:
+          - votre_salon_reserver
       confirm_member:
         allowed_roles: []
         allowed_users: []
         allowed_channels: []
-
-# Notifications de démarrage
 startup_notifier:
   enabled: true
-  channel_id: "votre_salon_reserver"
-  color: "couleur_du_bot_dans_le_salon"
-  last_commit_sha: "" # À remplir avec le dernier commit sha du bot
+  channel_id: votre_salon_reserver
+  color: couleur_du_bot_dans_le_salon
+  last_commit_sha: ''
   github:
-    repo: "sinteam-bot/chienne-bot"
-    token: ""
-
-# Message du jour
+    repo: sinteam-bot/chienne-bot
+    token: ''
 daily_message:
   enabled: true
-  channel_id: "votre_salon_message_du_jour"
-  color: "couleur_du_bot_dans_le_salon"
-  preview_channel_id: "votre_salon_preview_message_du_jour"
-  preview_color: "couleur_du_bot_dans_le_salon"
+  channel_id: votre_salon_message_du_jour
+  color: couleur_du_bot_dans_le_salon
+  preview_channel_id: votre_salon_preview_message_du_jour
+  preview_color: couleur_du_bot_dans_le_salon
   ai_config:
-    model: "gpt-4o-mini"
+    model: gpt-4o-mini
     temperature: 0.7
     max_tokens: 500
-    prompt: "Date : ${dateStr}. Objectif : souhaiter une bonne journée en ambiance petit déjeuner. Voici les mots à inclure dans le texte : ${pickRandom(ajoutMod, 2)}"
-    instruction: "Écris uniquement le message final. Commence les message par 'En ce ' suivi de la date du jour (exemple format : lundi 1 janvier 2025). Le message doit être clair et compréhensible de tous. Maximum 3 phrases sans emoji."
+    prompt: 'Date : ${dateStr}. Objectif : souhaiter une bonne journée en ambiance petit déjeuner. Voici les mots à inclure dans le texte : ${pickRandom(ajoutMod, 2)}'
+    instruction: 'Écris uniquement le message final. Commence les message par ''En ce '' suivi de la date du jour (exemple format : lundi 1 janvier 2025). Le message doit être clair et compréhensible de tous. Maximum 3 phrases sans emoji.'
     angle_humour:
-      - "observation du quotidien"
-      - "energie du matin"
-      - "bienveillance complice"
+      - observation du quotidien
+      - energie du matin
+      - bienveillance complice
     style_ecriture:
-      - "philosophique"
-      - "familier chaleureux"
+      - philosophique
+      - familier chaleureux
     dispositif_narratif:
-      - "classique"
+      - classique
     contrainte_legere:
-      - "interdire_les_mots: soleil"
-      - "pas_de_point_dexclamation"
-      - "utiliser_une_image_concrete"
-      - "aucune_reference_au_temps"
-      - "aucun_pronom_personnel"
+      - 'interdire_les_mots: soleil'
+      - pas_de_point_dexclamation
+      - utiliser_une_image_concrete
+      - aucune_reference_au_temps
+      - aucun_pronom_personnel
     ajoutMod:
-      - "Petit déjeuner"
-      - " boisson"
-      - " matin"
-      - " réconfortant"
-      - " motivation"
-      - " avec du pep’s"
-      - " le lever"
-      - " le lit"
-      - " doudou"
-      - " boire"
-      - " bol"
-      - " tasse"
-      - " verre"
-      - " coucher"
-      - " ambition"
-      - " sérénité"
-      - " tendresse"
-      - " chaleur"
-      - " café"
-      - " thé"
-      - " chocolat chaud"
-      - " confiance"
-      - " opportunité"
-      - " fraicheur"
-      - " oreiller"
-      - " couette"
-      - " cuisine"
-      - " tartine"
-      - " jus d’orange"
-      - " amour"
-      - " gorgée"
-
-# CONFIGURATION DU SYSTÈME DE CAPTCHA
+      - Petit déjeuner
+      - ' boisson'
+      - ' matin'
+      - ' réconfortant'
+      - ' motivation'
+      - ' avec du pep’s'
+      - ' le lever'
+      - ' le lit'
+      - ' doudou'
+      - ' boire'
+      - ' bol'
+      - ' tasse'
+      - ' verre'
+      - ' coucher'
+      - ' ambition'
+      - ' sérénité'
+      - ' tendresse'
+      - ' chaleur'
+      - ' café'
+      - ' thé'
+      - ' chocolat chaud'
+      - ' confiance'
+      - ' opportunité'
+      - ' fraicheur'
+      - ' oreiller'
+      - ' couette'
+      - ' cuisine'
+      - ' tartine'
+      - ' jus d’orange'
+      - ' amour'
+      - ' gorgée'
 captcha:
-  # Activer ou désactiver le système de captcha
   enabled: true
-  # ID du canal où les captchas seront envoyés
-  # Si non défini, un canal sera créé automatiquement
   channel_id: null
-  # Nom du canal captcha à créer (si CAPTCHA_CHANNEL_ID est null)
-  captcha_channel_name: "✅-verification-captcha"
-  color: "couleur_du_bot_dans_le_salon"
-  # ID du rôle à donner après validation du captcha
-  verified_role_id: "votre_role_verifie"
-  # Temps avant expiration du captcha (en minutes)
+  captcha_channel_name: ✅-verification-captcha
+  color: couleur_du_bot_dans_le_salon
+  verified_role_id: votre_role_verifie
   captcha_timeout: 10
-  # Nombre de tentatives autorisées
   max_attempts: 3
-  # Configuration des questions mathématiques
   math_questions:
     min_number: 1
     max_number: 20
-    # Types d'opérations possibles
-    operations: ["+", "-", "*"]
-    # Poids de chaque opération (pour la sélection aléatoire)
+    operations:
+      - +
+      - '-'
+      - '*'
     operation_weights:
-      - "+": 0.6
-      - "-": 0.3
-      - "*": 0.1
-    # Messages
+      - +: 0.6
+      - '-': 0.3
+      - '*': 0.1
     messages:
-      welcome_message: "Bienvenue sur le serveur ! Pour accéder au reste du serveur, tu dois résoudre ce captcha :"
-      captcha_question: "Combien font {num1} {operator} {num2} ?"
-      instructions: "Réponds avec le résultat **en chiffres** (exemple: 18) dans ce canal."
-      success_message: "✅ Bravo ! Ta réponse est correcte. Tu as maintenant accès au serveur !"
-      fail_message: "Mauvaise réponse, tu n'as plus que {attempts} tentative(s) <:Obsydemoncouverture:1488145689916473544>."
-      timeout_message: "⏰ Temps écoulé ! Le captcha a expiré. Veuillez réessayer en rejoignant à nouveau le serveur."
-      max_attempts_message: "❌ Trop de tentatives incorrectes. Veuillez quitter et rejoindre le serveur pour réessayer."
-      already_verified: "✅ Tu as déjà été vérifié !"
-    # Messages pour les logs
+      welcome_message: 'Bienvenue sur le serveur ! Pour accéder au reste du serveur, tu dois résoudre ce captcha :'
+      captcha_question: Combien font {num1} {operator} {num2} ?
+      instructions: 'Réponds avec le résultat **en chiffres** (exemple: 18) dans ce canal.'
+      success_message: ✅ Bravo ! Ta réponse est correcte. Tu as maintenant accès au serveur !
+      fail_message: Mauvaise réponse, tu n'as plus que {attempts} tentative(s) <:Obsydemoncouverture:1488145689916473544>.
+      timeout_message: ⏰ Temps écoulé ! Le captcha a expiré. Veuillez réessayer en rejoignant à nouveau le serveur.
+      max_attempts_message: ❌ Trop de tentatives incorrectes. Veuillez quitter et rejoindre le serveur pour réessayer.
+      already_verified: ✅ Tu as déjà été vérifié !
     log_messages:
-      captcha_created: "🔒 Captcha créé pour {username} ({userId})"
-      captcha_success: "✅ Captcha validé pour {username} ({userId})"
-      captcha_failed: "❌ Captcha échoué pour {username} ({userId}) - Tentative {attempt}/{max}"
-      captcha_timeout: "⏰ Captcha expiré pour {username} ({userId})"
-
-# CONFIGURATION DU SYSTÈME D'ACCUEIL
+      captcha_created: 🔒 Captcha créé pour {username} ({userId})
+      captcha_success: ✅ Captcha validé pour {username} ({userId})
+      captcha_failed: ❌ Captcha échoué pour {username} ({userId}) - Tentative {attempt}/{max}
+      captcha_timeout: ⏰ Captcha expiré pour {username} ({userId})
 welcome:
   enabled: true
-  # Logs
   LOG_TO_CONSOLE: true
-  # ID du channel où envoyer les messages de bienvenue
-  channel_id: "votre_salon_accueil"
-  # Nom du channel accueil à créer (si WELCOME_CHANNEL_ID est null)
-  welcome_channel_name: "votre_salon_accueil"
-  # Couleur du bot dans le salon accueil
-  welcome_color: "couleur_du_bot_dans_le_salon"
-  # IDs des rôles à attribuer automatiquement
+  channel_id: votre_salon_accueil
+  welcome_channel_name: votre_salon_accueil
+  welcome_color: couleur_du_bot_dans_le_salon
   AUTO_ROLES: []
-
-  # Message de bienvenue (peut contenir des variables)
-  # {user} = mention de l'utilisateur
-  # {username} = nom de l'utilisateur
-  # {server} = nom du serveur
-  # {memberCount} = nombre de membres
   welcome_message:
     enabled: true
-    title: "🎉 Bienvenue sur {server} !"
-    description: "Bienvenue {user} !\n\nNous sommes ravis de t'accueillir parmi nous ! 🎊"
-    color: "#f2c7ce"
-    footer: "Membre #{memberCount}"
-    thumbnail: "user" # 'user' = avatar de l'utilisateur, ou URL d'une image
-    image: null # URL d'une image de bannière (optionnel)
-    fields:
-      - name: "📚 Pour commencer"
-        value: "• Lis les règles dans <#CHANNEL_REGLES_ID>\n• Présente-toi dans <#CHANNEL_PRESENTATION_ID>\n• N'hésite pas à poser des questions !"
-        inline: false
-      - name: "🎮 Commandes utiles"
-        value: "`/help` - Liste des commandes\n`/rank` - Voir ton niveau"
-        inline: true
+    title: 🎉 Bienvenue sur {server} !
+    description: |-
+      Bienvenue {user} !
 
-  # Envoyer un message privé au nouveau membre
+      Nous sommes ravis de t'accueillir parmi nous ! 🎊
+    color: '#f2c7ce'
+    footer: 'Membre #{memberCount}'
+    thumbnail: user
+    image: null
+    fields:
+      - name: 📚 Pour commencer
+        value: |-
+          • Lis les règles dans <#CHANNEL_REGLES_ID>
+          • Présente-toi dans <#CHANNEL_PRESENTATION_ID>
+          • N'hésite pas à poser des questions !
+        inline: false
+      - name: 🎮 Commandes utiles
+        value: |-
+          `/help` - Liste des commandes
+          `/rank` - Voir ton niveau
+        inline: true
   dm_message:
     enabled: true
-    title: "👋 Bienvenue !"
-    description: "Salut {username} !\n\nBienvenue sur **{server}** ! Nous espérons que tu vas t'amuser avec nous. 😊"
-    color: "#f2c7ce"
-    fields:
-      - name: "💡 Conseil"
-        value: "N'oublie pas de te présenter pour que la communauté apprenne à te connaître !"
-        inline: false
+    title: 👋 Bienvenue !
+    description: |-
+      Salut {username} !
 
-# Configuration du système XP
+      Bienvenue sur **{server}** ! Nous espérons que tu vas t'amuser avec nous. 😊
+    color: '#f2c7ce'
+    fields:
+      - name: 💡 Conseil
+        value: N'oublie pas de te présenter pour que la communauté apprenne à te connaître !
+        inline: false
 xp:
   enabled: false
-  # XP par message
   message_xp:
     min: 15
     max: 25
-    cooldown: 10 # Cooldown en secondes entre deux gains d'XP
-
-  # XP vocal
+    cooldown: 10
   voice_xp:
-    per_minute: 2 # XP par minute en vocal
-    check_interval: 5 # Vérifier toutes les X minutes
-    min_duration: 1 # Minimum de minutes pour gagner de l'XP
-
-  # Formule de calcul de niveau
+    per_minute: 2
+    check_interval: 5
+    min_duration: 1
   level:
-    base_xp: 100 # XP requis pour le niveau 1
-    multiplier: 1.5 # Multiplicateur par niveau
-
-  # Bonus
+    base_xp: 100
+    multiplier: 1.5
   bonus:
-    daily_first_message: 50 # Bonus pour le premier message du jour
-    streak_multiplier: 1.1 # +10% XP par jour consécutif (max 7 jours)
-    event_multiplier: 2 # Double XP pendant les événements
-
-  # Limites anti-spam
+    daily_first_message: 50
+    streak_multiplier: 1.1
+    event_multiplier: 2
   limits:
-    max_xp_per_day: 5000 # Maximum d'XP par jour
-    max_messages_per_minute: 5 # Ignorer après X messages par minute
-
-  # Récompenses de niveau (à personnaliser selon vos rôles)
+    max_xp_per_day: 5000
+    max_messages_per_minute: 5
   level_roles:
-    5: "Membre Actif"
-    10: "Membre Dévoué"
-    20: "Vétéran"
-    30: "Légende"
-    50: "Dieu du serveur"
-
-# ==============================================================================
-# CONFIGURATION DU JEU DU COMPTEUR (ROUTE DE L'INFINI)
-# ==============================================================================
+    '5': Membre Actif
+    '10': Membre Dévoué
+    '20': Vétéran
+    '30': Légende
+    '50': Dieu du serveur
 counter:
   enabled: true
-  channel_id: "votre_salon_compteur_id"
-  max_errors: 1 # Nombre d'erreurs autorisées avant réinitialisation du compteur (défaut: 1)
+  channel_id: votre_salon_compteur_id
+  max_errors: 1
   emojis:
-    obsybon_id: "1524104068514189422"
-    obsydemon_id: "1488145689916473544"
+    obsybon_id: '1524104068514189422'
+    obsydemon_id: '1488145689916473544'
   messages:
-    double_post_message: "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>"
-    warning_message: "⚠️ <@{userId}> s'est trompé(e) ! (**{errorsCount}/{maxErrors} erreurs** tolérées). Le nombre attendu reste **{expectedNumber}**."
-    ranking_header: "**<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !** \n\n 🏆 **Classement de la Route de l'Infini**\n"
-    ranking_footer: "\n\nLe compteur a été réinitialisé, le prochain nombre est 1."
-    no_participation: "Aucune participation enregistrée pour cette session."
-    embed_title: "❌ Perdu !"
-    embed_color: "#F2C7CE"
+    start_message: '**Allez la chienne commence :** {number}'
+    double_post_message: <@{userId}>, **tu ne peux pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>
+    trap_dodge_message: '**J’ai cru que j’allais vous avoir <:Obsydemoncouverture:{emojiObsydemon}>**'
+    trap_failed_message: <@{userId}>**, Je t’ai eu ** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**.
+    finish_message: '**Je suis émue, vous ne vous êtes pas trompés mais ce n’est pas fini** <:Obsydemoncouverture:{emojiObsydemon}>'
+    warning_message: ⚠️ <@{userId}> s'est trompé(e) (**{errorsCount}/{maxErrors} erreurs** tolérées). Le prochain nombre attendu est **{expectedNumber}**.
+    error_message: '**Oups <@{userId}> s''est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>'
+    no_participation: Aucune participation enregistrée.
+    ranking_header: |
+      **<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !** 
 
-# ==============================================================================
-# CONFIGURATION DU JEU DU COMPTE À REBOURS (COUNTDOWN)
-# ==============================================================================
+       🏆 **Classement de la Route de l'Infini**
+    ranking_footer: |-
+      Le compteur a été réinitialisé, le prochain nombre est 1.
+    embed_title: ❌ Perdu !
+    embed_color: '#F2C7CE'
 countdown:
   enabled: true
-  channel_id: "votre_salon_countdown_id"
+  channel_id: votre_salon_countdown_id
   start_number: 900
-  max_errors: 1 # Nombre d'erreurs autorisées avant réinitialisation du compte à rebours (défaut: 1)
-  trap_chance: 0.15 # ~15% de chance d'activer un piège
+  max_errors: 1
+  trap_chance: 0.15
   emojis:
-    obsybon_id: "1524104068514189422"
-    obsydemon_id: "1488145689916473544"
+    obsybon_id: '1524104068514189422'
+    obsydemon_id: '1488145689916473544'
   messages:
-    start_message: "**Allez la chienne commence :** {number}"
-    double_post_message: "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>"
-    trap_dodge_message: "**J’ai cru que j’allais vous avoir <:Obsydemoncouverture:{emojiObsydemon}>**"
-    trap_failed_message: "<@{userId}>**, Je t’ai eu !** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**."
-    finish_message: "**Je suis émue, vous ne vous êtes pas trompés mais ce n’est pas fini <:Obsydemoncouverture:{emojiObsydemon}>**"
-    warning_message: "⚠️ <@{userId}> s'est trompé(e) ! (**{errorsCount}/{maxErrors} erreurs** tolérées). Le prochain nombre attendu est **{expectedNumber}**."
-    error_message: "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre ** <:Obsydemoncouverture:{emojiObsydemon}>"
-    no_participation: "Aucune participation enregistrée."
-    embed_title: "🏆 **Classement de la partie**"
-    embed_color: "#F2C7CE"
-
-# ==============================================================================
-# CONFIGURATION DES RAPPELS DE BUMP DISBOARD
-# ==============================================================================
+    start_message: '**Allez la chienne commence :** {number}'
+    double_post_message: <@{userId}>, **tu ne peux pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>
+    trap_dodge_message: '**J’ai cru que j’allais vous avoir <:Obsydemoncouverture:{emojiObsydemon}>**'
+    trap_failed_message: <@{userId}>**, Je t’ai eu ** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**.
+    finish_message: '**Je suis émue, vous ne vous êtes pas trompés mais ce n’est pas fini** <:Obsydemoncouverture:{emojiObsydemon}>'
+    warning_message: ⚠️ <@{userId}> s'est trompé(e) (**{errorsCount}/{maxErrors} erreurs** tolérées). Le prochain nombre attendu est **{expectedNumber}**.
+    error_message: '**Oups <@{userId}> s''est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>'
+    no_participation: Aucune participation enregistrée.
+    embed_title: 🏆 **Classement de la partie**
+    embed_color: '#F2C7CE'
 bump_reminder:
-  enabled: true # Activer ou désactiver le rappel de bump automatique
-  channel_id: "" # Salon où envoyer les rappels (laisser vide "" pour utiliser le salon du bump)
-  role_id: "" # Rôle à ping (ex: "123456789012345678"). Si vide, @here sera mentionné
-  mention_here: true # Mentionner @here en fallback si role_id est vide
-  reminder_cooldown_hours: 2 # Délai en heures entre deux bumps (2h pour Disboard)
-  use_embed: false # Envoyer sous forme de message simple (false) ou d'embed Discord (true)
-  # Message simple par défaut (Variables: {role}, {server}, {user}, {last_user}, {username}, {command}, {channel}, {hours})
-  message: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})"
-  # Options supplémentaires si use_embed est activé (optionnel)
-  # Personnalisation des messages et de l'embed Discord
-  # Variables disponibles :
-  #   - {hours}    : Nombre d'heures de cooldown (ex: 2)
-  #   - {role}     : Mention du rôle configuré ou @here
-  #   - {user}     : Mention du dernier membre ayant bumpé (<@id>)
-  #   - {username} : Pseudo du dernier membre ayant bumpé
-  #   - {command}  : Raccourci Discord vers la commande </bump:947088344167366698>
-  #   - {channel}  : Salon où le bump a eu lieu
-  #   - {server}   : Nom du serveur Discord
+  enabled: true
+  channel_id: '123456789012345678'
+  role_id: '987654321098765432'
+  mention_here: true
+  reminder_cooldown_hours: 2
+  use_embed: false
+  message: '{role} c''est l''heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})'
   messages:
-    content: "{role}"
-    title: "⏰ C'est l'heure du Bump !"
-    description: "{role} c'est l'heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> !\n(Dernier bump par {user})"
-    color: "#f2c7ce"
-    footer: "Disboard Auto-Reminder"
-    thumbnail: null # URL d'une vignette (optionnel)
-    image: null # URL d'une bannière (optionnel)
+    content: 🔔 {role}
+    title: ⏰ C'est l'heure du Bump personnalisé !
+    description: 2 heures se sont écoulées, merci {user} ! Tapez {command}
+    color: '#ff66aa'
+    footer: Mon Footer Custom
+    thumbnail: null
+    image: null
+bump_reminders:
+  enabled: true
+  channel_id: '123456789012345678'
+  role_id: '987654321098765432'
+  mention_here: true
+  reminder_cooldown_hours: 2
+  use_embed: false
+  message: '{role} c''est l''heure de bumper {server} <:Obsydemoncouverture:1488145689916473544> (Dernier bump par {user})'
+  messages:
+    content: 🔔 {role}
+    title: ⏰ C'est l'heure du Bump personnalisé !
+    description: 2 heures se sont écoulées, merci {user} ! Tapez {command}
+    color: '#ff66aa'
+    footer: Mon Footer Custom
+    thumbnail: null
+    image: null
+'':
+  vfox_pid: 1825
+  vfox_shell: fish
+  vfox_curtmppath: /home/nosi/.vfox/tmp/20260802-2951

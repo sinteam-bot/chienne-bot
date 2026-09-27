@@ -182,5 +182,70 @@ describe('Service: Bump Reminder Module Tests', () => {
         assert.strictEqual(saveRes.data.messages.title, '⏰ C\'est l\'heure du Bump personnalisé !');
         assert.strictEqual(saveRes.data.messages.color, '#ff66aa');
     });
+
+    test('Service: checkAndSendReminders schedules reminder with setTimeout when <= 60s remaining', async () => {
+        const service = container.resolve(BumpReminderService);
+        const repo = container.resolve(BumpReminderRepository);
+
+        // Bump créé il y a (2h - 30s) -> il reste 30s
+        const bumpTime = new Date(Date.now() - (2 * 3600 * 1000 - 30 * 1000));
+        const bump = await repo.saveBump(guildId, channelId, 'user_bumper_timeout', 'TestTimeout');
+
+        const { eq } = require('drizzle-orm');
+        await repo.db.update(repo.schema.bumpLogs)
+            .set({ bumpedAt: bumpTime.toISOString() })
+            .where(eq(repo.schema.bumpLogs.id, bump.id));
+
+        const mockClient = {
+            channels: {
+                fetch: async () => null
+            }
+        };
+
+        await service.checkAndSendReminders(mockClient);
+
+        assert.ok(service.activeScheduledBumpIds.has(bump.id));
+        assert.ok(service.activeTimers.has(bump.id));
+
+        service.clearActiveTimers();
+        await repo.markReminderSent(bump.id);
+    });
+
+    test('Service: checkAndSendReminders sends immediately when remainingMs <= 0', async () => {
+        const service = container.resolve(BumpReminderService);
+        const repo = container.resolve(BumpReminderRepository);
+
+        // Bump créé il y a 2h30 -> déjà échu
+        const bumpTime = new Date(Date.now() - (2.5 * 3600 * 1000));
+        const bump = await repo.saveBump(guildId, channelId, 'user_bumper_expired', 'TestExpired');
+
+        const { eq } = require('drizzle-orm');
+        await repo.db.update(repo.schema.bumpLogs)
+            .set({ bumpedAt: bumpTime.toISOString() })
+            .where(eq(repo.schema.bumpLogs.id, bump.id));
+
+        let sentCalled = false;
+        const mockClient = {
+            channels: {
+                fetch: async (id) => ({
+                    id,
+                    isTextBased: () => true,
+                    guild: { name: 'Obsydian' },
+                    send: async () => {
+                        sentCalled = true;
+                        return { id: 'sent_ok' };
+                    }
+                })
+            }
+        };
+
+        await service.checkAndSendReminders(mockClient);
+
+        assert.strictEqual(sentCalled, true);
+        assert.strictEqual(service.activeScheduledBumpIds.has(bump.id), false);
+
+        const last = await repo.getLastBump(guildId);
+        assert.strictEqual(last.reminder_sent, 1);
+    });
 });
 
