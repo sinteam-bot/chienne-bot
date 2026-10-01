@@ -70,7 +70,8 @@ class SecurityQuestionRepository {
             is_verified: captcha.isVerified,
             created_at: captcha.createdAt,
             expires_at: captcha.expiresAt,
-            verified_at: captcha.verifiedAt
+            verified_at: captcha.verifiedAt,
+            expired_at: captcha.expiredAt
         };
     }
 
@@ -273,6 +274,83 @@ class SecurityQuestionRepository {
                     eq(this.schema.userCaptchas.guildId, guildId)
                 )
             );
+    }
+
+    /**
+     * Marque un utilisateur comme expiré
+     */
+    async markExpired(userId, guildId) {
+        await this.db.update(this.schema.userCaptchas)
+            .set({
+                expiredAt: sql`CURRENT_TIMESTAMP`,
+                updatedAt: sql`CURRENT_TIMESTAMP`
+            })
+            .where(
+                and(
+                    eq(this.schema.userCaptchas.userId, userId),
+                    eq(this.schema.userCaptchas.guildId, guildId)
+                )
+            );
+    }
+
+    /**
+     * Invalide la vérification d'un utilisateur
+     */
+    async invalidateVerification(userId, guildId) {
+        await this.db.update(this.schema.userCaptchas)
+            .set({
+                isVerified: 0,
+                verifiedAt: null,
+                updatedAt: sql`CURRENT_TIMESTAMP`
+            })
+            .where(
+                and(
+                    eq(this.schema.userCaptchas.userId, userId),
+                    eq(this.schema.userCaptchas.guildId, guildId)
+                )
+            );
+    }
+
+    /**
+     * Récupère les captchas expirés mais non encore marqués ou traités
+     */
+    async getPendingExpiredCaptchas() {
+        return await this.db.select()
+            .from(this.schema.userCaptchas)
+            .where(
+                and(
+                    eq(this.schema.userCaptchas.isVerified, 0),
+                    sql`${this.schema.userCaptchas.expiredAt} IS NULL`,
+                    sql`${this.schema.userCaptchas.expiresAt} < CURRENT_TIMESTAMP`
+                )
+            );
+    }
+
+    /**
+     * Enregistre les métadonnées de la carte de log dynamique pour un captcha
+     */
+    async saveCaptchaCard(userId, guildId, cardData) {
+        try {
+            const { setBotState } = require('../../database.js');
+            await setBotState(`captcha_card_${guildId}_${userId}`, JSON.stringify(cardData));
+        } catch (err) {
+            console.warn(`⚠️ [SecurityQuestionRepository] Erreur saveCaptchaCard:`, err.message);
+        }
+    }
+
+    /**
+     * Récupère les métadonnées de la carte de log dynamique pour un captcha
+     */
+    async getCaptchaCard(userId, guildId) {
+        try {
+            const { getBotState } = require('../../database.js');
+            const raw = await getBotState(`captcha_card_${guildId}_${userId}`);
+            if (!raw) return null;
+            return typeof raw === 'string' ? JSON.parse(raw) : raw;
+        } catch (err) {
+            console.warn(`⚠️ [SecurityQuestionRepository] Erreur getCaptchaCard:`, err.message);
+            return null;
+        }
     }
 
     /**

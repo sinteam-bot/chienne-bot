@@ -69,7 +69,7 @@ function getCaptchaConfig() {
         set enabled(v) { this.ENABLED = v; },
 
         get CAPTCHA_LOG_CHANNEL() {
-            return fullConfig.startup_notifier?.channel_id || c.channel_id || process.env.LOG_CHANNEL_ID;
+            return c.captcha_log_channel || c.log_channel_id || fullConfig.startup_notifier?.channel_id || c.channel_id || process.env.LOG_CHANNEL_ID;
         },
 
         get CAPTCHA_CHANNEL_ID() { return c.channel_id || null; },

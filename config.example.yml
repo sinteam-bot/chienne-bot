@@ -143,6 +143,7 @@ daily_message:
 captcha:
   enabled: true
   channel_id: null
+  captcha_log_channel: votre_salon_de_logs_captcha
   captcha_channel_name: ✅-verification-captcha
   color: couleur_du_bot_dans_le_salon
   verified_role_id: votre_role_verifie
