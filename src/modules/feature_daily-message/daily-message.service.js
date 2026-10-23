@@ -504,7 +504,7 @@ class DailyMessageService {
 Injectable()(DailyMessageService);
 Cron('0 21 * * *', { timezone: 'Europe/Paris', configKey: 'scheduler.tasks.daily_preview' })(DailyMessageService.prototype, 'sendPreview');
 Cron('0 9 * * *', { timezone: 'Europe/Paris', configKey: 'scheduler.tasks.daily_publish' })(DailyMessageService.prototype, 'publishScheduled');
-Cron('0 11 * * *', { timezone: 'Europe/Paris', configKey: 'scheduler.tasks.daily_autovalidate' })(DailyMessageService.prototype, 'autoValidateAndPublish');
+Cron('0 9 * * *', { timezone: 'Europe/Paris', configKey: 'scheduler.tasks.daily_autovalidate' })(DailyMessageService.prototype, 'autoValidateAndPublish');
 
 module.exports = {
     DailyMessageService

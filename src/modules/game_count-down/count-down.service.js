@@ -300,12 +300,9 @@ class CountDownService {
 
     async handleGameOver(message, channelId, startNumber, messages, errorsCount, maxErrors) {
         const cdConfig = this.getConfig();
-        const showRanking = cdConfig.show_ranking !== false && cdConfig.ranking_enabled !== false && cdConfig.enable_ranking !== false;
-
-        let description = '';
-        const defaultFooter = `Le compte à rebours a été réinitialisé à **${startNumber}**.`;
-        const footer = messages.ranking_footer || defaultFooter;
-        const cleanFooter = footer.startsWith('\n') ? footer : `\n\n${footer}`;
+        const showRanking = cdConfig.show_ranked !== undefined
+            ? cdConfig.show_ranked !== false
+            : (cdConfig.show_ranking !== false && cdConfig.ranking_enabled !== false && cdConfig.enable_ranking !== false);
 
         if (showRanking) {
             const scores = await this.repo.getScores(channelId);
@@ -329,16 +326,24 @@ class CountDownService {
                 }
             );
 
-            description = `${header}${rankingText}${cleanFooter}`;
-        } else {
-            const defaultHeader = `**La limite de ${maxErrors} erreur(s) a été atteinte.**`;
-            let baseHeader = messages.error_message || defaultHeader;
-            if (messages.ranking_header && !messages.error_message) {
-                baseHeader = messages.ranking_header.split(/🏆|Classement/i)[0].trim() || defaultHeader;
-            }
+            const defaultFooter = `Le compte à rebours a été réinitialisé à **${startNumber}**.`;
+            const footer = messages.ranking_footer || defaultFooter;
+            const cleanFooter = footer.startsWith('\n') ? footer : `\n\n${footer}`;
 
-            const header = this.formatMessage(
-                baseHeader,
+            const description = `${header}${rankingText}${cleanFooter}`;
+
+            const embed = new EmbedBuilder()
+                .setColor(messages.embed_color || '#F2C7CE')
+                .setTitle(messages.embed_title || '🏆 **Classement de la partie**')
+                .setDescription(description)
+                .setTimestamp();
+
+            await message.channel.send({ embeds: [embed] });
+        } else {
+            // Classement désactivé : message texte simple sans embed
+            const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
+            const errorMsg = this.formatMessage(
+                messages.error_message || defaultErrorMsg,
                 {
                     errorsCount,
                     maxErrors,
@@ -348,21 +353,13 @@ class CountDownService {
                     emojiObsydemon: cdConfig.emojis?.obsydemon_id || '1488145689916473544'
                 }
             );
-
-            description = `${header}${cleanFooter}`;
+            await message.channel.send(errorMsg);
         }
-
-        const embed = new EmbedBuilder()
-            .setColor(messages.embed_color || '#F2C7CE')
-            .setTitle(messages.embed_title || '❌ **Partie terminée !**')
-            .setDescription(description)
-            .setTimestamp();
-
-        await message.channel.send({ embeds: [embed] });
 
         await this.repo.resetScores(channelId);
         await this.repo.updateState(channelId, startNumber, 0, null, null, 0);
 
+        // Deuxième message : Allez la chienne commence : <startNumber>
         const restartMsg = this.formatMessage(
             messages.start_message || "**Allez la chienne commence :** {number}",
             { number: startNumber }
@@ -375,7 +372,9 @@ class CountDownService {
         const conf = this.getConfig();
         const targetChannel = channelId || conf.channel_id || '1533492760697503805';
         const state = await this.repo.getState(targetChannel);
-        const showRanking = conf.show_ranking !== false && conf.ranking_enabled !== false && conf.enable_ranking !== false;
+        const showRanking = conf.show_ranked !== undefined
+            ? conf.show_ranked !== false
+            : (conf.show_ranking !== false && conf.ranking_enabled !== false && conf.enable_ranking !== false);
         return {
             channelId: targetChannel,
             currentNumber: state?.current_number ?? (conf.start_number || 900),

@@ -88,7 +88,7 @@ describe('Game: Count Down Module Tests', () => {
         assert.ok(resScores.success);
     });
 
-    test('Service: should omit ranking when show_ranking is false on game over', async () => {
+    test('Service: should send plain messages without embed when show_ranking is false on game over', async () => {
         const service = container.resolve(CountDownService);
         const repo = container.resolve(CountDownRepository);
         service.getConfig = () => ({
@@ -96,20 +96,20 @@ describe('Game: Count Down Module Tests', () => {
             channel_id: channelId,
             start_number: 900,
             max_errors: 1,
-            show_ranking: false
+            show_ranked: false
         });
 
         await repo.updateState(channelId, 850, 0, null, 'user_alice', 0);
         await repo.addScore(channelId, 'user_winner', 'WinnerUser', 10);
 
-        let sentEmbed = null;
+        let sentMessages = [];
         const mockWrongMessage = {
             id: 'msg_cd_wrong_noranking',
             guild: { id: 'guild_1', name: 'Test Guild' },
             channel: {
                 id: channelId,
                 send: async (payload) => {
-                    if (payload.embeds?.[0]) sentEmbed = payload.embeds[0];
+                    sentMessages.push(payload);
                 }
             },
             author: { id: 'user_bob', username: 'Bob', bot: false },
@@ -118,9 +118,11 @@ describe('Game: Count Down Module Tests', () => {
         };
 
         await service.handleIncomingMessage(mockWrongMessage);
-        assert.ok(sentEmbed, 'Should send Game Over embed');
-        assert.ok(!sentEmbed.data.description.includes('Classement'), 'Should not include Classement');
-        assert.ok(!sentEmbed.data.description.includes('WinnerUser'), 'Should not include WinnerUser');
+        assert.strictEqual(sentMessages.length, 2, 'Should send exactly 2 plain messages');
+        assert.ok(!sentMessages[0].embeds, 'First message must NOT be an embed');
+        assert.ok(typeof sentMessages[0] === 'string' && sentMessages[0].includes('Oups'), 'First message must be the error message');
+        assert.ok(!sentMessages[1].embeds, 'Second message must NOT be an embed');
+        assert.ok(typeof sentMessages[1] === 'string' && sentMessages[1].includes('Allez la chienne commence'), 'Second message must be the restart message with starter number');
     });
 
 });

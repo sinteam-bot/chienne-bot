@@ -121,27 +121,27 @@ describe('Game: Road to Infinite Module Tests', () => {
         assert.ok(resScores.success);
     });
 
-    test('Service: should omit ranking when show_ranking is false', async () => {
+    test('Service: should send plain messages without embed when show_ranking is false', async () => {
         const service = container.resolve(RoadToInfiniteService);
         const repo = container.resolve(RoadToInfiniteRepository);
         service.getConfig = () => ({
             enabled: true,
             channel_id: channelId,
             max_errors: 1,
-            show_ranking: false
+            show_ranked: false
         });
 
         await repo.updateState(channelId, 15, 'user_b', 0);
         await repo.addScore(channelId, 'user_winner', 'WinnerUser', 10);
 
-        let sentEmbed = null;
+        let sentMessages = [];
         const mockMessage = {
             id: 'msg_wrong_noranking',
             guild: { id: 'guild_1', name: 'Test Guild' },
             channel: {
                 id: channelId,
                 send: async (payload) => {
-                    if (payload.embeds?.[0]) sentEmbed = payload.embeds[0];
+                    sentMessages.push(payload);
                 },
                 messages: { fetch: async () => new Map() }
             },
@@ -151,9 +151,11 @@ describe('Game: Road to Infinite Module Tests', () => {
         };
 
         await service.handleIncomingMessage(mockMessage);
-        assert.ok(sentEmbed, 'Should send Game Over embed');
-        assert.ok(!sentEmbed.data.description.includes('Classement'), 'Should not include Classement');
-        assert.ok(!sentEmbed.data.description.includes('WinnerUser'), 'Should not include WinnerUser');
+        assert.strictEqual(sentMessages.length, 2, 'Should send exactly 2 plain messages');
+        assert.ok(!sentMessages[0].embeds, 'First message must NOT be an embed');
+        assert.ok(typeof sentMessages[0] === 'string' && sentMessages[0].includes('Oups'), 'First message must be the error message');
+        assert.ok(!sentMessages[1].embeds, 'Second message must NOT be an embed');
+        assert.ok(typeof sentMessages[1] === 'string' && sentMessages[1].includes('Allez la chienne commence'), 'Second message must be the restart message with starter number');
     });
 
 });

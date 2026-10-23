@@ -147,11 +147,15 @@ class RoadToInfiniteService {
                 }
 
                 // Si le seuil d'erreurs est atteint : Game Over & Réinitialisation
-                const showRanking = counterConfig.show_ranking !== false && counterConfig.ranking_enabled !== false && counterConfig.enable_ranking !== false;
+                const showRanking = counterConfig.show_ranked !== undefined
+                    ? counterConfig.show_ranked !== false
+                    : (counterConfig.show_ranking !== false && counterConfig.ranking_enabled !== false && counterConfig.enable_ranking !== false);
 
-                let embedDescription = '';
-                const rankingTextFooter = messages.ranking_footer || "Le compteur a été réinitialisé, le prochain nombre est 1.";
-                const footer = rankingTextFooter.startsWith('\n') ? rankingTextFooter : `\n\n${rankingTextFooter}`;
+                const startNumber = counterConfig.start_number || 1;
+                const restartMsg = this.formatMessage(
+                    messages.start_message || "**Allez la chienne commence :** {number}",
+                    { number: startNumber }
+                );
 
                 if (showRanking) {
                     const scores = await this.repo.getScores(COUNTER_CHANNEL_ID);
@@ -177,17 +181,23 @@ class RoadToInfiniteService {
                         }
                     );
 
-                    embedDescription = `${rankingTextHeader}${rankingText}${footer}`;
-                } else {
-                    // Classement désactivé : message de défaite sans le bloc de classement
-                    const defaultHeader = "**<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !**";
-                    let baseHeader = messages.error_message || defaultHeader;
-                    if (messages.ranking_header && !messages.error_message) {
-                        baseHeader = messages.ranking_header.split(/🏆|Classement/i)[0].trim() || defaultHeader;
-                    }
+                    const rankingTextFooter = messages.ranking_footer || "Le compteur a été réinitialisé, le prochain nombre est 1.";
+                    const footer = rankingTextFooter.startsWith('\n') ? rankingTextFooter : `\n\n${rankingTextFooter}`;
 
-                    const header = this.formatMessage(
-                        baseHeader,
+                    const embed = new EmbedBuilder()
+                        .setColor(messages.embed_color || '#F2C7CE')
+                        .setTitle(messages.embed_title || '❌ Perdu !')
+                        .setDescription(`${rankingTextHeader}${rankingText}${footer}`)
+                        .setTimestamp();
+
+                    await message.channel.send({ embeds: [embed] });
+                    await message.channel.send(restartMsg);
+                } else {
+                    // Classement désactivé : messages texte simples sans embed
+                    // 1er message : Oups @user s'est trompé(e), je vais devoir mordre...
+                    const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
+                    const errorMsg = this.formatMessage(
+                        messages.error_message || defaultErrorMsg,
                         {
                             userId: message.author.id,
                             username: message.author.username,
@@ -198,17 +208,11 @@ class RoadToInfiniteService {
                             emojiObsydemon: EMOJI_OBSYDEMON_ID
                         }
                     );
+                    await message.channel.send(errorMsg);
 
-                    embedDescription = `${header}${footer}`;
+                    // 2ème message : Allez la chienne commence : <startNumber>
+                    await message.channel.send(restartMsg);
                 }
-
-                const embed = new EmbedBuilder()
-                    .setColor(messages.embed_color || '#F2C7CE')
-                    .setTitle(messages.embed_title || '❌ Perdu !')
-                    .setDescription(embedDescription)
-                    .setTimestamp();
-
-                await message.channel.send({ embeds: [embed] });
 
                 await this.repo.resetScores(COUNTER_CHANNEL_ID);
                 await this.repo.updateState(COUNTER_CHANNEL_ID, 0, null, 0);
@@ -225,7 +229,9 @@ class RoadToInfiniteService {
         const conf = this.getConfig();
         const targetChannel = channelId || conf.channel_id || '1533492692825276598';
         const state = await this.repo.getState(targetChannel);
-        const showRanking = conf.show_ranking !== false && conf.ranking_enabled !== false && conf.enable_ranking !== false;
+        const showRanking = conf.show_ranked !== undefined
+            ? conf.show_ranked !== false
+            : (conf.show_ranking !== false && conf.ranking_enabled !== false && conf.enable_ranking !== false);
         return {
             channelId: targetChannel,
             currentNumber: state?.current_number || 0,
