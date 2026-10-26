@@ -269,9 +269,13 @@ class SecurityQuestionService {
         try {
             const existing = await this.repo.getUserCaptcha(member.id, member.guild.id);
             if (existing && existing.is_verified) {
+                let updatedMember = member;
                 const role = await this.getVerifiedRole(member.guild);
                 if (role) {
-                    await member.roles.add(role.id).catch(() => {});
+                    try {
+                        const updated = await member.roles.add(role.id);
+                        if (updated) updatedMember = updated;
+                    } catch (_) {}
                 }
 
                 // Afficher une carte dans le salon de logs avec le bouton d'invalidation actif
@@ -297,7 +301,7 @@ class SecurityQuestionService {
 
                 await sendOrUpdateCaptchaCard(member.guild, cardData);
                 await this.saveCardData(member.id, member.guild.id, cardData);
-                await this.triggerWelcome(member);
+                await this.triggerWelcome(updatedMember);
                 return;
             }
 
@@ -541,8 +545,12 @@ class SecurityQuestionService {
                 }
 
                 const role = await this.getVerifiedRole(message.guild);
+                let targetMember = message.member;
                 if (role && message.member) {
-                    await message.member.roles.add(role.id).catch(() => {});
+                    try {
+                        const updated = await message.member.roles.add(role.id);
+                        if (updated) targetMember = updated;
+                    } catch (_) {}
                 }
 
                 // Mettre à jour la carte dynamique de logs
@@ -556,8 +564,8 @@ class SecurityQuestionService {
                     );
                 }
 
-                if (message.member) {
-                    await this.triggerWelcome(message.member);
+                if (targetMember) {
+                    await this.triggerWelcome(targetMember);
                 }
 
                 setTimeout(async () => {
