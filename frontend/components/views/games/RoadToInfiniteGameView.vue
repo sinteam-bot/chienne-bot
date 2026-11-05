@@ -255,7 +255,7 @@ const config = ref<any>({
     ranking_header: '',
     ranking_footer: '',
     no_participation: '',
-    embed_title: '❌ Perdu !',
+    embed_title: "C'est moche !",
     embed_color: '#F2C7CE'
   }
 });

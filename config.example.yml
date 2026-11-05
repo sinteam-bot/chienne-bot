@@ -271,7 +271,7 @@ counter:
 
        🏆 **Classement de la Route de l'Infini**
     ranking_footer: Le compteur a été réinitialisé, le prochain nombre est 1.
-    embed_title: ❌ Perdu !
+    embed_title: "C'est moche !"
     embed_color: "#F2C7CE"
 countdown:
   enabled: true
@@ -293,7 +293,7 @@ countdown:
     warning_message: ⚠️ <@{userId}> s'est trompé(e) (**{errorsCount}/{maxErrors} erreurs** tolérées). Le prochain nombre attendu est **{expectedNumber}**.
     error_message: "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>"
     no_participation: Aucune participation enregistrée.
-    embed_title: 🏆 **Classement de la partie**
+    embed_title: "C'est moche !"
     embed_color: "#F2C7CE"
 bump_reminder:
   enabled: true

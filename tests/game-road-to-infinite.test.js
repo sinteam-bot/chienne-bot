@@ -117,7 +117,7 @@ describe('Game: Road to Infinite Module Tests', () => {
             show_ranked: false
         });
 
-        await repo.updateState(channelId, 11, 'user_b', 0);
+        await repo.updateState(channelId, 11, 0, null, 'user_b', 0);
 
         let sentMessages = [];
         const mockMessage = {
@@ -130,8 +130,12 @@ describe('Game: Road to Infinite Module Tests', () => {
         };
 
         await service.handleIncomingMessage(mockMessage);
-        assert.strictEqual(sentMessages.length, 2, 'Should send exactly 2 messages: double-post message and restart message');
-        assert.ok(!sentMessages.some(m => typeof m === 'string' && m.includes('Oups')), 'Should NOT send redundant Oups error message on double post');
+        assert.strictEqual(sentMessages.length, 1, 'Should send exactly 1 embed message');
+        assert.ok(sentMessages[0].embeds?.[0], 'Message must be an embed');
+        assert.strictEqual(sentMessages[0].embeds[0].data.title, "C'est moche !");
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('partager deux nombres à la suite'), 'Embed description must include double post message');
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Allez la chienne commence'), 'Embed description must include restart message');
+        assert.ok(!sentMessages[0].embeds[0].data.description.includes('Oups'), 'Should NOT send redundant Oups error message on double post');
 
         const state = await repo.getState(channelId);
         assert.strictEqual(state.current_number, 0, 'Counter must reset to 0');
@@ -183,7 +187,7 @@ describe('Game: Road to Infinite Module Tests', () => {
         assert.ok(resScores.success);
     });
 
-    test('Service: should send plain messages without embed when show_ranking is false', async () => {
+    test('Service: should send embed with error and restart when game over even if show_ranked is false', async () => {
         const service = container.resolve(RoadToInfiniteService);
         const repo = container.resolve(RoadToInfiniteRepository);
         service.getConfig = () => ({
@@ -193,7 +197,7 @@ describe('Game: Road to Infinite Module Tests', () => {
             show_ranked: false
         });
 
-        await repo.updateState(channelId, 15, 'user_b', 0);
+        await repo.updateState(channelId, 15, 0, null, 'user_b', 0);
         await repo.addScore(channelId, 'user_winner', 'WinnerUser', 10);
 
         let sentMessages = [];
@@ -213,11 +217,12 @@ describe('Game: Road to Infinite Module Tests', () => {
         };
 
         await service.handleIncomingMessage(mockMessage);
-        assert.strictEqual(sentMessages.length, 2, 'Should send exactly 2 plain messages');
-        assert.ok(!sentMessages[0].embeds, 'First message must NOT be an embed');
-        assert.ok(typeof sentMessages[0] === 'string' && sentMessages[0].includes('Oups'), 'First message must be the error message');
-        assert.ok(!sentMessages[1].embeds, 'Second message must NOT be an embed');
-        assert.ok(typeof sentMessages[1] === 'string' && sentMessages[1].includes('Allez la chienne commence'), 'Second message must be the restart message with starter number');
+        assert.strictEqual(sentMessages.length, 1, 'Should send exactly 1 embed message');
+        assert.ok(sentMessages[0].embeds?.[0], 'First message must be an embed');
+        assert.strictEqual(sentMessages[0].embeds[0].data.title, "C'est moche !");
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Oups'), 'Embed must include error message');
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Allez la chienne commence'), 'Embed must include restart message');
+        assert.ok(!sentMessages[0].embeds[0].data.description.includes('WinnerUser'), 'Should not include ranking when show_ranked is false');
     });
 
     test('Repository: should store and retrieve trap state', async () => {
@@ -384,10 +389,12 @@ describe('Game: Road to Infinite Module Tests', () => {
 
         await service.handleIncomingMessage(mockMessage);
 
-        // Seuil d'erreurs (1) atteint -> Game Over
-        assert.strictEqual(sentMessages.length, 2);
-        assert.ok(sentMessages[0].includes('Oups'));
-        assert.ok(sentMessages[1].includes('Allez la chienne commence'));
+        // Seuil d'erreurs (1) atteint -> Game Over avec Embed
+        assert.strictEqual(sentMessages.length, 1);
+        assert.ok(sentMessages[0].embeds?.[0]);
+        assert.strictEqual(sentMessages[0].embeds[0].data.title, "C'est moche !");
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Je t’ai eu'));
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Allez la chienne commence'));
 
         const state = await repo.getState(channelId);
         assert.strictEqual(state.current_number, 0, 'Game must be reset to 0');

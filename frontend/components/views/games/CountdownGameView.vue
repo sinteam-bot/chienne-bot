@@ -255,7 +255,7 @@ const config = ref<any>({
     warning_message: '',
     error_message: '',
     no_participation: '',
-    embed_title: '🏆 **Classement de la partie**',
+    embed_title: "C'est moche !",
     embed_color: '#F2C7CE'
   }
 });

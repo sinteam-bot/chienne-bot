@@ -138,9 +138,9 @@ class RoadToInfiniteService {
                     return;
                 }
 
-                // Seuil d'erreurs atteint -> Message double-post puis Game Over & Reset (sans le message d'erreur redondant "Oups...")
+                // Seuil d'erreurs atteint -> Game Over & Reset avec embed d'erreur
                 const doublePostMsg = this.formatMessage(
-                    messages.double_post_message || "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>",
+                    messages.double_post_message || "<@{userId}>, **tu ne peux pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>",
                     {
                         userId: message.author.id,
                         username: message.author.username,
@@ -152,9 +152,8 @@ class RoadToInfiniteService {
                         emojiObsydemon: EMOJI_OBSYDEMON_ID
                     }
                 );
-                await message.channel.send(doublePostMsg);
 
-                await this.handleGameOver(message, COUNTER_CHANNEL_ID, messages, newErrorCount, maxErrors, expectedNumber, { skipErrorMessage: true });
+                await this.handleGameOver(message, COUNTER_CHANNEL_ID, messages, newErrorCount, maxErrors, expectedNumber, { errorMessage: doublePostMsg });
                 return;
             }
 
@@ -204,28 +203,28 @@ class RoadToInfiniteService {
                     const maxErrors = Math.max(1, parseInt(counterConfig.max_errors || 1, 10));
                     const newErrorCount = (state.error_count || 0) + 1;
 
+                    const trapFailMsg = this.formatMessage(
+                        messages.trap_failed_message || "<@{userId}>**, Je t’ai eu !** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**.",
+                        {
+                            userId: message.author.id,
+                            username: message.author.username,
+                            errorsCount: newErrorCount,
+                            maxErrors,
+                            remainingErrors: Math.max(0, maxErrors - newErrorCount),
+                            expectedNumber: currentNumber + 1,
+                            emojiObsydemon: EMOJI_OBSYDEMON_ID
+                        }
+                    );
+
                     if (newErrorCount < maxErrors) {
                         await this.repo.updateState(COUNTER_CHANNEL_ID, currentNumber, 0, null, state.last_user_id, newErrorCount);
-
-                        const trapFailMsg = this.formatMessage(
-                            messages.trap_failed_message || "<@{userId}>**, Je t’ai eu !** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**.",
-                            {
-                                userId: message.author.id,
-                                username: message.author.username,
-                                errorsCount: newErrorCount,
-                                maxErrors,
-                                remainingErrors: maxErrors - newErrorCount,
-                                expectedNumber: currentNumber + 1,
-                                emojiObsydemon: EMOJI_OBSYDEMON_ID
-                            }
-                        );
                         await message.channel.send(trapFailMsg);
                         console.log(`🪤 [COUNTER] ${message.author.tag} est tombé dans le piège (${newErrorCount}/${maxErrors} erreurs)`);
                         return;
                     }
 
                     // Seuil d'erreurs atteint lors du piège -> Reset de la partie
-                    await this.handleGameOver(message, COUNTER_CHANNEL_ID, messages, newErrorCount, maxErrors, currentNumber + 1);
+                    await this.handleGameOver(message, COUNTER_CHANNEL_ID, messages, newErrorCount, maxErrors, currentNumber + 1, { errorMessage: trapFailMsg });
                     return;
                 }
             }
@@ -292,8 +291,22 @@ class RoadToInfiniteService {
                     return;
                 }
 
+                const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
+                const errorMsg = this.formatMessage(
+                    messages.error_message || defaultErrorMsg,
+                    {
+                        userId: message.author.id,
+                        username: message.author.username,
+                        expectedNumber,
+                        postedNumber: message.content,
+                        errorsCount: newErrorCount,
+                        maxErrors,
+                        emojiObsydemon: counterConfig.emojis?.obsydemon_id || '1488145689916473544'
+                    }
+                );
+
                 // Seuil d'erreurs atteint -> Reset de la partie
-                await this.handleGameOver(message, COUNTER_CHANNEL_ID, messages, newErrorCount, maxErrors, expectedNumber);
+                await this.handleGameOver(message, COUNTER_CHANNEL_ID, messages, newErrorCount, maxErrors, expectedNumber, { errorMessage: errorMsg });
             }
 
         } catch (error) {
@@ -313,6 +326,22 @@ class RoadToInfiniteService {
             { number: startNumber }
         );
 
+        const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
+        const errorText = options.errorMessage || this.formatMessage(
+            messages.error_message || defaultErrorMsg,
+            {
+                userId: message.author.id,
+                username: message.author.username,
+                expectedNumber,
+                postedNumber: message.content,
+                errorsCount,
+                maxErrors,
+                emojiObsydemon: counterConfig.emojis?.obsydemon_id || '1488145689916473544'
+            }
+        );
+
+        let description = '';
+
         if (showRanking) {
             const scores = await this.repo.getScores(channelId);
 
@@ -324,8 +353,12 @@ class RoadToInfiniteService {
                 }).join('\n');
             }
 
-            const rankingTextHeader = this.formatMessage(
-                messages.ranking_header || "**<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !** \n\n 🏆 **Classement de la Route de l'Infini**\n",
+            const defaultHeader = options.errorMessage
+                ? `🏆 **Classement de la Route de l'Infini**`
+                : (messages.ranking_header || "**<@{userId}> a ruiné la Route de l'Infini après {maxErrors} erreur(s) !** \n\n 🏆 **Classement de la Route de l'Infini**");
+
+            const rankingHeader = this.formatMessage(
+                defaultHeader,
                 {
                     userId: message.author.id,
                     username: message.author.username,
@@ -337,37 +370,29 @@ class RoadToInfiniteService {
                 }
             );
 
-            const rankingTextFooter = messages.ranking_footer || "Le compteur a été réinitialisé, le prochain nombre est 1.";
-            const footer = rankingTextFooter.startsWith('\n') ? rankingTextFooter : `\n\n${rankingTextFooter}`;
+            const rankingFooter = messages.ranking_footer ? `\n\n${messages.ranking_footer}` : '';
 
+            if (options.errorMessage) {
+                description = `${errorText}\n\n${rankingHeader}\n${rankingText}${rankingFooter}\n\n${restartMsg}`;
+            } else {
+                description = `${rankingHeader}\n${rankingText}${rankingFooter}\n\n${restartMsg}`;
+            }
+        } else {
+            description = `${errorText}\n\n${restartMsg}`;
+        }
+
+        const useEmbed = counterConfig.use_embed !== false && messages.use_embed !== false;
+        if (!useEmbed) {
+            await message.channel.send(errorText);
+            await message.channel.send(restartMsg);
+        } else {
             const embed = new EmbedBuilder()
                 .setColor(messages.embed_color || '#F2C7CE')
-                .setTitle(messages.embed_title || '❌ Perdu !')
-                .setDescription(`${rankingTextHeader}${rankingText}${footer}`)
+                .setTitle(messages.embed_title || "C'est moche !")
+                .setDescription(description)
                 .setTimestamp();
 
             await message.channel.send({ embeds: [embed] });
-            await message.channel.send(restartMsg);
-        } else {
-            // Classement désactivé : message texte simple sans embed
-            if (!options.skipErrorMessage) {
-                const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
-                const errorMsg = this.formatMessage(
-                    messages.error_message || defaultErrorMsg,
-                    {
-                        userId: message.author.id,
-                        username: message.author.username,
-                        expectedNumber,
-                        postedNumber: message.content,
-                        errorsCount,
-                        maxErrors,
-                        emojiObsydemon: counterConfig.emojis?.obsydemon_id || '1488145689916473544'
-                    }
-                );
-                await message.channel.send(errorMsg);
-            }
-
-            await message.channel.send(restartMsg);
         }
 
         await this.repo.resetScores(channelId);

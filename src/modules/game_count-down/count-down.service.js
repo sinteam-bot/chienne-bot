@@ -157,9 +157,9 @@ class CountDownService {
                     return;
                 }
 
-                // Seuil d'erreurs atteint -> Message double-post puis Game Over & Reset (sans le message d'erreur redondant "Oups...")
+                // Seuil d'erreurs atteint -> Game Over & Reset avec embed d'erreur
                 const doublePostMsg = this.formatMessage(
-                    messages.double_post_message || "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>",
+                    messages.double_post_message || "<@{userId}>, **tu ne peux pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>",
                     {
                         userId: message.author.id,
                         username: message.author.username,
@@ -171,9 +171,8 @@ class CountDownService {
                         emojiObsydemon: EMOJI_OBSYDEMON_ID
                     }
                 );
-                await message.channel.send(doublePostMsg);
 
-                await this.handleGameOver(message, COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, messages, newErrorCount, maxErrors, { skipErrorMessage: true });
+                await this.handleGameOver(message, COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, messages, newErrorCount, maxErrors, { errorMessage: doublePostMsg });
                 return;
             }
 
@@ -223,28 +222,28 @@ class CountDownService {
                     const maxErrors = Math.max(1, parseInt(cdConfig.max_errors || 1, 10));
                     const newErrorCount = (state.error_count || 0) + 1;
 
+                    const trapFailMsg = this.formatMessage(
+                        messages.trap_failed_message || "<@{userId}>**, Je t’ai eu !** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**.",
+                        {
+                            userId: message.author.id,
+                            username: message.author.username,
+                            errorsCount: newErrorCount,
+                            maxErrors,
+                            remainingErrors: Math.max(0, maxErrors - newErrorCount),
+                            expectedNumber: currentNumber - 1,
+                            emojiObsydemon: EMOJI_OBSYDEMON_ID
+                        }
+                    );
+
                     if (newErrorCount < maxErrors) {
                         await this.repo.updateState(COUNTDOWN_CHANNEL_ID, currentNumber, 0, null, state.last_user_id, newErrorCount);
-
-                        const trapFailMsg = this.formatMessage(
-                            messages.trap_failed_message || "<@{userId}>**, Je t’ai eu !** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**.",
-                            {
-                                userId: message.author.id,
-                                username: message.author.username,
-                                errorsCount: newErrorCount,
-                                maxErrors,
-                                remainingErrors: maxErrors - newErrorCount,
-                                expectedNumber: currentNumber - 1,
-                                emojiObsydemon: EMOJI_OBSYDEMON_ID
-                            }
-                        );
                         await message.channel.send(trapFailMsg);
                         console.log(`🪤 [COUNTDOWN] ${message.author.tag} est tombé dans le piège (${newErrorCount}/${maxErrors} erreurs)`);
                         return;
                     }
 
                     // Seuil d'erreurs atteint lors du piège -> Reset de la partie
-                    await this.handleGameOver(message, COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, messages, newErrorCount, maxErrors);
+                    await this.handleGameOver(message, COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, messages, newErrorCount, maxErrors, { errorMessage: trapFailMsg });
                     return;
                 }
             }
@@ -355,8 +354,21 @@ class CountDownService {
                     return;
                 }
 
+                const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
+                const errorMsg = this.formatMessage(
+                    messages.error_message || defaultErrorMsg,
+                    {
+                        errorsCount: newErrorCount,
+                        maxErrors,
+                        startNumber: COUNTDOWN_START_AT,
+                        userId: message.author.id,
+                        username: message.author.username,
+                        emojiObsydemon: cdConfig.emojis?.obsydemon_id || '1488145689916473544'
+                    }
+                );
+
                 // Seuil d'erreurs atteint -> Reset de la partie
-                await this.handleGameOver(message, COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, messages, newErrorCount, maxErrors);
+                await this.handleGameOver(message, COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, messages, newErrorCount, maxErrors, { errorMessage: errorMsg });
             }
 
         } catch (error) {
@@ -370,6 +382,26 @@ class CountDownService {
             ? cdConfig.show_ranked !== false
             : (cdConfig.show_ranking !== false && cdConfig.ranking_enabled !== false && cdConfig.enable_ranking !== false);
 
+        const restartMsg = this.formatMessage(
+            messages.start_message || "**Allez la chienne commence :** {number}",
+            { number: startNumber }
+        );
+
+        const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
+        const errorText = options.errorMessage || this.formatMessage(
+            messages.error_message || defaultErrorMsg,
+            {
+                errorsCount,
+                maxErrors,
+                startNumber,
+                userId: message.author.id,
+                username: message.author.username,
+                emojiObsydemon: cdConfig.emojis?.obsydemon_id || '1488145689916473544'
+            }
+        );
+
+        let description = '';
+
         if (showRanking) {
             const scores = await this.repo.getScores(channelId);
             let rankingText = messages.no_participation || "Aucune participation enregistrée.";
@@ -380,9 +412,12 @@ class CountDownService {
                 }).join('\n');
             }
 
-            const defaultHeader = `**La limite de ${maxErrors} erreur(s) a été atteinte.**\n\n🏆 **Classement de la partie :**\n`;
+            const defaultHeader = options.errorMessage
+                ? `🏆 **Classement de la partie :**`
+                : (messages.ranking_header || `**La limite de ${maxErrors} erreur(s) a été atteinte.**\n\n🏆 **Classement de la partie :**`);
+
             const header = this.formatMessage(
-                messages.ranking_header || defaultHeader,
+                defaultHeader,
                 {
                     errorsCount,
                     maxErrors,
@@ -392,47 +427,34 @@ class CountDownService {
                 }
             );
 
-            const defaultFooter = `Le compte à rebours a été réinitialisé à **${startNumber}**.`;
-            const footer = messages.ranking_footer || defaultFooter;
-            const cleanFooter = footer.startsWith('\n') ? footer : `\n\n${footer}`;
+            const rankingFooter = messages.ranking_footer ? `\n\n${messages.ranking_footer}` : '';
 
-            const description = `${header}${rankingText}${cleanFooter}`;
+            if (options.errorMessage) {
+                description = `${errorText}\n\n${header}\n${rankingText}${rankingFooter}\n\n${restartMsg}`;
+            } else {
+                description = `${header}\n${rankingText}${rankingFooter}\n\n${restartMsg}`;
+            }
+        } else {
+            description = `${errorText}\n\n${restartMsg}`;
+        }
 
+        const useEmbed = cdConfig.use_embed !== false && messages.use_embed !== false;
+        if (!useEmbed) {
+            await message.channel.send(errorText);
+            await message.channel.send(restartMsg);
+        } else {
             const embed = new EmbedBuilder()
                 .setColor(messages.embed_color || '#F2C7CE')
-                .setTitle(messages.embed_title || '🏆 **Classement de la partie**')
+                .setTitle(messages.embed_title || "C'est moche !")
                 .setDescription(description)
                 .setTimestamp();
 
             await message.channel.send({ embeds: [embed] });
-        } else {
-            // Classement désactivé : message texte simple sans embed
-            if (!options.skipErrorMessage) {
-                const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
-                const errorMsg = this.formatMessage(
-                    messages.error_message || defaultErrorMsg,
-                    {
-                        errorsCount,
-                        maxErrors,
-                        startNumber,
-                        userId: message.author.id,
-                        username: message.author.username,
-                        emojiObsydemon: cdConfig.emojis?.obsydemon_id || '1488145689916473544'
-                    }
-                );
-                await message.channel.send(errorMsg);
-            }
         }
 
         await this.repo.resetScores(channelId);
         await this.repo.updateState(channelId, startNumber, 0, null, null, 0);
 
-        // Deuxième message : Allez la chienne commence : <startNumber>
-        const restartMsg = this.formatMessage(
-            messages.start_message || "**Allez la chienne commence :** {number}",
-            { number: startNumber }
-        );
-        await message.channel.send(restartMsg);
         console.log(`❌ [COUNTDOWN] ${message.author.tag} a atteint la limite d'erreurs (${errorsCount}/${maxErrors}). Partie réinitialisée.`);
     }
 

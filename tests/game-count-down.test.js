@@ -88,7 +88,7 @@ describe('Game: Count Down Module Tests', () => {
         assert.ok(resScores.success);
     });
 
-    test('Service: should send plain messages without embed when show_ranking is false on game over', async () => {
+    test('Service: should send embed with error and restart when game over even if show_ranked is false', async () => {
         const service = container.resolve(CountDownService);
         const repo = container.resolve(CountDownRepository);
         service.getConfig = () => ({
@@ -118,11 +118,12 @@ describe('Game: Count Down Module Tests', () => {
         };
 
         await service.handleIncomingMessage(mockWrongMessage);
-        assert.strictEqual(sentMessages.length, 2, 'Should send exactly 2 plain messages');
-        assert.ok(!sentMessages[0].embeds, 'First message must NOT be an embed');
-        assert.ok(typeof sentMessages[0] === 'string' && sentMessages[0].includes('Oups'), 'First message must be the error message');
-        assert.ok(!sentMessages[1].embeds, 'Second message must NOT be an embed');
-        assert.ok(typeof sentMessages[1] === 'string' && sentMessages[1].includes('Allez la chienne commence'), 'Second message must be the restart message with starter number');
+        assert.strictEqual(sentMessages.length, 1, 'Should send exactly 1 embed message');
+        assert.ok(sentMessages[0].embeds?.[0], 'Message must be an embed');
+        assert.strictEqual(sentMessages[0].embeds[0].data.title, "C'est moche !");
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Oups'), 'Embed must include error message');
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Allez la chienne commence'), 'Embed must include restart message');
+        assert.ok(!sentMessages[0].embeds[0].data.description.includes('WinnerUser'), 'Should not include ranking when show_ranked is false');
     });
 
     test('Service: should treat double-post as error and reset when max_errors is 1', async () => {
@@ -150,8 +151,12 @@ describe('Game: Count Down Module Tests', () => {
         };
 
         await service.handleIncomingMessage(mockMessage);
-        assert.strictEqual(sentMessages.length, 2, 'Should send exactly 2 messages: double-post message and restart message');
-        assert.ok(!sentMessages.some(m => typeof m === 'string' && m.includes('Oups')), 'Should NOT send redundant Oups error message on double post');
+        assert.strictEqual(sentMessages.length, 1, 'Should send exactly 1 embed message');
+        assert.ok(sentMessages[0].embeds?.[0], 'Message must be an embed');
+        assert.strictEqual(sentMessages[0].embeds[0].data.title, "C'est moche !");
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('partager deux nombres à la suite'));
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Allez la chienne commence'));
+        assert.ok(!sentMessages[0].embeds[0].data.description.includes('Oups'), 'Should NOT send redundant Oups error message on double post');
 
         const state = await repo.getState(channelId);
         assert.strictEqual(state.current_number, 900, 'Countdown must reset to start_number (900)');
