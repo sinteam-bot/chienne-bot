@@ -133,7 +133,8 @@ describe('Game: Count Down Module Tests', () => {
             channel_id: channelId,
             start_number: 900,
             max_errors: 1,
-            double_post_is_error: true
+            double_post_is_error: true,
+            show_ranked: false
         });
 
         await repo.updateState(channelId, 850, 0, null, 'user_bob', 0);
@@ -149,7 +150,8 @@ describe('Game: Count Down Module Tests', () => {
         };
 
         await service.handleIncomingMessage(mockMessage);
-        assert.ok(sentMessages.length >= 2, 'Should send double post message then restart message/ranking');
+        assert.strictEqual(sentMessages.length, 2, 'Should send exactly 2 messages: double-post message and restart message');
+        assert.ok(!sentMessages.some(m => typeof m === 'string' && m.includes('Oups')), 'Should NOT send redundant Oups error message on double post');
 
         const state = await repo.getState(channelId);
         assert.strictEqual(state.current_number, 900, 'Countdown must reset to start_number (900)');

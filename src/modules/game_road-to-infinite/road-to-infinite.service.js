@@ -138,7 +138,7 @@ class RoadToInfiniteService {
                     return;
                 }
 
-                // Seuil d'erreurs atteint -> Message double-post puis Game Over & Reset
+                // Seuil d'erreurs atteint -> Message double-post puis Game Over & Reset (sans le message d'erreur redondant "Oups...")
                 const doublePostMsg = this.formatMessage(
                     messages.double_post_message || "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>",
                     {
@@ -154,7 +154,7 @@ class RoadToInfiniteService {
                 );
                 await message.channel.send(doublePostMsg);
 
-                await this.handleGameOver(message, COUNTER_CHANNEL_ID, messages, newErrorCount, maxErrors, expectedNumber);
+                await this.handleGameOver(message, COUNTER_CHANNEL_ID, messages, newErrorCount, maxErrors, expectedNumber, { skipErrorMessage: true });
                 return;
             }
 
@@ -301,7 +301,7 @@ class RoadToInfiniteService {
         }
     }
 
-    async handleGameOver(message, channelId, messages, errorsCount, maxErrors, expectedNumber) {
+    async handleGameOver(message, channelId, messages, errorsCount, maxErrors, expectedNumber, options = {}) {
         const counterConfig = this.getConfig();
         const showRanking = counterConfig.show_ranked !== undefined
             ? counterConfig.show_ranked !== false
@@ -349,21 +349,23 @@ class RoadToInfiniteService {
             await message.channel.send({ embeds: [embed] });
             await message.channel.send(restartMsg);
         } else {
-            // Classement désactivé : messages texte simples sans embed
-            const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
-            const errorMsg = this.formatMessage(
-                messages.error_message || defaultErrorMsg,
-                {
-                    userId: message.author.id,
-                    username: message.author.username,
-                    expectedNumber,
-                    postedNumber: message.content,
-                    errorsCount,
-                    maxErrors,
-                    emojiObsydemon: counterConfig.emojis?.obsydemon_id || '1488145689916473544'
-                }
-            );
-            await message.channel.send(errorMsg);
+            // Classement désactivé : message texte simple sans embed
+            if (!options.skipErrorMessage) {
+                const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
+                const errorMsg = this.formatMessage(
+                    messages.error_message || defaultErrorMsg,
+                    {
+                        userId: message.author.id,
+                        username: message.author.username,
+                        expectedNumber,
+                        postedNumber: message.content,
+                        errorsCount,
+                        maxErrors,
+                        emojiObsydemon: counterConfig.emojis?.obsydemon_id || '1488145689916473544'
+                    }
+                );
+                await message.channel.send(errorMsg);
+            }
 
             await message.channel.send(restartMsg);
         }

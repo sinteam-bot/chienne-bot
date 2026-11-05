@@ -157,7 +157,7 @@ class CountDownService {
                     return;
                 }
 
-                // Seuil d'erreurs atteint -> Message double-post puis Game Over & Reset
+                // Seuil d'erreurs atteint -> Message double-post puis Game Over & Reset (sans le message d'erreur redondant "Oups...")
                 const doublePostMsg = this.formatMessage(
                     messages.double_post_message || "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>",
                     {
@@ -173,7 +173,7 @@ class CountDownService {
                 );
                 await message.channel.send(doublePostMsg);
 
-                await this.handleGameOver(message, COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, messages, newErrorCount, maxErrors);
+                await this.handleGameOver(message, COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, messages, newErrorCount, maxErrors, { skipErrorMessage: true });
                 return;
             }
 
@@ -364,7 +364,7 @@ class CountDownService {
         }
     }
 
-    async handleGameOver(message, channelId, startNumber, messages, errorsCount, maxErrors) {
+    async handleGameOver(message, channelId, startNumber, messages, errorsCount, maxErrors, options = {}) {
         const cdConfig = this.getConfig();
         const showRanking = cdConfig.show_ranked !== undefined
             ? cdConfig.show_ranked !== false
@@ -407,19 +407,21 @@ class CountDownService {
             await message.channel.send({ embeds: [embed] });
         } else {
             // Classement désactivé : message texte simple sans embed
-            const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
-            const errorMsg = this.formatMessage(
-                messages.error_message || defaultErrorMsg,
-                {
-                    errorsCount,
-                    maxErrors,
-                    startNumber,
-                    userId: message.author.id,
-                    username: message.author.username,
-                    emojiObsydemon: cdConfig.emojis?.obsydemon_id || '1488145689916473544'
-                }
-            );
-            await message.channel.send(errorMsg);
+            if (!options.skipErrorMessage) {
+                const defaultErrorMsg = "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>";
+                const errorMsg = this.formatMessage(
+                    messages.error_message || defaultErrorMsg,
+                    {
+                        errorsCount,
+                        maxErrors,
+                        startNumber,
+                        userId: message.author.id,
+                        username: message.author.username,
+                        emojiObsydemon: cdConfig.emojis?.obsydemon_id || '1488145689916473544'
+                    }
+                );
+                await message.channel.send(errorMsg);
+            }
         }
 
         await this.repo.resetScores(channelId);

@@ -30,7 +30,7 @@ describe('Game: Road to Infinite Module Tests', () => {
     test('Service: should handle valid sequential counting', async () => {
         const service = container.resolve(RoadToInfiniteService);
         const repo = container.resolve(RoadToInfiniteRepository);
-        service.getConfig = () => ({ enabled: true, channel_id: channelId });
+        service.getConfig = () => ({ enabled: true, channel_id: channelId, trap_chance: 0 });
 
         await repo.updateState(channelId, 10, 'user_a');
 
@@ -113,7 +113,8 @@ describe('Game: Road to Infinite Module Tests', () => {
             enabled: true,
             channel_id: channelId,
             max_errors: 1,
-            double_post_is_error: true
+            double_post_is_error: true,
+            show_ranked: false
         });
 
         await repo.updateState(channelId, 11, 'user_b', 0);
@@ -129,7 +130,8 @@ describe('Game: Road to Infinite Module Tests', () => {
         };
 
         await service.handleIncomingMessage(mockMessage);
-        assert.ok(sentMessages.length >= 2, 'Should send double post message then restart message/ranking');
+        assert.strictEqual(sentMessages.length, 2, 'Should send exactly 2 messages: double-post message and restart message');
+        assert.ok(!sentMessages.some(m => typeof m === 'string' && m.includes('Oups')), 'Should NOT send redundant Oups error message on double post');
 
         const state = await repo.getState(channelId);
         assert.strictEqual(state.current_number, 0, 'Counter must reset to 0');
