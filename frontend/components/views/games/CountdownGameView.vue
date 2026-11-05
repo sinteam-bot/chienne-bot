@@ -210,9 +210,15 @@
           <input v-model="config.messages.finish_message" type="text" class="discord-input" />
         </div>
 
-        <div>
-          <label class="form-label">Message d'Erreur ({userId})</label>
-          <input v-model="config.messages.error_message" type="text" class="discord-input" />
+        <div class="form-row">
+          <div class="col-half">
+            <label class="form-label">Titre de l'Embed de Victoire (Arrivée à 0)</label>
+            <input v-model="config.messages.victory_embed_title" type="text" class="discord-input" />
+          </div>
+          <div class="col-half">
+            <label class="form-label">Message d'Erreur ({userId})</label>
+            <input v-model="config.messages.error_message" type="text" class="discord-input" />
+          </div>
         </div>
 
         <div class="config-actions-bar">
@@ -252,6 +258,7 @@ const config = ref<any>({
     trap_dodge_message: '',
     trap_failed_message: '',
     finish_message: '',
+    victory_embed_title: "OMG <a:Propertyslurp:1554796587966922804>",
     warning_message: '',
     error_message: '',
     no_participation: '',

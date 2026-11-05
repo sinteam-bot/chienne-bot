@@ -276,17 +276,27 @@ class CountDownService {
 
                 // 4. Arrivée à 0 : Victoire & Réinitialisation
                 if (expectedNumber === 0) {
+                    const showRanking = cdConfig.show_ranked !== undefined
+                        ? cdConfig.show_ranked !== false
+                        : (cdConfig.show_ranking !== false && cdConfig.ranking_enabled !== false && cdConfig.enable_ranking !== false);
+
                     const finishMsg = this.formatMessage(
-                        messages.finish_message || "**Je suis émue, vous ne vous êtes pas trompés mais ce n’est pas fini <:Obsydemoncouverture:{emojiObsydemon}>**",
+                        messages.finish_message || "**Je suis émue, vous ne vous êtes pas trompés mais ce n’est pas fini** <:Obsydemoncouverture:{emojiObsydemon}>",
                         {
                             userId: message.author.id,
                             username: message.author.username,
+                            number: COUNTDOWN_START_AT,
+                            startNumber: COUNTDOWN_START_AT,
                             emojiObsydemon: EMOJI_OBSYDEMON_ID
                         }
                     );
-                    await message.channel.send(finishMsg);
 
-                    const showRanking = cdConfig.show_ranking !== false && cdConfig.ranking_enabled !== false && cdConfig.enable_ranking !== false;
+                    const restartMsg = this.formatMessage(
+                        messages.start_message || "Allez la chienne commence : {number}",
+                        { number: COUNTDOWN_START_AT }
+                    );
+
+                    let description = '';
 
                     if (showRanking) {
                         const scores = await this.repo.getScores(COUNTDOWN_CHANNEL_ID);
@@ -298,10 +308,45 @@ class CountDownService {
                             }).join('\n');
                         }
 
+                        const defaultHeader = messages.ranking_header || `🏆 **Classement de la partie :**`;
+                        const header = this.formatMessage(
+                            defaultHeader,
+                            {
+                                startNumber: COUNTDOWN_START_AT,
+                                userId: message.author.id,
+                                username: message.author.username
+                            }
+                        );
+
+                        description = `${finishMsg}\n\n${header}\n${rankingText}\n\n${restartMsg}`;
+                    } else {
+                        description = `${finishMsg}\n\n${restartMsg}`;
+                    }
+
+                    const useEmbed = cdConfig.use_embed !== false && messages.use_embed !== false;
+                    if (!useEmbed) {
+                        const plainTitle = messages.victory_title || "# OMG <a:Propertyslurp:1554796587966922804>";
+                        await message.channel.send(this.resolveCustomEmojis(`${plainTitle}\n\n${description}`, message.client, message.guild));
+                    } else {
+                        const defaultTitle = messages.victory_embed_title || messages.finish_embed_title || "OMG <a:Propertyslurp:1554796587966922804>";
+                        const embedTitle = this.resolveCustomEmojis(
+                            this.formatMessage(defaultTitle, {
+                                userId: message.author.id,
+                                username: message.author.username,
+                                number: COUNTDOWN_START_AT,
+                                startNumber: COUNTDOWN_START_AT,
+                                emojiObsydemon: EMOJI_OBSYDEMON_ID
+                            }),
+                            message.client,
+                            message.guild
+                        );
+
+                        const finalDescription = this.resolveCustomEmojis(description, message.client, message.guild);
+
                         const embed = new EmbedBuilder()
                             .setColor(messages.embed_color || '#F2C7CE')
-                            .setTitle(messages.embed_title || '🏆 **Classement de la partie**')
-                            .setDescription(rankingText)
+                            .setTitle(embedTitle)
+                            .setDescription(finalDescription)
                             .setTimestamp();
 
                         await message.channel.send({ embeds: [embed] });
@@ -309,12 +354,6 @@ class CountDownService {
 
                     await this.repo.resetScores(COUNTDOWN_CHANNEL_ID);
                     await this.repo.updateState(COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, 0, null, null, 0);
-
-                    const restartMsg = this.formatMessage(
-                        messages.start_message || "**Allez la chienne commence :** {number}",
-                        { number: COUNTDOWN_START_AT }
-                    );
-                    await message.channel.send(restartMsg);
                     return;
                 }
 

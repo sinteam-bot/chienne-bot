@@ -290,6 +290,7 @@ countdown:
     trap_dodge_message: "**J’ai cru que j’allais vous avoir <:Obsydemoncouverture:{emojiObsydemon}>**"
     trap_failed_message: <@{userId}>**, Je t’ai eu ** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**.
     finish_message: "**Je suis émue, vous ne vous êtes pas trompés mais ce n’est pas fini** <:Obsydemoncouverture:{emojiObsydemon}>"
+    victory_embed_title: "OMG <a:Propertyslurp:1554796587966922804>"
     warning_message: ⚠️ <@{userId}> s'est trompé(e) (**{errorsCount}/{maxErrors} erreurs** tolérées). Le prochain nombre attendu est **{expectedNumber}**.
     error_message: "**Oups <@{userId}> s'est trompé(e), je vais devoir mordre** <:Obsydemoncouverture:{emojiObsydemon}>"
     no_participation: Aucune participation enregistrée.

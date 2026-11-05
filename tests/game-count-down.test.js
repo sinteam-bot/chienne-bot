@@ -337,4 +337,49 @@ describe('Game: Count Down Module Tests', () => {
         assert.strictEqual(state.error_count, 0);
     });
 
+    test('Service: should send victory embed with OMG title, finish message and restart message on reaching 0', async () => {
+        const service = container.resolve(CountDownService);
+        const repo = container.resolve(CountDownRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            start_number: 9,
+            show_ranked: false
+        });
+
+        // Le compteur est à 1 (le prochain nombre attendu est 0)
+        await repo.updateState(channelId, 1, 0, null, 'user_a', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_victory',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            client: {
+                emojis: {
+                    cache: new Map([
+                        ['1554796587966922804', { id: '1554796587966922804', name: 'slurp', animated: true }]
+                    ])
+                }
+            },
+            channel: { id: channelId, send: async (msg) => { sentMessages.push(msg); } },
+            author: { id: 'user_b', username: 'Bob', bot: false },
+            content: '0',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+
+        assert.strictEqual(sentMessages.length, 1, 'Should send exactly 1 embed message');
+        assert.ok(sentMessages[0].embeds?.[0], 'Message must be an embed');
+        const embed = sentMessages[0].embeds[0];
+        assert.strictEqual(embed.data.title, 'OMG <a:slurp:1554796587966922804>', 'Title should be OMG with resolved emoji');
+        assert.ok(embed.data.description.includes('Je suis émue, vous ne vous êtes pas trompés mais ce n’est pas fini'), 'Description must include finish message');
+        assert.ok(embed.data.description.includes('Allez la chienne commence : 9'), 'Description must include restart message with start number');
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.current_number, 9, 'Countdown must be reset to start_number (9)');
+        assert.strictEqual(state.is_trap_active, 0);
+        assert.strictEqual(state.error_count, 0);
+    });
+
 });
