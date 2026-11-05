@@ -52,10 +52,10 @@ describe('Game: Road to Infinite Module Tests', () => {
         assert.strictEqual(state.last_user_id, 'user_b');
     });
 
-    test('Service: should prevent double-post from same user', async () => {
+    test('Service: should prevent double-post without error when double_post_is_error is false', async () => {
         const service = container.resolve(RoadToInfiniteService);
         const repo = container.resolve(RoadToInfiniteRepository);
-        service.getConfig = () => ({ enabled: true, channel_id: channelId });
+        service.getConfig = () => ({ enabled: true, channel_id: channelId, double_post_is_error: false });
 
         await repo.updateState(channelId, 11, 'user_b');
 
@@ -74,6 +74,66 @@ describe('Game: Road to Infinite Module Tests', () => {
 
         const state = await repo.getState(channelId);
         assert.strictEqual(state.current_number, 11, 'Counter must stay unchanged on double post');
+    });
+
+    test('Service: should count double-post as error and tolerate when max_errors > 1', async () => {
+        const service = container.resolve(RoadToInfiniteService);
+        const repo = container.resolve(RoadToInfiniteRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            max_errors: 2,
+            double_post_is_error: true
+        });
+
+        await repo.updateState(channelId, 11, 'user_b', 0);
+
+        let sentMsg = null;
+        const mockMessage = {
+            id: 'msg_double_err',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: { id: channelId, send: async (payload) => { sentMsg = payload; }, messages: { fetch: async () => new Map() } },
+            author: { id: 'user_b', username: 'Bob', bot: false },
+            content: '12',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+        assert.ok(sentMsg, 'Should send double post warning message');
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.current_number, 11, 'Counter must stay at 11');
+        assert.strictEqual(state.error_count, 1, 'Error count must increment to 1');
+    });
+
+    test('Service: should reset game on double-post when limit reached', async () => {
+        const service = container.resolve(RoadToInfiniteService);
+        const repo = container.resolve(RoadToInfiniteRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            max_errors: 1,
+            double_post_is_error: true
+        });
+
+        await repo.updateState(channelId, 11, 'user_b', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_double_reset',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: { id: channelId, send: async (payload) => { sentMessages.push(payload); }, messages: { fetch: async () => new Map() } },
+            author: { id: 'user_b', username: 'Bob', bot: false },
+            content: '12',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+        assert.ok(sentMessages.length >= 2, 'Should send double post message then restart message/ranking');
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.current_number, 0, 'Counter must reset to 0');
+        assert.strictEqual(state.error_count, 0, 'Error count must reset to 0');
     });
 
     test('Service: should tolerate errors when max_errors > 1 and only reset on reaching limit', async () => {
@@ -156,6 +216,181 @@ describe('Game: Road to Infinite Module Tests', () => {
         assert.ok(typeof sentMessages[0] === 'string' && sentMessages[0].includes('Oups'), 'First message must be the error message');
         assert.ok(!sentMessages[1].embeds, 'Second message must NOT be an embed');
         assert.ok(typeof sentMessages[1] === 'string' && sentMessages[1].includes('Allez la chienne commence'), 'Second message must be the restart message with starter number');
+    });
+
+    test('Repository: should store and retrieve trap state', async () => {
+        const repo = container.resolve(RoadToInfiniteRepository);
+        await repo.updateState(channelId, 50, 1, 51, 'user_trap_1', 0);
+
+        const state = await repo.getState(channelId);
+        assert.ok(state);
+        assert.strictEqual(state.current_number, 50);
+        assert.strictEqual(state.is_trap_active, 1);
+        assert.strictEqual(state.trap_number, 51);
+        assert.strictEqual(state.last_user_id, 'user_trap_1');
+
+        await repo.updateState(channelId, 51, 0, null, 'user_trap_2', 0);
+        const updated = await repo.getState(channelId);
+        assert.strictEqual(updated.is_trap_active, 0);
+        assert.strictEqual(updated.trap_number, null);
+    });
+
+    test('Service: should trigger a trap when valid number > 5 and trap_chance triggers', async () => {
+        const service = container.resolve(RoadToInfiniteService);
+        const repo = container.resolve(RoadToInfiniteRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            trap_chance: 1.0 // Force le déclenchement du piège
+        });
+
+        await repo.updateState(channelId, 10, 0, null, 'user_a', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_trap_trigger',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: {
+                id: channelId,
+                send: async (msg) => { sentMessages.push(msg); },
+                messages: { fetch: async () => new Map() }
+            },
+            author: { id: 'user_b', username: 'Bob', bot: false },
+            content: '11',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+
+        // Le bot doit avoir posté le nombre piège 12
+        assert.strictEqual(sentMessages.length, 1);
+        assert.strictEqual(sentMessages[0], '12');
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.is_trap_active, 1);
+        assert.strictEqual(state.trap_number, 12);
+        assert.strictEqual(state.current_number, 12);
+    });
+
+    test('Service: should handle dodging an active trap', async () => {
+        const service = container.resolve(RoadToInfiniteService);
+        const repo = container.resolve(RoadToInfiniteRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            messages: {
+                trap_dodge_message: 'Esquive réussie !'
+            }
+        });
+
+        // Simuler un piège actif sur le nombre 12
+        await repo.updateState(channelId, 12, 1, 12, 'user_b', 0);
+
+        let sentMessages = [];
+        let reacted = null;
+        const mockMessage = {
+            id: 'msg_trap_dodge',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: {
+                id: channelId,
+                send: async (msg) => { sentMessages.push(msg); },
+                messages: { fetch: async () => new Map() }
+            },
+            author: { id: 'user_c', username: 'Charlie', bot: false },
+            content: '12', // Joueur poste 12 pour esquiver le piège
+            react: async (r) => { reacted = r; }
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+
+        assert.ok(reacted !== null);
+        assert.strictEqual(sentMessages.length, 1);
+        assert.strictEqual(sentMessages[0], 'Esquive réussie !');
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.is_trap_active, 0, 'Trap must be deactivated');
+        assert.strictEqual(state.trap_number, null);
+        assert.strictEqual(state.last_user_id, 'user_c');
+    });
+
+    test('Service: should handle falling into an active trap with errors tolerated', async () => {
+        const service = container.resolve(RoadToInfiniteService);
+        const repo = container.resolve(RoadToInfiniteRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            max_errors: 2,
+            messages: {
+                trap_failed_message: 'Je t’ai eu ! ({errorsCount}/{maxErrors}) Prochain: {expectedNumber}'
+            }
+        });
+
+        // Piège actif sur 12
+        await repo.updateState(channelId, 12, 1, 12, 'user_b', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_trap_fall',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: {
+                id: channelId,
+                send: async (msg) => { sentMessages.push(msg); },
+                messages: { fetch: async () => new Map() }
+            },
+            author: { id: 'user_c', username: 'Charlie', bot: false },
+            content: '13', // Tombe dans le piège en postant 13
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+
+        assert.strictEqual(sentMessages.length, 1);
+        assert.ok(sentMessages[0].includes('Je t’ai eu ! (1/2) Prochain: 13'));
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.is_trap_active, 0, 'Trap must be deactivated');
+        assert.strictEqual(state.error_count, 1);
+        assert.strictEqual(state.current_number, 12);
+    });
+
+    test('Service: should reset game when falling into a trap reaches max_errors', async () => {
+        const service = container.resolve(RoadToInfiniteService);
+        const repo = container.resolve(RoadToInfiniteRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            max_errors: 1,
+            show_ranked: false
+        });
+
+        // Piège actif sur 12
+        await repo.updateState(channelId, 12, 1, 12, 'user_b', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_trap_reset',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: {
+                id: channelId,
+                send: async (msg) => { sentMessages.push(msg); },
+                messages: { fetch: async () => new Map() }
+            },
+            author: { id: 'user_c', username: 'Charlie', bot: false },
+            content: '13',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+
+        // Seuil d'erreurs (1) atteint -> Game Over
+        assert.strictEqual(sentMessages.length, 2);
+        assert.ok(sentMessages[0].includes('Oups'));
+        assert.ok(sentMessages[1].includes('Allez la chienne commence'));
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.current_number, 0, 'Game must be reset to 0');
+        assert.strictEqual(state.is_trap_active, 0);
+        assert.strictEqual(state.error_count, 0);
     });
 
 });

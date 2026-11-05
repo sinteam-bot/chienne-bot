@@ -97,23 +97,90 @@ class CountDownService {
                     await message.react('❌').catch(() => {});
                 }
 
+                const doublePostIsError = cdConfig.double_post_is_error !== undefined
+                    ? cdConfig.double_post_is_error !== false
+                    : (cdConfig.double_post_as_error !== undefined
+                        ? cdConfig.double_post_as_error !== false
+                        : true);
+
+                if (!doublePostIsError) {
+                    const doublePostMsg = this.formatMessage(
+                        messages.double_post_message || "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>",
+                        {
+                            userId: message.author.id,
+                            username: message.author.username,
+                            emojiObsydemon: EMOJI_OBSYDEMON_ID
+                        }
+                    );
+
+                    await message.channel.send(doublePostMsg);
+                    console.log(`⚠️ [COUNTDOWN] ${message.author.tag} a essayé de poster deux fois d'affilée.`);
+                    return;
+                }
+
+                // Si le double-post est compté comme une erreur
+                const currentNumber = state.current_number;
+                const expectedNumber = currentNumber - 1;
+                const maxErrors = Math.max(1, parseInt(cdConfig.max_errors || 1, 10));
+                const newErrorCount = (state.error_count || 0) + 1;
+
+                if (newErrorCount < maxErrors) {
+                    await this.repo.updateState(
+                        COUNTDOWN_CHANNEL_ID,
+                        currentNumber,
+                        state.is_trap_active ? 1 : 0,
+                        state.trap_number,
+                        state.last_user_id,
+                        newErrorCount
+                    );
+
+                    let doublePostMsg = this.formatMessage(
+                        messages.double_post_message || "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** (**{errorsCount}/{maxErrors} erreurs** tolérées) <:Obsydemoncouverture:{emojiObsydemon}>. Le prochain nombre attendu est **{expectedNumber}**.",
+                        {
+                            userId: message.author.id,
+                            username: message.author.username,
+                            errorsCount: newErrorCount,
+                            maxErrors,
+                            remainingErrors: maxErrors - newErrorCount,
+                            expectedNumber,
+                            postedNumber: message.content,
+                            emojiObsydemon: EMOJI_OBSYDEMON_ID
+                        }
+                    );
+
+                    if (messages.double_post_message && !messages.double_post_message.includes('{errorsCount}')) {
+                        doublePostMsg += ` (**${newErrorCount}/${maxErrors} erreurs** tolérées). Le prochain nombre attendu est **${expectedNumber}**.`;
+                    }
+
+                    await message.channel.send(doublePostMsg);
+                    console.log(`⚠️ [COUNTDOWN] ${message.author.tag} a fait une erreur de double-post (${newErrorCount}/${maxErrors} erreurs). Décompte maintenu à ${currentNumber}.`);
+                    return;
+                }
+
+                // Seuil d'erreurs atteint -> Message double-post puis Game Over & Reset
                 const doublePostMsg = this.formatMessage(
                     messages.double_post_message || "<@{userId}>, **vous ne pouvez pas partager deux nombres à la suite** <:Obsydemoncouverture:{emojiObsydemon}>",
                     {
                         userId: message.author.id,
                         username: message.author.username,
+                        errorsCount: newErrorCount,
+                        maxErrors,
+                        remainingErrors: 0,
+                        expectedNumber,
+                        postedNumber: message.content,
                         emojiObsydemon: EMOJI_OBSYDEMON_ID
                     }
                 );
-
                 await message.channel.send(doublePostMsg);
-                console.log(`⚠️ [COUNTDOWN] ${message.author.tag} a essayé de poster deux fois d'affilée.`);
+
+                await this.handleGameOver(message, COUNTDOWN_CHANNEL_ID, COUNTDOWN_START_AT, messages, newErrorCount, maxErrors);
                 return;
             }
 
             const contentText = message.content.trim();
             const isNumberFormat = /^\d+$/.test(contentText);
             const postedNumber = isNumberFormat ? parseInt(contentText, 10) : null;
+            const currentNumber = state.current_number;
 
             // 2. Piège actif
             if (state.is_trap_active === 1) {
@@ -183,7 +250,6 @@ class CountDownService {
             }
 
             // 3. Déroulement normal
-            const currentNumber = state.current_number;
             const expectedNumber = currentNumber - 1;
 
             if (postedNumber !== null && postedNumber === expectedNumber) {

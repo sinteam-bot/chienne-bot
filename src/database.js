@@ -1518,6 +1518,8 @@ async function getCounterState(channelId) {
             ...st,
             channel_id: st.channelId,
             current_number: st.currentNumber,
+            is_trap_active: st.isTrapActive,
+            trap_number: st.trapNumber,
             last_user_id: st.lastUserId,
             updated_at: st.updatedAt
         };
@@ -1527,12 +1529,19 @@ async function getCounterState(channelId) {
     }
 }
 
-async function updateCounterState(channelId, currentNumber, lastUserId) {
+async function updateCounterState(channelId, currentNumber, isTrapActive = 0, trapNumber = null, lastUserId = null) {
+    if (typeof isTrapActive === 'string') {
+        lastUserId = isTrapActive;
+        isTrapActive = 0;
+        trapNumber = null;
+    }
     try {
         const [updated] = await db.insert(schema.counterState)
             .values({
                 channelId,
                 currentNumber,
+                isTrapActive: isTrapActive ? 1 : 0,
+                trapNumber,
                 lastUserId,
                 updatedAt: sql`CURRENT_TIMESTAMP`
             })
@@ -1540,6 +1549,8 @@ async function updateCounterState(channelId, currentNumber, lastUserId) {
                 target: schema.counterState.channelId,
                 set: {
                     currentNumber,
+                    isTrapActive: isTrapActive ? 1 : 0,
+                    trapNumber,
                     lastUserId,
                     updatedAt: sql`CURRENT_TIMESTAMP`
                 }
@@ -1550,6 +1561,8 @@ async function updateCounterState(channelId, currentNumber, lastUserId) {
             ...updated,
             channel_id: updated.channelId,
             current_number: updated.currentNumber,
+            is_trap_active: updated.isTrapActive,
+            trap_number: updated.trapNumber,
             last_user_id: updated.lastUserId
         };
     } catch (error) {

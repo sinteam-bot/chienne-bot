@@ -146,12 +146,14 @@ function getModulesStatusList() {
         {
             key: 'counter',
             name: 'Route de l\'Infini',
-            subFeature: 'Jeu du Compteur incrémental',
+            subFeature: 'Jeu du Compteur incrémental avec pièges aléatoires',
             category: 'Jeux',
             icon: '🔢',
             enabled: !!config.counter?.enabled,
             viewId: 'game-road-to-infinite',
-            details: config.counter?.channel_id ? `Salon : <#${config.counter.channel_id}>` : 'Salon non configuré'
+            details: config.counter?.channel_id
+                ? `Salon : <#${config.counter.channel_id}> | Pièges : ${(((config.counter.trap_chance !== undefined ? config.counter.trap_chance : 0.15)) * 100).toFixed(0)}%`
+                : 'Salon non configuré'
         },
         {
             key: 'countdown',

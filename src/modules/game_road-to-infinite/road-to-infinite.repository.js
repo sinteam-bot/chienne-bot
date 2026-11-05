@@ -24,6 +24,8 @@ class RoadToInfiniteRepository {
             channel_id: state.channelId,
             current_number: state.currentNumber,
             error_count: state.errorCount ?? 0,
+            is_trap_active: state.isTrapActive,
+            trap_number: state.trapNumber,
             last_user_id: state.lastUserId,
             updated_at: state.updatedAt
         };
@@ -33,15 +35,27 @@ class RoadToInfiniteRepository {
      * Met à jour ou initialise l'état du compteur
      * @param {string} channelId
      * @param {number} currentNumber
-     * @param {string|null} lastUserId
+     * @param {number} [isTrapActive=0]
+     * @param {number|null} [trapNumber=null]
+     * @param {string|null} [lastUserId=null]
      * @param {number} [errorCount=0]
      */
-    async updateState(channelId, currentNumber, lastUserId = null, errorCount = 0) {
+    async updateState(channelId, currentNumber, isTrapActive = 0, trapNumber = null, lastUserId = null, errorCount = 0) {
+        // Rétrocompatibilité avec l'ancienne signature : updateState(channelId, currentNumber, lastUserId, errorCount)
+        if (typeof isTrapActive === 'string') {
+            lastUserId = isTrapActive;
+            errorCount = typeof trapNumber === 'number' ? trapNumber : 0;
+            isTrapActive = 0;
+            trapNumber = null;
+        }
+
         const [updated] = await this.db.insert(this.schema.counterState)
             .values({
                 channelId,
                 currentNumber,
                 errorCount,
+                isTrapActive: isTrapActive ? 1 : 0,
+                trapNumber,
                 lastUserId,
                 updatedAt: sql`CURRENT_TIMESTAMP`
             })
@@ -50,6 +64,8 @@ class RoadToInfiniteRepository {
                 set: {
                     currentNumber,
                     errorCount,
+                    isTrapActive: isTrapActive ? 1 : 0,
+                    trapNumber,
                     lastUserId,
                     updatedAt: sql`CURRENT_TIMESTAMP`
                 }
@@ -61,6 +77,8 @@ class RoadToInfiniteRepository {
             channel_id: updated.channelId,
             current_number: updated.currentNumber,
             error_count: updated.errorCount ?? 0,
+            is_trap_active: updated.isTrapActive,
+            trap_number: updated.trapNumber,
             last_user_id: updated.lastUserId
         };
     }

@@ -142,6 +142,17 @@
           </label>
         </div>
 
+        <div class="form-group-toggle" style="margin-top: 14px;">
+          <div class="toggle-info">
+            <span class="form-label">Double-post considéré comme une erreur</span>
+            <p class="form-help">Si activé, poster deux nombres consécutifs compte comme une erreur et réinitialise la partie si le seuil d'erreurs est atteint.</p>
+          </div>
+          <label class="switch">
+            <input v-model="config.double_post_is_error" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
         <div class="form-divider"></div>
 
         <div class="form-row">
@@ -233,6 +244,7 @@ const config = ref<any>({
   start_number: 900,
   max_errors: 1,
   trap_chance: 0.15,
+  double_post_is_error: true,
   emojis: { obsybon_id: '1524104068514189422', obsydemon_id: '1488145689916473544' },
   messages: {
     start_message: '',

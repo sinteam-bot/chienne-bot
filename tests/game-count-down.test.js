@@ -125,4 +125,66 @@ describe('Game: Count Down Module Tests', () => {
         assert.ok(typeof sentMessages[1] === 'string' && sentMessages[1].includes('Allez la chienne commence'), 'Second message must be the restart message with starter number');
     });
 
+    test('Service: should treat double-post as error and reset when max_errors is 1', async () => {
+        const service = container.resolve(CountDownService);
+        const repo = container.resolve(CountDownRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            start_number: 900,
+            max_errors: 1,
+            double_post_is_error: true
+        });
+
+        await repo.updateState(channelId, 850, 0, null, 'user_bob', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_cd_double_reset',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: { id: channelId, send: async (payload) => { sentMessages.push(payload); } },
+            author: { id: 'user_bob', username: 'Bob', bot: false },
+            content: '849',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+        assert.ok(sentMessages.length >= 2, 'Should send double post message then restart message/ranking');
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.current_number, 900, 'Countdown must reset to start_number (900)');
+        assert.strictEqual(state.error_count, 0);
+    });
+
+    test('Service: should prevent double-post without error when double_post_is_error is false', async () => {
+        const service = container.resolve(CountDownService);
+        const repo = container.resolve(CountDownRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            start_number: 900,
+            max_errors: 1,
+            double_post_is_error: false
+        });
+
+        await repo.updateState(channelId, 850, 0, null, 'user_bob', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_cd_double_noerr',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: { id: channelId, send: async (payload) => { sentMessages.push(payload); } },
+            author: { id: 'user_bob', username: 'Bob', bot: false },
+            content: '849',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+        assert.strictEqual(sentMessages.length, 1);
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.current_number, 850, 'Countdown must stay at 850');
+        assert.strictEqual(state.error_count, 0);
+    });
+
 });

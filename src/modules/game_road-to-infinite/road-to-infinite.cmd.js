@@ -11,7 +11,7 @@ class RoadToInfiniteCommand {
     async executeCommand(interaction) {
         const state = await this.service.getGameState(interaction.channelId);
         await interaction.reply({
-            content: `🔢 **Route de l'Infini** : Nombre actuel = **${state.currentNumber}** (Prochain = **${state.currentNumber + 1}**)`,
+            content: `🔢 **Route de l'Infini** : Nombre actuel = **${state.currentNumber}** (Prochain = **${state.currentNumber + 1}**) | Piège actif = **${state.isTrapActive ? 'Oui 🪤' : 'Non'}**`,
             ephemeral: true
         });
     }

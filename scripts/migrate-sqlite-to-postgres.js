@@ -394,6 +394,9 @@ async function ensurePgTables(pgClient) {
         CREATE TABLE IF NOT EXISTS counter_state (
             channel_id TEXT PRIMARY KEY,
             current_number INTEGER DEFAULT 0,
+            error_count INTEGER DEFAULT 0,
+            is_trap_active INTEGER DEFAULT 0,
+            trap_number INTEGER,
             last_user_id TEXT,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );

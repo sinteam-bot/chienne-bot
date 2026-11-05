@@ -46,6 +46,17 @@
         </div>
 
         <div class="module-stat-card">
+          <div class="module-stat-icon">🪤</div>
+          <div class="module-stat-info">
+            <span class="module-stat-label">Statut Piège Bot</span>
+            <span class="module-stat-value" :style="{ color: gameState.is_trap_active ? 'var(--red)' : 'var(--green)' }">
+              {{ gameState.is_trap_active ? '⚠️ PIÈGE EN COURS !' : 'Désactivé' }}
+            </span>
+            <span class="module-stat-sub">{{ (config.trap_chance * 100) || 15 }}% chance par tour</span>
+          </div>
+        </div>
+
+        <div class="module-stat-card">
           <div class="module-stat-icon">📢</div>
           <div class="module-stat-info">
             <span class="module-stat-label">Salon Dédié</span>
@@ -116,6 +127,17 @@
           </label>
         </div>
 
+        <div class="form-group-toggle" style="margin-top: 14px;">
+          <div class="toggle-info">
+            <span class="form-label">Double-post considéré comme une erreur</span>
+            <p class="form-help">Si activé, poster deux nombres consécutifs compte comme une erreur et réinitialise la partie si le seuil d'erreurs est atteint.</p>
+          </div>
+          <label class="switch">
+            <input v-model="config.double_post_is_error" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
         <div class="form-divider"></div>
 
         <div class="form-row">
@@ -127,6 +149,13 @@
               :filter-text-only="true"
             />
           </div>
+          <div class="col-half">
+            <label class="form-label">Probabilité de Piège (0.15 = 15%)</label>
+            <input v-model.number="config.trap_chance" type="number" step="0.05" min="0" max="1" class="discord-input" />
+          </div>
+        </div>
+
+        <div class="form-row">
           <div class="col-half">
             <label class="form-label">Erreurs Max avant Reset</label>
             <input v-model.number="config.max_errors" type="number" min="1" max="100" class="discord-input" />
@@ -152,6 +181,16 @@
         <div>
           <label class="form-label">Message Anti Double-Post</label>
           <input v-model="config.messages.double_post_message" type="text" class="discord-input" />
+        </div>
+
+        <div>
+          <label class="form-label">Message Esquive de Piège</label>
+          <input v-model="config.messages.trap_dodge_message" type="text" class="discord-input" />
+        </div>
+
+        <div>
+          <label class="form-label">Message Échec Piège ({userId}, {errorsCount}, {maxErrors}, {expectedNumber})</label>
+          <input v-model="config.messages.trap_failed_message" type="text" class="discord-input" />
         </div>
 
         <div>
@@ -205,9 +244,13 @@ const config = ref<any>({
   enabled: true,
   channel_id: '1533492692825276598',
   max_errors: 1,
+  trap_chance: 0.15,
+  double_post_is_error: true,
   emojis: { obsybon_id: '1524104068514189422', obsydemon_id: '1488145689916473544' },
   messages: {
     double_post_message: '',
+    trap_dodge_message: '',
+    trap_failed_message: '',
     warning_message: '',
     ranking_header: '',
     ranking_footer: '',
