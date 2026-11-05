@@ -194,4 +194,147 @@ describe('Game: Count Down Module Tests', () => {
         assert.strictEqual(state.error_count, 0);
     });
 
+    test('Service: should trigger a trap when counting down from 900 and trap_chance triggers', async () => {
+        const service = container.resolve(CountDownService);
+        const repo = container.resolve(CountDownRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            start_number: 900,
+            trap_chance: 1.0 // 100% de chance de piège
+        });
+
+        // Le compteur est à 900
+        await repo.updateState(channelId, 900, 0, null, 'user_a', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_trap_trigger',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: { id: channelId, send: async (msg) => { sentMessages.push(msg); } },
+            author: { id: 'user_b', username: 'Bob', bot: false },
+            content: '899',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+
+        // Le bot doit avoir validé 899 et envoyé le piège "898"
+        assert.strictEqual(sentMessages.length, 1);
+        assert.strictEqual(sentMessages[0], '898', 'Bot should post 898 as trap');
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.current_number, 898, 'Counter should be updated to trap number 898');
+        assert.strictEqual(state.is_trap_active, 1, 'Trap must be active');
+        assert.strictEqual(state.trap_number, 898, 'Trap number must be 898');
+    });
+
+    test('Service: should handle dodging an active trap in countdown', async () => {
+        const service = container.resolve(CountDownService);
+        const repo = container.resolve(CountDownRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            start_number: 900,
+            trap_chance: 0
+        });
+
+        // Piège actif sur 898
+        await repo.updateState(channelId, 898, 1, 898, 'user_b', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_trap_dodge',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: { id: channelId, send: async (msg) => { sentMessages.push(msg); } },
+            author: { id: 'user_c', username: 'Charlie', bot: false },
+            content: '898', // Charlie esquive en postant le même nombre
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+
+        assert.strictEqual(sentMessages.length, 1);
+        assert.ok(sentMessages[0].includes('J’ai cru que j’allais vous avoir'));
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.current_number, 898);
+        assert.strictEqual(state.is_trap_active, 0, 'Trap must be deactivated');
+        assert.strictEqual(state.trap_number, null);
+    });
+
+    test('Service: should handle falling into an active trap with errors tolerated in countdown', async () => {
+        const service = container.resolve(CountDownService);
+        const repo = container.resolve(CountDownRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            start_number: 900,
+            max_errors: 2,
+            trap_chance: 0
+        });
+
+        // Piège actif sur 898
+        await repo.updateState(channelId, 898, 1, 898, 'user_b', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_trap_fail',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: { id: channelId, send: async (msg) => { sentMessages.push(msg); } },
+            author: { id: 'user_c', username: 'Charlie', bot: false },
+            content: '897', // Charlie se trompe et saute au nombre suivant
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+
+        assert.strictEqual(sentMessages.length, 1);
+        assert.ok(sentMessages[0].includes('Je t’ai eu'));
+        assert.ok(sentMessages[0].includes('1/2 erreurs'));
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.error_count, 1, 'Error count must increment to 1');
+        assert.strictEqual(state.is_trap_active, 0, 'Trap is consumed');
+        assert.strictEqual(state.current_number, 898);
+    });
+
+    test('Service: should reset countdown when falling into a trap reaches max_errors', async () => {
+        const service = container.resolve(CountDownService);
+        const repo = container.resolve(CountDownRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            start_number: 900,
+            max_errors: 1,
+            show_ranked: false
+        });
+
+        // Piège actif sur 898
+        await repo.updateState(channelId, 898, 1, 898, 'user_b', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_trap_reset',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            channel: { id: channelId, send: async (msg) => { sentMessages.push(msg); } },
+            author: { id: 'user_c', username: 'Charlie', bot: false },
+            content: '897',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+
+        assert.strictEqual(sentMessages.length, 1);
+        assert.ok(sentMessages[0].embeds?.[0]);
+        assert.strictEqual(sentMessages[0].embeds[0].data.title, "C'est moche !");
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Je t’ai eu'));
+        assert.ok(sentMessages[0].embeds[0].data.description.includes('Allez la chienne commence'));
+
+        const state = await repo.getState(channelId);
+        assert.strictEqual(state.current_number, 900, 'Countdown must be reset to 900');
+        assert.strictEqual(state.is_trap_active, 0);
+        assert.strictEqual(state.error_count, 0);
+    });
+
 });

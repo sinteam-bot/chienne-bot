@@ -24,6 +24,17 @@ class CountDownService {
         return res;
     }
 
+    resolveCustomEmojis(text, client, guild) {
+        if (!text || typeof text !== 'string') return text;
+        return text.replace(/<a?:([a-zA-Z0-9_]+)?:(\d{17,20})>/g, (match, name, id) => {
+            const found = client?.emojis?.cache?.get(id) || guild?.emojis?.cache?.get(id);
+            if (found) {
+                return `<${found.animated ? 'a' : ''}:${found.name}:${found.id}>`;
+            }
+            return match;
+        });
+    }
+
     /**
      * Initialise le canal CountDown au démarrage si aucun état n'existe
      * @param {import('discord.js').Client} client
@@ -65,7 +76,7 @@ class CountDownService {
 
         const COUNTDOWN_CHANNEL_ID = cdConfig.channel_id || '1533492760697503805';
         const COUNTDOWN_START_AT = cdConfig.start_number || 900;
-        const trapChance = cdConfig.trap_chance !== undefined ? cdConfig.trap_chance : 0.15;
+        const trapChance = cdConfig.trap_chance !== undefined ? parseFloat(cdConfig.trap_chance) : 0.15;
         const emojis = cdConfig.emojis || {};
         const EMOJI_OBSYBON_ID = emojis.obsybon_id || '1524104068514189422';
         const EMOJI_OBSYDEMON_ID = emojis.obsydemon_id || '1488145689916473544';
@@ -205,7 +216,7 @@ class CountDownService {
                     await message.channel.send(dodgeMsg);
 
                     await this.repo.addScore(COUNTDOWN_CHANNEL_ID, message.author.id, message.author.username);
-                    await this.repo.updateState(COUNTDOWN_CHANNEL_ID, trapNum, 0, null, message.author.id);
+                    await this.repo.updateState(COUNTDOWN_CHANNEL_ID, trapNum, 0, null, message.author.id, state.error_count || 0);
 
                     console.log(`🛡️ [COUNTDOWN] ${message.author.tag} a esquivé le piège (${trapNum}) !`);
                     return;
@@ -308,7 +319,7 @@ class CountDownService {
                 }
 
                 // 5. Tirage aléatoire d'un piège
-                const shouldTrap = (expectedNumber > 5 && expectedNumber < 85) && (Math.random() < trapChance);
+                const shouldTrap = (expectedNumber > 1) && (Math.random() < trapChance);
 
                 if (shouldTrap) {
                     const trapNumber = expectedNumber - 1;
@@ -443,10 +454,25 @@ class CountDownService {
             await message.channel.send(errorText);
             await message.channel.send(restartMsg);
         } else {
+            const embedTitle = this.resolveCustomEmojis(
+                this.formatMessage(messages.embed_title || "C'est moche !", {
+                    userId: message.author.id,
+                    username: message.author.username,
+                    startNumber,
+                    errorsCount,
+                    maxErrors,
+                    emojiObsydemon: cdConfig.emojis?.obsydemon_id || '1488145689916473544'
+                }),
+                message.client,
+                message.guild
+            );
+
+            const finalDescription = this.resolveCustomEmojis(description, message.client, message.guild);
+
             const embed = new EmbedBuilder()
                 .setColor(messages.embed_color || '#F2C7CE')
-                .setTitle(messages.embed_title || "C'est moche !")
-                .setDescription(description)
+                .setTitle(embedTitle)
+                .setDescription(finalDescription)
                 .setTimestamp();
 
             await message.channel.send({ embeds: [embed] });

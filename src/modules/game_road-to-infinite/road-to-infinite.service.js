@@ -24,6 +24,17 @@ class RoadToInfiniteService {
         return res;
     }
 
+    resolveCustomEmojis(text, client, guild) {
+        if (!text || typeof text !== 'string') return text;
+        return text.replace(/<a?:([a-zA-Z0-9_]+)?:(\d{17,20})>/g, (match, name, id) => {
+            const found = client?.emojis?.cache?.get(id) || guild?.emojis?.cache?.get(id);
+            if (found) {
+                return `<${found.animated ? 'a' : ''}:${found.name}:${found.id}>`;
+            }
+            return match;
+        });
+    }
+
     /**
      * Traite un message reçu dans le canal de la Route de l'Infini
      * @param {import('discord.js').Message} message
@@ -33,7 +44,7 @@ class RoadToInfiniteService {
         if (counterConfig.enabled === false) return;
 
         const COUNTER_CHANNEL_ID = counterConfig.channel_id || '1533492692825276598';
-        const trapChance = counterConfig.trap_chance !== undefined ? counterConfig.trap_chance : 0.15;
+        const trapChance = counterConfig.trap_chance !== undefined ? parseFloat(counterConfig.trap_chance) : 0.15;
         const emojis = counterConfig.emojis || {};
         const EMOJI_OBSYBON_ID = emojis.obsybon_id || '1524104068514189422';
         const EMOJI_OBSYDEMON_ID = emojis.obsydemon_id || '1488145689916473544';
@@ -386,10 +397,26 @@ class RoadToInfiniteService {
             await message.channel.send(errorText);
             await message.channel.send(restartMsg);
         } else {
+            const embedTitle = this.resolveCustomEmojis(
+                this.formatMessage(messages.embed_title || "C'est moche !", {
+                    userId: message.author.id,
+                    username: message.author.username,
+                    expectedNumber,
+                    postedNumber: message.content,
+                    errorsCount,
+                    maxErrors,
+                    emojiObsydemon: counterConfig.emojis?.obsydemon_id || '1488145689916473544'
+                }),
+                message.client,
+                message.guild
+            );
+
+            const finalDescription = this.resolveCustomEmojis(description, message.client, message.guild);
+
             const embed = new EmbedBuilder()
                 .setColor(messages.embed_color || '#F2C7CE')
-                .setTitle(messages.embed_title || "C'est moche !")
-                .setDescription(description)
+                .setTitle(embedTitle)
+                .setDescription(finalDescription)
                 .setTimestamp();
 
             await message.channel.send({ embeds: [embed] });

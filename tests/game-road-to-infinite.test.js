@@ -402,4 +402,47 @@ describe('Game: Road to Infinite Module Tests', () => {
         assert.strictEqual(state.error_count, 0);
     });
 
+    test('Service: should resolve custom emojis (animated and correct name) in embed title and description', async () => {
+        const service = container.resolve(RoadToInfiniteService);
+        const repo = container.resolve(RoadToInfiniteRepository);
+        service.getConfig = () => ({
+            enabled: true,
+            channel_id: channelId,
+            max_errors: 1,
+            show_ranked: false,
+            messages: {
+                embed_title: "C'est moche <:Propertyslurp:1554796587966922804>",
+                start_message: "C'est à vous !"
+            }
+        });
+
+        await repo.updateState(channelId, 10, 0, null, 'user_b', 0);
+
+        let sentMessages = [];
+        const mockMessage = {
+            id: 'msg_emoji_test',
+            guild: { id: 'guild_1', name: 'Test Guild' },
+            client: {
+                emojis: {
+                    cache: new Map([
+                        ['1554796587966922804', { id: '1554796587966922804', name: 'slurp', animated: true }]
+                    ])
+                }
+            },
+            channel: {
+                id: channelId,
+                send: async (payload) => { sentMessages.push(payload); },
+                messages: { fetch: async () => new Map() }
+            },
+            author: { id: 'user_c', username: 'Charlie', bot: false },
+            content: '999',
+            react: async () => {}
+        };
+
+        await service.handleIncomingMessage(mockMessage);
+        assert.strictEqual(sentMessages.length, 1);
+        const embed = sentMessages[0].embeds[0];
+        assert.strictEqual(embed.data.title, "C'est moche <a:slurp:1554796587966922804>", 'Should auto-detect animated emoji and correct name in title');
+    });
+
 });
